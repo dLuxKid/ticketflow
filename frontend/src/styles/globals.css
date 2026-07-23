@@ -1,0 +1,182 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap");
+
+@import "tailwindcss";
+
+@theme {
+  --color-main-white: #fff;
+  --color-main-purple: #6528F7;
+  --color-main-black: #141619;
+  --color-main-light-grey: #d9d9d9;
+  --color-main-grey-bg: #F8F9FA;
+  --color-main-error-red: #EF1616;
+
+  --color-sec-black: #1b1b1b;
+  --color-sec-grey: #fdfeff;
+
+  --breakpoint-nav: 900px;
+  --breakpoint-mobile: 480px;
+
+  --radius-big: 0.625rem;
+  --radius-sm: 0.3125rem;
+}
+
+@layer base {
+  html,
+  body,
+  h1,
+  p {
+    font-family: "Roboto", system-ui, sans-serif;
+  }
+}
+
+*::-webkit-scrollbar {
+  width: 0;
+  display: none;
+}
+
+*::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #888;
+}
+
+* {
+  /* outline: 1px solid red; */
+}
+
+input,
+select,
+textarea {
+  @apply outline-none text-main-black text-base;
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+input:active,
+select:active,
+textarea:active {
+  @apply text-base outline-none;
+}
+
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  input:focus {
+    font-size: 16px;
+  }
+}
+
+input::placeholder {
+  @apply text-main-black text-base;
+}
+
+button {
+  @apply transition-all duration-300 transform cursor-pointer;
+}
+
+button:hover,
+button:focus,
+button:active {
+  @apply opacity-80 border-0 outline-0;
+}
+
+button:disabled {
+  background-color: rgba(101, 40, 247, 0.3) !important;
+  color: #fff;
+  font-size: 600;
+  cursor: not-allowed;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+button:disabled:hover {
+  background-color: rgba(101, 40, 247, 0.3) !important;
+  color: #fff;
+  outline: 0;
+  border: 0;
+}
+
+section {
+  @apply py-[3.75rem] md:py-[7.5%] px-[5%] md:min-h-[100svh] w-full;
+}
+
+main {
+  @apply min-h-[100svh] w-full overflow-x-hidden relative bg-main-grey-bg;
+}
+
+/* TYPOGRAPHY */
+.nav-text {
+  @apply font-medium nav:font-semibold text-base leading-4 cursor-pointer duration-300 transition relative w-full h-auto md:w-auto;
+}
+
+.title-text {
+  @apply font-semibold text-2xl sm:text-3xl md:text-4xl;
+}
+
+.sub-title-text {
+  @apply font-semibold text-lg md:text-2xl;
+}
+
+.body-text {
+  @apply font-normal text-sm sm:text-base md:text-lg;
+}
+
+/* FLEX TEMPLATE */
+.flex-center {
+  @apply flex justify-center items-center;
+}
+
+.flex-start {
+  @apply flex justify-start items-start;
+}
+
+.flex-end {
+  @apply flex justify-end items-center;
+}
+
+.flex-between {
+  @apply flex justify-between items-center;
+}
+
+.error-text {
+  @apply text-xs md:text-sm font-semibold text-main-error-red mt-1;
+}
+
+.bg-text {
+  background-image: url("/hero-section-bg.webp");
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+  background-repeat: repeat;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-font-smoothing: antialiased;
+}
+
+@keyframes slideInFromTop {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInFromBottom {
+  0% {
+    transform: translateY(100%);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.icon-transition {
+  animation: slideInFromTop 0.3s cubic-bezier(0, 0.9, 0.3, 1.2);
+}
+
+.text-transition {
+  animation: slideInFromBottom 0.3s cubic-bezier(0, 0.9, 0.3, 1.2);
+}

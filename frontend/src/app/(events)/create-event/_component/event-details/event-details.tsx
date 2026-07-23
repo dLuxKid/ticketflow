@@ -1,0 +1,451 @@
+import { subDays } from "date-fns";
+import ReactDatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+
+import { categoriesStyles, timezoneStyles } from "@/styles/react-select.styles";
+import Select, { SingleValue } from "react-select";
+
+import { categories, timzezones } from "@/assets/data/react-select-options";
+
+import Button from "@/components/ui/submit-btn";
+
+import FacebookWhite from "@/assets/svg/fb-white";
+import GlobeIcon from "@/assets/svg/globe";
+import GlobeWhite from "@/assets/svg/globe-white";
+import IGWhite from "@/assets/svg/ig-white";
+import XWhite from "@/assets/svg/x-white";
+import YoutubeWhite from "@/assets/svg/yt-white";
+
+type Props = {
+  eventData: eventData;
+  setEventData: React.Dispatch<React.SetStateAction<eventData>>;
+  nextStep: () => void;
+  countryOptions: CountryOptions[];
+  stateOptions: { label: string; value: string }[];
+};
+
+export function EventDetails({
+  eventData,
+  setEventData,
+  nextStep,
+  countryOptions,
+  stateOptions,
+}: Props) {
+  const handleSocialMediaLink = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
+    const newSocialMediaLinks = { ...eventData.socialMediaLinks };
+    if (
+      name === "others" ||
+      name === "facebook" ||
+      name === "twitter" ||
+      name === "instagram" ||
+      name === "facebook"
+    )
+      newSocialMediaLinks[name] = value;
+
+    setEventData((prev) => ({
+      ...prev,
+      socialMediaLinks: newSocialMediaLinks,
+    }));
+  };
+
+  const minDate = new Date();
+  const excludeDates = [
+    new Date(),
+    ...Array.from({ length: minDate.getDate() }).map((_, i) =>
+      subDays(minDate, i)
+    ),
+  ];
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setEventData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEventLocation = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
+    const newEventLocation = { ...eventData.eventLocation };
+    if (name === "address" || name === "city" || name === "postalCode")
+      newEventLocation[name] = value;
+
+    setEventData((prev) => ({
+      ...prev,
+      eventLocation: newEventLocation,
+    }));
+  };
+
+  const isSocialsAvailable = () => {
+    return (
+      eventData.socialMediaLinks.facebook ||
+      eventData.socialMediaLinks.instagram ||
+      eventData.socialMediaLinks.others ||
+      eventData.socialMediaLinks.twitter ||
+      eventData.socialMediaLinks.youtube
+    );
+  };
+
+  const isAllInputFilled = () => {
+    return (
+      eventData.startDate &&
+      eventData.startTime &&
+      eventData.endDate &&
+      eventData.endTime &&
+      eventData.timezone &&
+      eventData.eventLocation.address &&
+      eventData.eventLocation.city &&
+      eventData.eventLocation.country &&
+      eventData.eventLocation.state &&
+      eventData.eventCategory &&
+      eventData.eventDescription &&
+      isSocialsAvailable()
+    );
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isAllInputFilled()) nextStep();
+  };
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="w-full flex items-stretch justify-center flex-col gap-4 md:gap-6"
+    >
+      <div className="w-full">
+        <p className="text-sm font-semibold text-main-black mb-1 capitalize">
+          Event Start
+        </p>
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <label className="bg-sec-grey rounded-md h-12 w-full px-4 text-main-black flex items-center border border-main-purple">
+            <ReactDatePicker
+              selected={eventData.startDate}
+              placeholderText="Date"
+              name="startDate"
+              onChange={(date) => {
+                if (date)
+                  setEventData((prev) => ({
+                    ...prev,
+                    startDate: date,
+                    endDate: null,
+                  }));
+              }}
+              className="bg-transparent text-main-black placeholder:text-[#1f1f1f66]"
+              minDate={minDate}
+              excludeDates={excludeDates}
+            />
+          </label>
+          <label className="bg-sec-grey rounded-md h-12 w-full px-4 text-main-black flex items-center border border-main-purple">
+            <ReactDatePicker
+              selected={eventData.startTime}
+              placeholderText="Time"
+              name="startTime"
+              onChange={(date) => {
+                if (date) {
+                  setEventData((prev) => ({
+                    ...prev,
+                    startTime: date,
+                  }));
+                }
+              }}
+              showTimeSelect
+              showTimeSelectOnly
+              timeIntervals={15}
+              timeCaption="Time"
+              dateFormat="h:mm aa"
+              className="bg-transparent text-main-black placeholder:text-[#1f1f1f66]"
+            />
+          </label>
+        </div>
+      </div>
+
+      <div>
+        <p className="text-sm font-semibold text-main-black mb-1 capitalize ">
+          Event End
+        </p>
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <label className="bg-sec-grey rounded-md h-12 w-full px-4 text-main-black flex items-center border border-main-purple">
+            <ReactDatePicker
+              selected={eventData.endDate}
+              placeholderText="Date"
+              name="endDate"
+              onChange={(date) => {
+                if (date)
+                  setEventData((prev) => ({
+                    ...prev,
+                    endDate: date,
+                  }));
+              }}
+              className="bg-transparent text-main-black placeholder:text-[#1f1f1f66]"
+              minDate={eventData.startDate || minDate}
+              excludeDates={
+                eventData.startDate
+                  ? excludeDates.slice(0, eventData.startDate.getDate())
+                  : excludeDates
+              }
+            />
+          </label>
+          <label className="bg-sec-grey rounded-md h-12 w-full px-4 text-main-black flex items-center border border-main-purple">
+            <ReactDatePicker
+              selected={eventData.endTime}
+              placeholderText="Time"
+              name="endTime"
+              onChange={(date) => {
+                if (date)
+                  setEventData((prev) => ({
+                    ...prev,
+                    endTime: date,
+                  }));
+              }}
+              showTimeSelect
+              showTimeSelectOnly
+              timeIntervals={15}
+              timeCaption="Time"
+              dateFormat="h:mm aa"
+              className="bg-transparent text-main-black placeholder:text-[#1f1f1f66]"
+            />
+          </label>
+        </div>
+      </div>
+
+      <div>
+        <p className="text-sm font-semibold text-main-black mb-1 capitalize">
+          Timezone
+        </p>
+        <label className="relative flex flex-1 flex-shrink-0">
+          <Select
+            styles={timezoneStyles}
+            value={timzezones.find(
+              (option) => option.value === eventData.timezone || null
+            )}
+            classNamePrefix="select"
+            options={timzezones}
+            onChange={(timezone: SingleValue<reactSelectOptions>) =>
+              setEventData((prev) => ({
+                ...prev,
+                timezone: timezone?.value as string,
+              }))
+            }
+            isSearchable={true}
+            name="timezone"
+            placeholder="Timezone"
+          />
+          <span className="absolute left-3 bottom-[12px] text-main-white">
+            <GlobeIcon />
+          </span>
+        </label>
+      </div>
+
+      <div>
+        <label>
+          <p className="text-sm font-semibold text-main-black mb-1 capitalize">
+            Event Description
+          </p>
+          <textarea
+            title="description"
+            name="eventDescription"
+            className="h-40 w-full bg-sec-grey rounded-md text-main-black px-4 py-2 border border-main-purple"
+            value={eventData.eventDescription}
+            onChange={handleChange}
+            placeholder="Describe your event"
+          />
+        </label>
+      </div>
+
+      <div>
+        <p className="text-sm font-semibold text-main-black mb-1 capitalize">
+          Location
+        </p>
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+          <label>
+            <Select
+              styles={categoriesStyles}
+              value={
+                countryOptions?.find(
+                  (option) => option.value === eventData.eventLocation.country
+                ) || null
+              }
+              classNamePrefix="select"
+              options={countryOptions}
+              onChange={(country: SingleValue<CountryOptions>) => {
+                const newEventLocation = { ...eventData.eventLocation };
+                if (country) {
+                  newEventLocation.country = country.value;
+                  newEventLocation.state = "";
+
+                  setEventData((prev) => ({
+                    ...prev,
+                    currency: country.currency,
+                    eventLocation: newEventLocation,
+                  }));
+                }
+              }}
+              isSearchable={true}
+              name="country"
+              placeholder="Country"
+            />
+          </label>
+          <label>
+            <Select
+              styles={categoriesStyles}
+              value={
+                stateOptions?.find(
+                  (option) => option.value === eventData.eventLocation.state
+                ) || null
+              }
+              classNamePrefix="select"
+              options={stateOptions}
+              onChange={(state: SingleValue<reactSelectOptions>) => {
+                const newEventLocation = { ...eventData.eventLocation };
+                newEventLocation.state = state?.value as string;
+
+                setEventData((prev) => ({
+                  ...prev,
+                  eventLocation: newEventLocation,
+                }));
+              }}
+              isSearchable={true}
+              name="state"
+              placeholder="State"
+            />
+          </label>
+          <input
+            name="city"
+            type="text"
+            placeholder="City"
+            className="rounded-md bg-sec-grey h-12 w-full px-4 text-main-black placeholder:text-[#1F1F1F66] border border-main-purple"
+            value={eventData.eventLocation.city}
+            onChange={handleEventLocation}
+          />
+          <input
+            name="postalCode"
+            type="tel"
+            placeholder="Postal Code"
+            className="rounded-md bg-sec-grey h-12 w-full px-4 text-main-black placeholder:text-[#1F1F1F66] border border-main-purple"
+            value={eventData.eventLocation.postalCode}
+            onChange={handleEventLocation}
+          />
+        </div>
+        <label className="bg-sec-grey rounded-md h-12 w-full px-4 text-main-black flex items-center border border-main-purple mt-4">
+          <input
+            name="address"
+            type="text"
+            placeholder="Fill in venue address"
+            className="bg-transparent text-main-black placeholder:text-[#1f1f1f66] w-full"
+            value={eventData.eventLocation.address}
+            onChange={handleEventLocation}
+          />
+        </label>
+      </div>
+
+      <div>
+        <p className="text-sm font-semibold text-main-black mb-1 capitalize">
+          Category
+        </p>
+        <label>
+          <Select
+            styles={categoriesStyles}
+            value={
+              categories.find(
+                (option) => option.value === eventData.eventCategory
+              ) || null
+            }
+            classNamePrefix="select"
+            options={categories}
+            onChange={(category: SingleValue<reactSelectOptions>) =>
+              setEventData((prev) => ({
+                ...prev,
+                eventCategory: category?.value as string,
+              }))
+            }
+            isSearchable={true}
+            name="eventCategory"
+            placeholder="Select Category"
+          />
+        </label>
+      </div>
+
+      <div>
+        <p className="text-sm font-semibold text-main-black mb-2 capitalize">
+          Social media handles
+        </p>
+        <div className="flex-center flex-col w-full gap-4">
+          <label className="flex flex-1 flex-shrink-0 relative w-full">
+            <input
+              name="twitter"
+              placeholder="Twitter URL"
+              type="text"
+              className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-[#1f1f1f66]"
+              value={eventData.socialMediaLinks.twitter}
+              onChange={handleSocialMediaLink}
+            />
+            <span className="left-0 top-0 bottom-0 w-14 absolute bg-main-purple rounded-l-md flex-center text-main-white body-text">
+              <XWhite />
+            </span>
+          </label>
+          <label className="flex flex-1 flex-shrink-0 relative w-full">
+            <input
+              name="instagram"
+              type="text"
+              placeholder="Instagram URL"
+              className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-[#1f1f1f66]"
+              value={eventData.socialMediaLinks.instagram}
+              onChange={handleSocialMediaLink}
+            />
+            <span className="left-0 top-0 bottom-0 w-14 absolute bg-main-purple rounded-l-md flex-center text-main-white body-text">
+              <IGWhite />
+            </span>
+          </label>
+          <label className="flex flex-1 flex-shrink-0 relative w-full">
+            <input
+              name="youtube"
+              type="text"
+              placeholder="Youtube URL"
+              className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-[#1f1f1f66]"
+              value={eventData.socialMediaLinks.youtube}
+              onChange={handleSocialMediaLink}
+            />
+            <span className="left-0 top-0 bottom-0 w-14 absolute bg-main-purple rounded-l-md flex-center text-main-white body-text">
+              <YoutubeWhite />
+            </span>
+          </label>
+          <label className="flex flex-1 flex-shrink-0 relative w-full">
+            <input
+              name="facebook"
+              type="text"
+              placeholder="Facebook URL"
+              className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-[#1f1f1f66]"
+              value={eventData.socialMediaLinks.facebook}
+              onChange={handleSocialMediaLink}
+            />
+            <span className="left-0 top-0 bottom-0 w-14 absolute bg-main-purple rounded-l-md flex-center text-main-white body-text">
+              <FacebookWhite />
+            </span>
+          </label>
+          <label className="flex flex-1 flex-shrink-0 relative w-full">
+            <input
+              name="others"
+              type="text"
+              placeholder="Website URL"
+              className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-[#1f1f1f66]"
+              value={eventData.socialMediaLinks.others}
+              onChange={handleSocialMediaLink}
+            />
+            <span className="left-0 top-0 bottom-0 w-14 absolute bg-main-purple rounded-l-md flex-center text-main-white body-text">
+              <GlobeWhite />
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div className="w-full max-w-md mt-4 self-center">
+        <Button disabled={!isAllInputFilled()} onClick={handleSubmit}>
+          Continue
+        </Button>
+      </div>
+    </form>
+  );
+}
