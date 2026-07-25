@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import * as eventController from '../controllers/eventController.js';
+import * as dashboardController from '../controllers/dashboardController.js';
 import * as authController from '../controllers/authController.js';
 import handleImg from '../../shared/middleware/uploadImage.js';
 
@@ -20,5 +21,11 @@ router.get('/my/events', eventController.getMyEvents);
 // Ownership is enforced in eventService.updateEvent; the service allows the event's
 // own creator or an admin. No role gate here so any user who owns an event can edit it.
 router.patch('/update/:eventId', eventController.updateEvent);
+
+// ─── Live arrivals dashboard (organiser / admin) ────────────────────────────────
+// Snapshot for initial render; SSE stream for live updates. Both authorize the viewer
+// against the event in dashboardService, so no one can watch another organiser's event.
+router.get('/:eventId/dashboard', dashboardController.getSnapshot);
+router.get('/:eventId/stream', dashboardController.streamEvent);
 
 export default router;

@@ -27,6 +27,9 @@ export const updateStatusByReference = (reference, transactionStatus) =>
 
 export const findById = (id) => Booking.findById(id);
 
+export const countByEventAndStatus = (eventId, status) =>
+  Booking.countDocuments({ event: eventId, status });
+
 /**
  * Resolves a scanned QR payload to its booking. The code may be an invite token (invited
  * guests) or a ticketId (purchased guests) — one lookup covers every guest type. Selects
