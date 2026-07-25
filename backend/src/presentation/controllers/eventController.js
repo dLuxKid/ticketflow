@@ -53,7 +53,11 @@ export const getEvent = catchAsync(async (req, res) => {
 });
 
 export const updateEvent = catchAsync(async (req, res, next) => {
-  const event = await eventService.updateEvent(req.params.eventId, req.body);
+  const event = await eventService.updateEvent(
+    req.params.eventId,
+    req.body,
+    req.user,
+  );
 
   res.status(200).json({
     status: 'success',

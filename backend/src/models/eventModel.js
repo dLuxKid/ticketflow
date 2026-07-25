@@ -8,20 +8,23 @@ const ticketSchema = new mongoose.Schema({
     required: [true, 'Ticket must have a type'],
   },
   ticketPrice: {
-    type: String,
+    type: Number,
+    min: [0, 'Ticket price cannot be negative'],
     required: [true, 'Ticket must have a price'],
   },
   ticketQuantity: {
-    type: String,
-    min: 0,
+    type: Number,
+    min: [0, 'Ticket quantity cannot be negative'],
     required: [true, 'Ticket must have a available quantity'],
   },
   minimumBuyingLimit: {
-    type: String,
+    type: Number,
+    min: [1, 'Minimum buying limit must be at least 1'],
     default: 1,
   },
   maximumBuyingLimit: {
-    type: String,
+    type: Number,
+    min: [1, 'Maximum buying limit must be at least 1'],
     default: 1,
   },
   ticketPerks: {
@@ -161,7 +164,8 @@ eventSchema.pre('save', function (next) {
 
   for (const ticket of this.ticketDetails) {
     const type = ticket.ticketName;
-    const availableQuantity = ticket.ticketQuantity * 1 || 0;
+    // ticketQuantity is now a Number (see ticketSchema); no string coercion needed.
+    const availableQuantity = ticket.ticketQuantity || 0;
     ticketTypeQuantities.set(
       type,
       (ticketTypeQuantities.get(type) || 0) + availableQuantity,

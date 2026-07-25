@@ -9,6 +9,13 @@ export const create = (data) => User.create(data);
 
 export const findById = (id) => User.findById(id);
 
+/**
+ * Loads a user including their `role` (which is `select: false` by default).
+ * Used when building the authenticated request context so that authorization
+ * middleware (restrictTo) and ownership checks have the role available.
+ */
+export const findByIdWithRole = (id) => User.findById(id).select('+role');
+
 export const findByIdWithPassword = (id) =>
   User.findById(id).select('+password +role');
 

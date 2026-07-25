@@ -17,6 +17,8 @@ router.use(authController.protect);
 
 router.post('/create', handleImg, eventController.createEvent);
 router.get('/my/events', eventController.getMyEvents);
+// Ownership is enforced in eventService.updateEvent; the service allows the event's
+// own creator or an admin. No role gate here so any user who owns an event can edit it.
 router.patch('/update/:eventId', eventController.updateEvent);
 
 export default router;

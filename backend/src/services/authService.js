@@ -60,7 +60,9 @@ export const login = async (email, password) => {
  */
 export const verifyAndGetUser = async (token) => {
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
-  const currentUser = await userRepository.findById(decoded.id);
+  // Load with role so downstream authorization (restrictTo) and ownership checks work;
+  // role is `select: false` on the schema and would otherwise be undefined here.
+  const currentUser = await userRepository.findByIdWithRole(decoded.id);
 
   if (!currentUser) {
     throw new AppError(

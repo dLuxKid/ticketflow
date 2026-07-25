@@ -26,11 +26,20 @@ export const getEventBySlug = async (slug) => {
   return event;
 };
 
-export const updateEvent = async (eventId, data) => {
+export const updateEvent = async (eventId, data, user) => {
   if (!eventId) throw new AppError('Event ID is required', 400);
-  const event = await eventRepository.updateById(eventId, data);
+
+  const event = await eventRepository.findById(eventId);
   if (!event) throw new AppError('No event found with that ID', 404);
-  return event;
+
+  // Ownership enforcement: only the event's own creator (or an admin) may update it.
+  // Without this, any authenticated user could edit any event (broken access control).
+  const isOwner = event.user?.equals(user._id);
+  if (user.role !== 'admin' && !isOwner) {
+    throw new AppError('You do not have permission to update this event', 403);
+  }
+
+  return eventRepository.updateById(eventId, data);
 };
 
 export const getTrendingEvents = () => eventRepository.findTrending();

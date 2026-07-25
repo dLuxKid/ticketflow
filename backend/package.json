@@ -11,6 +11,9 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
+    "test": "node --test \"tests/**/*.test.js\"",
+    "test:unit": "node --test \"tests/unit/**/*.test.js\"",
+    "migrate:numeric-tickets": "node scripts/migrate-numeric-ticket-fields.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write ."

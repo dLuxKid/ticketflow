@@ -46,6 +46,7 @@ export const checkInAttendee = catchAsync(async (req, res) => {
   const ticket = await bookingService.checkInAttendee(
     req.params.id,
     req.body.isCheckedIn,
+    req.user,
   );
 
   res.status(200).json({

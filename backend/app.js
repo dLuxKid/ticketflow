@@ -55,7 +55,16 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // ─── Body Parsing ──────────────────────────────────────────────────────────────
-app.use(express.json({ limit: '50mb' }));
+// Capture the exact raw bytes on the way in so webhook handlers can verify provider
+// signatures (e.g. Paystack HMAC), which must be computed over the unmodified body.
+app.use(
+  express.json({
+    limit: '50mb',
+    verify: (req, res, buf) => {
+      req.rawBody = buf;
+    },
+  }),
+);
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // ─── Logging ───────────────────────────────────────────────────────────────────

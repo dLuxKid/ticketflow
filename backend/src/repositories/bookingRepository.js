@@ -6,10 +6,24 @@ import APIFeatures from '../shared/utils/apiFeatures.js';
  * No business logic — only database operations.
  */
 
-export const insertMany = (data) => Booking.insertMany(data);
+export const insertMany = (data, session) =>
+  Booking.insertMany(data, session ? { session } : undefined);
 
 export const updateById = (id, data, options = { new: true }) =>
   Booking.findByIdAndUpdate(id, data, options);
+
+/**
+ * Returns a booking with its event's owner populated — used for ownership checks.
+ */
+export const findByIdWithEventOwner = (id) =>
+  Booking.findById(id).populate({ path: 'event', select: 'user' });
+
+/**
+ * Sets the transaction status for every booking under a Paystack reference.
+ * Called from the verified webhook so payment state is server-authoritative.
+ */
+export const updateStatusByReference = (reference, transactionStatus) =>
+  Booking.updateMany({ reference }, { $set: { transactionStatus } });
 
 /**
  * Returns all bookings for a user, sorted by most recent, with event details populated.

@@ -19,6 +19,35 @@ export const updateById = (id, data, options = { new: true }) =>
 export const save = (event) => event.save();
 
 /**
+ * Atomically reserves `count` tickets of a given type on an event.
+ *
+ * The update only matches (and therefore only succeeds) when the event has an embedded
+ * ticket of `ticketName` whose `ticketQuantity` is still >= `count`. Because MongoDB
+ * applies a single-document update atomically, two concurrent buyers cannot both pass
+ * the `$gte` guard for the last remaining tickets — one update matches and decrements,
+ * the other matches nothing and returns null. This eliminates the oversell race and can
+ * never drive `ticketQuantity` below zero.
+ *
+ * @returns {Promise<object|null>} the updated event, or null if not enough tickets remain
+ */
+export const reserveTicketInventory = (eventId, ticketName, count, session) =>
+  Event.findOneAndUpdate(
+    {
+      _id: eventId,
+      ticketDetails: {
+        $elemMatch: { ticketName, ticketQuantity: { $gte: count } },
+      },
+    },
+    {
+      $inc: {
+        'ticketDetails.$.ticketQuantity': -count,
+        numberOfAttendees: count,
+      },
+    },
+    { new: true, session },
+  );
+
+/**
  * Returns all active events (currently running or yet to start) with
  * query string filtering, sorting, field limiting, and pagination applied.
  */
