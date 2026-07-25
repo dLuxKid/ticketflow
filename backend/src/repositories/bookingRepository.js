@@ -9,6 +9,8 @@ import APIFeatures from '../shared/utils/apiFeatures.js';
 export const insertMany = (data, session) =>
   Booking.insertMany(data, session ? { session } : undefined);
 
+export const create = (data) => Booking.create(data);
+
 export const updateById = (id, data, options = { new: true }) =>
   Booking.findByIdAndUpdate(id, data, options);
 

@@ -37,6 +37,14 @@ export const createBooking = async (ticketBuyers, eventId, userId) => {
   const eventExists = await eventRepository.findById(eventId);
   if (!eventExists) throw new AppError('No event found with that ID', 404);
 
+  // Invite-only events admit guests from the organiser's guest list, not by purchase.
+  if (eventExists.accessMode === 'invite_only') {
+    throw new AppError(
+      'This event is invite-only; tickets are not available for purchase',
+      403,
+    );
+  }
+
   // Reserve inventory and persist bookings atomically. Reservation uses a guarded
   // atomic $inc (see eventRepository.reserveTicketInventory) so concurrent buyers can
   // never oversell; the surrounding transaction guarantees bookings are only written

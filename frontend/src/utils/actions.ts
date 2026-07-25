@@ -165,3 +165,49 @@ export const checkInAttendee = async (id: string, isCheckedIn: boolean) => {
     return error;
   }
 };
+
+type GuestInput = {
+  name: string;
+  email: string;
+  vip?: boolean;
+  plusOnes?: number;
+};
+
+export const getEventGuests = async (eventId: string) => {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("jwt")?.value;
+
+  try {
+    const res = await axios({
+      method: "GET",
+      url: API_URLS.events.guests(eventId),
+      headers: { Authorization: "Bearer " + token },
+    });
+    return res.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) return error.response?.data ?? error;
+    return error;
+  }
+};
+
+export const importGuests = async (
+  eventId: string,
+  payload: { guests?: GuestInput[]; csv?: string },
+) => {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("jwt")?.value;
+
+  try {
+    const res = await axios({
+      method: "POST",
+      url: API_URLS.events.guests(eventId),
+      data: payload,
+      headers: { Authorization: "Bearer " + token },
+    });
+    revalidatePath(`/guest-list/${eventId}`);
+    return res.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) return error.response?.data ?? error;
+    return error;
+  }
+};

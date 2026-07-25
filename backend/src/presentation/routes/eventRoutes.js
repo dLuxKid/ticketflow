@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import * as eventController from '../controllers/eventController.js';
 import * as dashboardController from '../controllers/dashboardController.js';
+import * as guestController from '../controllers/guestController.js';
 import * as authController from '../controllers/authController.js';
 import handleImg from '../../shared/middleware/uploadImage.js';
 
@@ -27,5 +28,13 @@ router.patch('/update/:eventId', eventController.updateEvent);
 // against the event in dashboardService, so no one can watch another organiser's event.
 router.get('/:eventId/dashboard', dashboardController.getSnapshot);
 router.get('/:eventId/stream', dashboardController.streamEvent);
+
+// ─── Guest list (organiser / admin) ─────────────────────────────────────────────
+// Manage the guest list of an invite_only / hybrid event. Ownership + access-mode are
+// enforced in guestService; importing issues single-use invites with emailed QR codes.
+router
+  .route('/:eventId/guests')
+  .get(guestController.listGuests)
+  .post(guestController.importGuests);
 
 export default router;

@@ -53,6 +53,7 @@ export const reserveTicketInventory = (eventId, ticketName, count, session) =>
  */
 export const findActiveWithFeatures = (queryParams) => {
   const query = Event.find({
+    accessMode: { $ne: 'invite_only' },
     $or: [
       { startDate: { $gte: new Date() } },
       { endDate: { $gte: new Date() } },
@@ -70,6 +71,7 @@ export const findActiveWithFeatures = (queryParams) => {
  */
 export const countActive = () => {
   const query = Event.find({
+    accessMode: { $ne: 'invite_only' },
     $or: [
       { startDate: { $gte: new Date() } },
       { endDate: { $gte: new Date() } },
@@ -104,6 +106,7 @@ export const findBySlug = (slug) =>
  */
 export const findTrending = () => {
   const query = Event.find({
+    accessMode: { $ne: 'invite_only' },
     $or: [
       { startDate: { $gte: new Date() } },
       { endDate: { $gte: new Date() } },
@@ -119,7 +122,10 @@ export const findTrending = () => {
  * Returns the next 3 upcoming events sorted by start date.
  */
 export const findUpcoming = () =>
-  Event.find({ startDate: { $gt: new Date() } })
+  Event.find({
+    accessMode: { $ne: 'invite_only' },
+    startDate: { $gt: new Date() },
+  })
     .sort({ startDate: 1, startTime: 1, _id: 1 })
     .limit(3)
     .select(

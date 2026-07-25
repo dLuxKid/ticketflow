@@ -1,5 +1,15 @@
 import mongoose from 'mongoose';
 
+// These fields describe a paid transaction and only exist for purchased bookings. Invite
+// bookings (source: 'invite') are created without a checkout, so they are required only
+// when the booking came from a purchase.
+const requiredForPurchase = [
+  function isPurchase() {
+    return this.source === 'purchase';
+  },
+  'This field is required for purchased bookings.',
+];
+
 const bookingSchema = new mongoose.Schema(
   {
     event: {
@@ -21,39 +31,40 @@ const bookingSchema = new mongoose.Schema(
     },
     price: {
       type: Number,
-      required: [true, 'Booking must have a price.'],
+      default: 0,
+      min: [0, 'Price cannot be negative'],
     },
     currency: {
       type: String,
-      required: [true, 'Booking must have a currency.'],
+      required: requiredForPurchase,
     },
     transactionNumber: {
       type: Number,
-      required: [true, 'Booking must have a transaction number.'],
+      required: requiredForPurchase,
     },
     ticketId: {
       type: String,
-      required: [true, 'Booking must have a ticket Id.'],
+      required: requiredForPurchase,
     },
     ticketUser: {
       type: String,
-      required: [true, 'Booking must have a ticket user.'],
+      required: requiredForPurchase,
     },
     transactionStatus: {
       type: String,
-      required: [true, 'Booking must have a transaction status.'],
+      required: requiredForPurchase,
     },
     redirectUrl: {
       type: String,
-      required: [true, 'Booking must have a redirect url.'],
+      required: requiredForPurchase,
     },
     message: {
       type: String,
-      required: [true, 'Booking must have a message.'],
+      required: requiredForPurchase,
     },
     reference: {
       type: Number,
-      required: [true, 'Booking must have a reference.'],
+      required: requiredForPurchase,
     },
     ticketType: {
       type: String,
