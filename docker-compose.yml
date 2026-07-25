@@ -1,0 +1,73 @@
+name: ticketflow
+
+# Local dev / demo-recording stack: Mongo (as a single-node replica set — transactions used
+# by the atomic booking-reservation and door-check-in paths require one; a standalone
+# mongod throws), backend, frontend.
+#
+# Usage:
+#   cp backend/.env.docker.example backend/.env.docker   # fill in real values first
+#   docker compose up --build
+#   frontend: http://localhost:3000   backend: http://localhost:4000
+#
+# `mongo-init` is a one-shot container: it waits for mongod to be healthy, then runs
+# rs.initiate() exactly once and exits 0. `backend` waits on that success before starting,
+# not just on mongod being "up", since transactions will fail until the replica set has a
+# PRIMARY.
+
+services:
+  mongo:
+    image: mongo:7
+    command: ["--replSet", "rs0"]
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mongo-init:
+    image: mongo:7
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: "no"
+    entrypoint:
+      - mongosh
+      - --host
+      - mongo
+      - --quiet
+      - --eval
+      - >
+        try { rs.status().ok }
+        catch (e) { rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "mongo:27017" }] }) }
+
+  backend:
+    build:
+      context: ./backend
+    depends_on:
+      mongo-init:
+        condition: service_completed_successfully
+    env_file:
+      - ./backend/.env.docker
+    environment:
+      DB: mongodb://mongo:27017/ticketflow?replicaSet=rs0
+      PORT: "4000"
+      NODE_ENV: development
+    ports:
+      - "4000:4000"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_BASE_URL: http://localhost:4000
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+
+volumes:
+  mongo_data:
