@@ -25,6 +25,32 @@ export const findByIdWithEventOwner = (id) =>
 export const updateStatusByReference = (reference, transactionStatus) =>
   Booking.updateMany({ reference }, { $set: { transactionStatus } });
 
+export const findById = (id) => Booking.findById(id);
+
+/**
+ * Resolves a scanned QR payload to its booking. The code may be an invite token (invited
+ * guests) or a ticketId (purchased guests) — one lookup covers every guest type. Selects
+ * the normally-hidden inviteToken and populates the event owner for authorization.
+ */
+export const findByScanCode = (code) =>
+  Booking.findOne({ $or: [{ inviteToken: code }, { ticketId: code }] })
+    .select('+inviteToken')
+    .populate({ path: 'event', select: 'user' });
+
+/**
+ * Atomically admits a booking: flips status to `admitted` only if it is currently in an
+ * admittable state. Because this is a single-document conditional update, two concurrent
+ * scans of the same ticket cannot both admit — exactly one matches, the other gets null.
+ *
+ * @returns {Promise<object|null>} the admitted booking, or null if it wasn't admittable
+ */
+export const admitById = (bookingId, session) =>
+  Booking.findOneAndUpdate(
+    { _id: bookingId, status: { $in: ['issued', 'delivered', 'scanned'] } },
+    { $set: { status: 'admitted' } },
+    { new: true, session },
+  );
+
 /**
  * Returns all bookings for a user, sorted by most recent, with event details populated.
  */

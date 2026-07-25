@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import * as bookingController from '../controllers/bookingController.js';
 import * as paymentController from '../controllers/paymentController.js';
+import * as admissionController from '../controllers/admissionController.js';
 import * as authController from '../controllers/authController.js';
 
 const router = Router();
@@ -24,5 +25,14 @@ router.use(authController.protect);
 router.get('/my-tickets', bookingController.getMyBookings);
 router.get('/event/:event', bookingController.getBookingsForEvent);
 router.patch('/check-in/:id', bookingController.checkInAttendee);
+
+// ─── Door admission (usher / organiser / admin) ─────────────────────────────────
+// Atomic single-use scan-and-admit for every guest type. Event-level scope (an usher may
+// only admit for their assigned events) is enforced in admissionService.
+router.post(
+  '/scan',
+  authController.restrictTo('usher', 'creator', 'admin'),
+  admissionController.scan,
+);
 
 export default router;
