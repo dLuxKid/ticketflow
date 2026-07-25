@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 
-import { getEventGuests, importGuests } from "@/utils/actions";
+import { getEventGuests, importGuests, queryGuests } from "@/utils/actions";
 
 /**
  * Guest-list manager for an invite_only / hybrid event. Paste or type a CSV
@@ -25,9 +25,19 @@ type ImportResult = {
   invalidRows: { line: number; raw: string }[];
 };
 
+type QueryAnswer = {
+  action: "list" | "count";
+  count: number;
+  guests: { name: string; email: string; vip: boolean }[];
+};
+
 export default function GuestManager({ eventId }: { eventId: string }) {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [csv, setCsv] = useState("");
+  const [question, setQuestion] = useState("");
+  const [answer, setAnswer] = useState<QueryAnswer | null>(null);
+  const [queryError, setQueryError] = useState<string | null>(null);
+  const [asking, startAsking] = useTransition();
   const [result, setResult] = useState<ImportResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -53,6 +63,21 @@ export default function GuestManager({ eventId }: { eventId: string }) {
         await loadGuests();
       } else {
         setError(res?.message ?? "Import failed. Check the format and try again.");
+      }
+    });
+  };
+
+  const handleAsk = () => {
+    setQueryError(null);
+    setAnswer(null);
+    startAsking(async () => {
+      const res = await queryGuests(eventId, question);
+      if (res?.status === "success") {
+        setAnswer(res.data as QueryAnswer);
+      } else {
+        setQueryError(
+          res?.message ?? "Couldn't understand that question. Try rephrasing it.",
+        );
       }
     });
   };
@@ -102,6 +127,53 @@ export default function GuestManager({ eventId }: { eventId: string }) {
           )}
         </div>
       )}
+
+      <div className="mb-8 rounded-lg border border-gray-100 p-4">
+        <h2 className="mb-2 text-lg font-semibold">Ask about your guest list</h2>
+        <p className="mb-3 text-sm text-gray-500">
+          Try &ldquo;who hasn&apos;t arrived&rdquo; or &ldquo;how many VIPs have
+          arrived&rdquo;.
+        </p>
+        <div className="flex gap-2">
+          <input
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleAsk()}
+            placeholder="who hasn't arrived?"
+            className="flex-1 rounded-lg border border-gray-200 p-2 text-sm"
+          />
+          <button
+            onClick={handleAsk}
+            disabled={asking || question.trim() === ""}
+            className="rounded-lg bg-[#6528F7] px-4 py-2 text-sm text-white disabled:opacity-50"
+          >
+            {asking ? "Asking…" : "Ask"}
+          </button>
+        </div>
+
+        {queryError && (
+          <p className="mt-3 text-sm text-red-600">{queryError}</p>
+        )}
+
+        {answer && (
+          <div className="mt-3 text-sm">
+            <p className="font-medium">
+              {answer.action === "count"
+                ? `${answer.count} guest${answer.count === 1 ? "" : "s"}`
+                : `${answer.count} guest${answer.count === 1 ? "" : "s"} found`}
+            </p>
+            {answer.action === "list" && answer.guests.length > 0 && (
+              <ul className="mt-2 list-disc pl-5 text-gray-600">
+                {answer.guests.map((g) => (
+                  <li key={g.email}>
+                    {g.name} {g.vip && "(VIP)"}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+      </div>
 
       <h2 className="mb-3 text-lg font-semibold">
         Invited guests ({guests.length})

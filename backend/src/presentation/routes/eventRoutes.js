@@ -2,6 +2,7 @@ import { Router } from 'express';
 import * as eventController from '../controllers/eventController.js';
 import * as dashboardController from '../controllers/dashboardController.js';
 import * as guestController from '../controllers/guestController.js';
+import * as nlQueryController from '../controllers/nlQueryController.js';
 import * as authController from '../controllers/authController.js';
 import handleImg from '../../shared/middleware/uploadImage.js';
 
@@ -37,5 +38,9 @@ router
   .route('/:eventId/guests')
   .get(guestController.listGuests)
   .post(guestController.importGuests);
+
+// Natural-language questions over the guest list ("who hasn't arrived", "how many VIPs
+// checked in"). Same organiser/admin access rule as the guest list and dashboard.
+router.post('/:eventId/guests/query', nlQueryController.query);
 
 export default router;

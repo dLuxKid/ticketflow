@@ -211,3 +211,21 @@ export const importGuests = async (
     return error;
   }
 };
+
+export const queryGuests = async (eventId: string, question: string) => {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("jwt")?.value;
+
+  try {
+    const res = await axios({
+      method: "POST",
+      url: API_URLS.events.guestsQuery(eventId),
+      data: { question },
+      headers: { Authorization: "Bearer " + token },
+    });
+    return res.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) return error.response?.data ?? error;
+    return error;
+  }
+};

@@ -23,6 +23,8 @@ export const API_URLS = {
       `${baseUrl}/api/v1/events/${eventId}/dashboard`,
     stream: (eventId: string) => `${baseUrl}/api/v1/events/${eventId}/stream`,
     guests: (eventId: string) => `${baseUrl}/api/v1/events/${eventId}/guests`,
+    guestsQuery: (eventId: string) =>
+      `${baseUrl}/api/v1/events/${eventId}/guests/query`,
   },
   bookings: {
     checkIn: (id: string) => `${baseUrl}/api/v1/bookings/check-in/${id}`,
