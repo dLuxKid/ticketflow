@@ -24,3 +24,7 @@ export const findOneByEventAndEmail = (eventId, email) =>
 
 export const linkBooking = (guestId, bookingId) =>
   Guest.findByIdAndUpdate(guestId, { booking: bookingId }, { new: true });
+
+/** Guest records for a set of bookings — used to pull vip/plusOnes for scoring. */
+export const findByBookingIds = (bookingIds) =>
+  Guest.find({ booking: { $in: bookingIds } }).select('booking vip plusOnes');

@@ -61,4 +61,12 @@ if (skipReason) {
     assert.equal(snap.sold, 3);
     assert.equal(snap.admitted, 2, 'only admitted bookings are counted');
   });
+
+  test('snapshot includes a no-show prediction for the one pending booking', async () => {
+    const snap = await dashboardService.getSnapshot(event._id);
+    // Only the 'issued' booking from the before() seed is pending (not yet admitted).
+    assert.equal(snap.noShow.pendingCount, 1);
+    assert.ok(snap.noShow.averageProbability >= 0 && snap.noShow.averageProbability <= 1);
+    assert.ok(Number.isInteger(snap.noShow.expectedNoShows));
+  });
 }

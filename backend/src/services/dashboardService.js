@@ -1,6 +1,11 @@
 import * as eventRepository from '../repositories/eventRepository.js';
 import * as bookingRepository from '../repositories/bookingRepository.js';
 import * as auditLogRepository from '../repositories/auditLogRepository.js';
+import * as guestRepository from '../repositories/guestRepository.js';
+import {
+  predictNoShowProbability,
+  featuresFromBooking,
+} from './noShowService.js';
 import AppError from '../shared/errors/AppError.js';
 
 /**
@@ -33,10 +38,11 @@ export const getEventForViewer = async (eventId, user) => {
  * the next scan arrives over the stream.
  */
 export const getSnapshot = async (eventId) => {
-  const [event, admitted, recent] = await Promise.all([
+  const [event, admitted, recent, noShow] = await Promise.all([
     eventRepository.findById(eventId),
     bookingRepository.countByEventAndStatus(eventId, 'admitted'),
     auditLogRepository.findByEvent(eventId, 10),
+    getNoShowPrediction(eventId),
   ]);
 
   return {
@@ -44,11 +50,61 @@ export const getSnapshot = async (eventId) => {
     capacity: event?.totalQuantity ?? 0,
     sold: event?.numberOfAttendees ?? 0,
     admitted,
+    noShow,
     recent: recent.map((row) => ({
       bookingId: String(row.booking ?? ''),
       outcome: row.outcome,
       reason: row.reason,
       at: row.createdAt,
     })),
+  };
+};
+
+/**
+ * No-show prediction (Phase 5, feature 3/3) for guests not yet admitted.
+ *
+ * Scores every pending booking with noShowService (a logistic model trained offline in
+ * Python; see ml/no_show/train.py) and aggregates into a confidence band the dashboard can
+ * render alongside the live arrivals feed — "expect ~6 of these 20 remaining guests not to
+ * show" is more decision-useful to an organiser than a single number with no context.
+ */
+export const getNoShowPrediction = async (eventId) => {
+  const [event, pending] = await Promise.all([
+    eventRepository.findById(eventId),
+    bookingRepository.findPendingByEvent(eventId),
+  ]);
+
+  if (pending.length === 0) {
+    return { pendingCount: 0, expectedNoShows: 0, averageProbability: 0 };
+  }
+
+  const guestByBooking = new Map(
+    (await guestRepository.findByBookingIds(pending.map((b) => b._id))).map(
+      (g) => [String(g.booking), g],
+    ),
+  );
+
+  const probabilities = pending.map((booking) => {
+    const guest = guestByBooking.get(String(booking._id));
+    const features = featuresFromBooking(booking, event);
+    if (guest) {
+      features.isVip = guest.vip;
+      features.plusOnes = guest.plusOnes;
+    }
+    return predictNoShowProbability(features);
+  });
+
+  const averageProbability =
+    probabilities.reduce((sum, p) => sum + p, 0) / probabilities.length;
+
+  return {
+    pendingCount: pending.length,
+    // Sum of individual probabilities, not count * average — same value here, but this is
+    // the form that stays correct if probabilities are ever computed per-guest with
+    // meaningfully different inputs (which they already are).
+    expectedNoShows: Math.round(
+      probabilities.reduce((sum, p) => sum + p, 0),
+    ),
+    averageProbability,
   };
 };

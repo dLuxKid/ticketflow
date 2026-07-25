@@ -1,0 +1,21 @@
+No-show prediction - evaluation report
+=======================================
+Train/test split: 2250/750 (synthetic, seed=20260725)
+
+LIMITATION: trained on a synthetic, documented generative process (see module
+docstring in train.py) - no real attendance history exists pre-launch. Retrain on
+real post-launch data by replacing generate_synthetic_data() with a query over
+actual Booking/AuditLog history once enough events have run.
+
+Accuracy:  0.724
+Precision: 0.593
+Recall:    0.161
+F1:        0.253
+ROC-AUC:   0.736
+
+Confusion matrix (rows=actual, cols=predicted; order=[showed, no_show]):
+  [[508, 24], [183, 35]]
+
+Feature order: ['rsvp_lead_days', 'is_purchase', 'is_vip', 'plus_ones']
+Coefficients:  [0.2248, -0.6234, -0.2253, 0.2844]
+Intercept:     -1.0059

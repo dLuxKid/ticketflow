@@ -12,7 +12,14 @@ type Snapshot = {
   capacity: number;
   sold: number;
   admitted: number;
+  noShow: NoShowPrediction;
   recent: RecentScan[];
+};
+
+type NoShowPrediction = {
+  pendingCount: number;
+  expectedNoShows: number;
+  averageProbability: number;
 };
 
 type RecentScan = {
@@ -43,6 +50,7 @@ export default function LiveDashboard({ eventId }: { eventId: string }) {
   const [capacity, setCapacity] = useState(0);
   const [sold, setSold] = useState(0);
   const [admitted, setAdmitted] = useState(0);
+  const [noShow, setNoShow] = useState<NoShowPrediction | null>(null);
   const [feed, setFeed] = useState<RecentScan[]>([]);
   const feedRef = useRef<RecentScan[]>([]);
 
@@ -62,6 +70,7 @@ export default function LiveDashboard({ eventId }: { eventId: string }) {
       setCapacity(s.capacity);
       setSold(s.sold);
       setAdmitted(s.admitted);
+      setNoShow(s.noShow ?? null);
       feedRef.current = s.recent ?? [];
       setFeed(feedRef.current);
     });
@@ -111,7 +120,7 @@ export default function LiveDashboard({ eventId }: { eventId: string }) {
         <Stat label="Capacity" value={capacity} />
       </div>
 
-      <div className="mb-8">
+      <div className="mb-6">
         <div className="mb-1 flex justify-between text-sm text-gray-500">
           <span>Arrivals</span>
           <span>{pct}% of capacity</span>
@@ -123,6 +132,21 @@ export default function LiveDashboard({ eventId }: { eventId: string }) {
           />
         </div>
       </div>
+
+      {noShow && noShow.pendingCount > 0 && (
+        <div className="mb-8 rounded-lg border border-amber-100 bg-amber-50 p-4 text-sm">
+          <p className="font-medium text-amber-800">
+            ~{noShow.expectedNoShows} of the {noShow.pendingCount} remaining guest
+            {noShow.pendingCount === 1 ? "" : "s"} may not show up
+          </p>
+          <p className="mt-1 text-amber-700">
+            Average predicted no-show risk:{" "}
+            {Math.round(noShow.averageProbability * 100)}%. Estimate from a model
+            trained on synthetic data pre-launch — treat as a rough guide, not a
+            guarantee.
+          </p>
+        </div>
+      )}
 
       <h2 className="mb-3 text-lg font-semibold">Recent scans</h2>
       {feed.length === 0 ? (

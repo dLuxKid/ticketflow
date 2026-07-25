@@ -33,6 +33,16 @@ export const countByEventAndStatus = (eventId, status) =>
   Booking.countDocuments({ event: eventId, status });
 
 /**
+ * Bookings not yet admitted/rejected/revoked — the population a no-show prediction is
+ * meaningful for (there is no "will they show up" question once they already have).
+ */
+export const findPendingByEvent = (eventId) =>
+  Booking.find({
+    event: eventId,
+    status: { $in: ['issued', 'delivered', 'scanned'] },
+  }).select('_id source createdAt');
+
+/**
  * Resolves a scanned QR payload to its booking. The code may be an invite token (invited
  * guests) or a ticketId (purchased guests) — one lookup covers every guest type. Selects
  * the normally-hidden inviteToken and populates the event owner for authorization.
