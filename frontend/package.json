@@ -6,7 +6,8 @@
     "dev": "next dev --turbo",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
@@ -43,6 +44,7 @@
     "validator": "^13.15.35"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.0",
     "@types/file-saver": "^2.0.7",
     "@types/node": "^22",
     "@types/nodemailer": "^6.4.17",

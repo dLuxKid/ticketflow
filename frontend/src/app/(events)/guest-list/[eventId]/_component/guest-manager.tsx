@@ -57,15 +57,19 @@ export default function GuestManager({ eventId }: { eventId: string }) {
   const handleImport = () => {
     setError(null);
     setResult(null);
-    startTransition(async () => {
-      const res = await importGuests(eventId, { csv });
-      if (res?.status === "success") {
-        setResult(res.data as ImportResult);
-        setCsv("");
-        await loadGuests();
-      } else {
-        setError(res?.message ?? "Import failed. Check the format and try again.");
-      }
+    // startTransition's callback must be () => void — the async work runs in an inner
+    // IIFE rather than making the callback itself async (which would return a Promise).
+    startTransition(() => {
+      void (async () => {
+        const res = await importGuests(eventId, { csv });
+        if (res?.status === "success") {
+          setResult(res.data as ImportResult);
+          setCsv("");
+          await loadGuests();
+        } else {
+          setError(res?.message ?? "Import failed. Check the format and try again.");
+        }
+      })();
     });
   };
 
@@ -88,15 +92,17 @@ export default function GuestManager({ eventId }: { eventId: string }) {
   const handleAsk = () => {
     setQueryError(null);
     setAnswer(null);
-    startAsking(async () => {
-      const res = await queryGuests(eventId, question);
-      if (res?.status === "success") {
-        setAnswer(res.data as QueryAnswer);
-      } else {
-        setQueryError(
-          res?.message ?? "Couldn't understand that question. Try rephrasing it.",
-        );
-      }
+    startAsking(() => {
+      void (async () => {
+        const res = await queryGuests(eventId, question);
+        if (res?.status === "success") {
+          setAnswer(res.data as QueryAnswer);
+        } else {
+          setQueryError(
+            res?.message ?? "Couldn't understand that question. Try rephrasing it.",
+          );
+        }
+      })();
     });
   };
 
