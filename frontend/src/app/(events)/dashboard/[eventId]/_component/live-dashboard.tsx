@@ -101,11 +101,14 @@ export default function LiveDashboard({ eventId }: { eventId: string }) {
       <header className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Live arrivals</h1>
         <span
+          role="status"
+          aria-live="polite"
           className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm ${
-            connected ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+            connected ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
           }`}
         >
           <span
+            aria-hidden="true"
             className={`h-2 w-2 rounded-full ${
               connected ? "bg-green-500" : "bg-gray-400"
             }`}
@@ -121,11 +124,18 @@ export default function LiveDashboard({ eventId }: { eventId: string }) {
       </div>
 
       <div className="mb-6">
-        <div className="mb-1 flex justify-between text-sm text-gray-500">
-          <span>Arrivals</span>
+        <div className="mb-1 flex justify-between text-sm text-gray-600">
+          <span id="arrivals-label">Arrivals</span>
           <span>{pct}% of capacity</span>
         </div>
-        <div className="h-3 w-full overflow-hidden rounded-full bg-gray-200">
+        <div
+          role="progressbar"
+          aria-labelledby="arrivals-label"
+          aria-valuenow={pct}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          className="h-3 w-full overflow-hidden rounded-full bg-gray-200"
+        >
           <div
             className="h-full rounded-full bg-[#6528F7] transition-all"
             style={{ width: `${pct}%` }}
@@ -150,9 +160,9 @@ export default function LiveDashboard({ eventId }: { eventId: string }) {
 
       <h2 className="mb-3 text-lg font-semibold">Recent scans</h2>
       {feed.length === 0 ? (
-        <p className="text-sm text-gray-500">No scans yet.</p>
+        <p className="text-sm text-gray-600">No scans yet.</p>
       ) : (
-        <ul className="divide-y divide-gray-100">
+        <ul aria-live="polite" className="divide-y divide-gray-100">
           {feed.map((scan, i) => (
             <li
               key={`${scan.bookingId}-${i}`}
@@ -160,14 +170,17 @@ export default function LiveDashboard({ eventId }: { eventId: string }) {
             >
               <span
                 className={
-                  scan.outcome === "admitted" ? "text-green-600" : "text-red-600"
+                  scan.outcome === "admitted" ? "text-green-700" : "text-red-600"
                 }
               >
                 {scan.outcome === "admitted"
                   ? "Admitted"
                   : `Rejected — ${scan.reason ?? "unknown"}`}
               </span>
-              <time className="text-gray-400">
+              <time
+                dateTime={scan.at}
+                className="text-gray-600"
+              >
                 {new Date(scan.at).toLocaleTimeString()}
               </time>
             </li>
@@ -182,7 +195,7 @@ function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-lg border border-gray-100 p-4 text-center">
       <div className="text-3xl font-bold tabular-nums">{value}</div>
-      <div className="text-xs uppercase tracking-wide text-gray-500">{label}</div>
+      <div className="text-xs uppercase tracking-wide text-gray-600">{label}</div>
     </div>
   );
 }

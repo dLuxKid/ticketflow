@@ -43,4 +43,8 @@ router
 // checked in"). Same organiser/admin access rule as the guest list and dashboard.
 router.post('/:eventId/guests/query', nlQueryController.query);
 
+// GDPR: erase one guest's PII immediately, ahead of the scheduled retention sweep
+// (scripts/gdpr-retention-sweep.js). Same organiser/admin access rule.
+router.delete('/:eventId/guests/:guestId/erase', guestController.eraseGuest);
+
 export default router;

@@ -42,6 +42,22 @@ export const findPendingByEvent = (eventId) =>
     status: { $in: ['issued', 'delivered', 'scanned'] },
   }).select('_id source createdAt');
 
+/** Not-yet-PII-erased bookings belonging to any of the given (expired) events. */
+export const findUnerasedByEvents = (eventIds) =>
+  Booking.find({ event: { $in: eventIds }, piiErasedAt: null });
+
+/** Overwrites a booking's PII in place and marks it erased. Keeps analytics-relevant
+ * fields (price, status, ticketType, source) intact. */
+export const anonymize = (bookingId) =>
+  Booking.findByIdAndUpdate(bookingId, {
+    $set: {
+      name: 'Erased Guest',
+      email: `erased-${bookingId}@erased.invalid`,
+      ticketUser: 'Erased Guest',
+      piiErasedAt: new Date(),
+    },
+  });
+
 /**
  * Resolves a scanned QR payload to its booking. The code may be an invite token (invited
  * guests) or a ticketId (purchased guests) — one lookup covers every guest type. Selects

@@ -10,6 +10,15 @@ export const create = (data) => Event.create(data);
 
 export const findById = (id) => Event.findById(id);
 
+/**
+ * Events that ended on or before `cutoffDate` — the population eligible for GDPR
+ * retention. Inclusive (`$lte`, not `$lt`) to match retentionService.isPastRetentionWindow's
+ * `now >= cutoff` contract exactly — a mismatched boundary here would mean the sweep's
+ * real behavior silently diverged from its tested/documented one-day-early-or-late edge case.
+ */
+export const findEndedBefore = (cutoffDate) =>
+  Event.find({ endDate: { $lte: cutoffDate } }).select('_id');
+
 export const findByIdWithOrganizer = (id) =>
   Event.findById(id).populate({ path: 'user', select: 'name' });
 

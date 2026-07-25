@@ -25,6 +25,8 @@ export const API_URLS = {
     guests: (eventId: string) => `${baseUrl}/api/v1/events/${eventId}/guests`,
     guestsQuery: (eventId: string) =>
       `${baseUrl}/api/v1/events/${eventId}/guests/query`,
+    eraseGuest: (eventId: string, guestId: string) =>
+      `${baseUrl}/api/v1/events/${eventId}/guests/${guestId}/erase`,
   },
   bookings: {
     checkIn: (id: string) => `${baseUrl}/api/v1/bookings/check-in/${id}`,

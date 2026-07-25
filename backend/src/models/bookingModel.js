@@ -92,6 +92,13 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       select: false,
     },
+    // GDPR retention (Phase 6): set once name/email/ticketUser on this booking have been
+    // anonymized. Every booking carries PII regardless of source (a purchase booking has
+    // no linked Guest record at all), so this lives on Booking directly, mirroring
+    // Guest.erasedAt.
+    piiErasedAt: {
+      type: Date,
+    },
   },
   {
     toJSON: { virtuals: true },
@@ -107,6 +114,8 @@ bookingSchema.virtual('isCheckedIn').get(function () {
 });
 
 bookingSchema.index({ inviteToken: 1 }, { unique: true, sparse: true });
+// Retention sweep query pattern: bookings for a set of expired events not yet erased.
+bookingSchema.index({ event: 1, piiErasedAt: 1 });
 
 const Booking = mongoose.model('Booking', bookingSchema);
 

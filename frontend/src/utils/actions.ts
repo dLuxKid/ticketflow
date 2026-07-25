@@ -212,6 +212,24 @@ export const importGuests = async (
   }
 };
 
+export const eraseGuest = async (eventId: string, guestId: string) => {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("jwt")?.value;
+
+  try {
+    const res = await axios({
+      method: "DELETE",
+      url: API_URLS.events.eraseGuest(eventId, guestId),
+      headers: { Authorization: "Bearer " + token },
+    });
+    revalidatePath(`/guest-list/${eventId}`);
+    return res.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) return error.response?.data ?? error;
+    return error;
+  }
+};
+
 export const queryGuests = async (eventId: string, question: string) => {
   const cookieStore = await cookies();
   const token = cookieStore.get("jwt")?.value;

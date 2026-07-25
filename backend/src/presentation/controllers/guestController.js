@@ -1,4 +1,5 @@
 import * as guestService from '../../services/guestService.js';
+import * as retentionService from '../../services/retentionService.js';
 import { parseGuestCsv } from '../../shared/utils/parseGuestCsv.js';
 import catchAsync from '../../shared/middleware/catchAsync.js';
 
@@ -38,4 +39,17 @@ export const importGuests = catchAsync(async (req, res) => {
     message: `Imported ${result.added.length} guest(s)`,
     data: { ...result, invalidRows },
   });
+});
+
+/**
+ * GDPR erasure request: anonymizes one guest's name/email (and their linked booking's)
+ * immediately, ahead of the scheduled retention sweep. Organiser/admin only.
+ */
+export const eraseGuest = catchAsync(async (req, res) => {
+  await retentionService.requestErasure(
+    req.params.eventId,
+    req.params.guestId,
+    req.user,
+  );
+  res.status(200).json({ status: 'success', message: 'Guest data erased' });
 });
