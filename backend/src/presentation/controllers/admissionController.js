@@ -7,11 +7,15 @@ import catchAsync from '../../shared/middleware/catchAsync.js';
  */
 
 /**
- * Scans a ticket and admits the guest. Body: { code } — the scanned QR payload
- * (invite token or ticketId). Errors surface as 403/404/409 with a clear reason.
+ * Scans a ticket and admits the guest. Body: { code, deviceId? } — the scanned QR
+ * payload (invite token or ticketId) and an optional client-supplied device fingerprint.
+ * Errors surface as 403/404/409 with a clear reason.
  */
 export const scan = catchAsync(async (req, res) => {
-  const result = await admissionService.checkInByScan(req.body.code, req.user);
+  const result = await admissionService.checkInByScan(req.body.code, req.user, {
+    deviceId: req.body.deviceId,
+    ip: req.ip,
+  });
 
   res.status(200).json({
     status: 'success',

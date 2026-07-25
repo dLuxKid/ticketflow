@@ -63,10 +63,13 @@ const REJECTION_MESSAGE = {
  *
  * @param {string} code - scanned QR payload (inviteToken or ticketId)
  * @param {object} actor - req.user (the usher/organiser/admin scanning)
+ * @param {{deviceId?: string, ip?: string}} [context] - best-effort scanner fingerprint,
+ *   recorded on the audit row only as a Phase 5 anomaly-detection signal — never used for
+ *   authorization.
  * @returns {Promise<{outcome: 'admitted', booking: object}>}
  * @throws {AppError} 400/403/404/409 on invalid, unauthorized, unknown, or non-admittable
  */
-export const checkInByScan = async (code, actor) => {
+export const checkInByScan = async (code, actor, context = {}) => {
   if (!code) throw new AppError('No ticket code provided', 400);
 
   const booking = await bookingRepository.findByScanCode(code);
@@ -79,7 +82,7 @@ export const checkInByScan = async (code, actor) => {
   if (!auth.ok) {
     // A usher scanning a ticket for an event they don't work is a recorded security event.
     if (auth.auditable) {
-      await recordRejection(event._id, booking._id, actor._id, auth.reason);
+      await recordRejection(event._id, booking._id, actor._id, auth.reason, context);
     }
     throw new AppError(
       REJECTION_MESSAGE[auth.reason] ??
@@ -102,6 +105,8 @@ export const checkInByScan = async (code, actor) => {
             booking: booking._id,
             actor: actor._id,
             outcome: 'admitted',
+            deviceId: context.deviceId,
+            ip: context.ip,
           },
           session,
         );
@@ -125,18 +130,20 @@ export const checkInByScan = async (code, actor) => {
   // Not admittable: re-read the current status for an accurate reason, then reject.
   const current = await bookingRepository.findById(booking._id);
   const reason = rejectionReasonForStatus(current?.status);
-  await recordRejection(event._id, booking._id, actor._id, reason);
+  await recordRejection(event._id, booking._id, actor._id, reason, context);
   throw new AppError(REJECTION_MESSAGE[reason], 409);
 };
 
 /** Writes a rejection audit row and publishes the rejection event. */
-const recordRejection = async (eventId, bookingId, actorId, reason) => {
+const recordRejection = async (eventId, bookingId, actorId, reason, context = {}) => {
   await auditLogRepository.record({
     event: eventId,
     booking: bookingId,
     actor: actorId,
     outcome: 'rejected',
     reason,
+    deviceId: context.deviceId,
+    ip: context.ip,
   });
   emitRejected({
     eventId: String(eventId),

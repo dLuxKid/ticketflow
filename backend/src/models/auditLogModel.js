@@ -33,6 +33,15 @@ const auditLogSchema = new mongoose.Schema(
     reason: {
       type: String,
     },
+    // Best-effort fingerprint of the scanning device, used only as an anomaly-detection
+    // signal (Phase 5) — never for authorization. Optional: older rows and non-web
+    // scanners may not have one.
+    deviceId: {
+      type: String,
+    },
+    ip: {
+      type: String,
+    },
   },
   { timestamps: true },
 );

@@ -28,6 +28,7 @@ router.patch('/update/:eventId', eventController.updateEvent);
 // against the event in dashboardService, so no one can watch another organiser's event.
 router.get('/:eventId/dashboard', dashboardController.getSnapshot);
 router.get('/:eventId/stream', dashboardController.streamEvent);
+router.get('/:eventId/anomalies', dashboardController.getAnomalies);
 
 // ─── Guest list (organiser / admin) ─────────────────────────────────────────────
 // Manage the guest list of an invite_only / hybrid event. Ownership + access-mode are

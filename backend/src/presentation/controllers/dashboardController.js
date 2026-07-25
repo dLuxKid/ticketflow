@@ -1,4 +1,5 @@
 import * as dashboardService from '../../services/dashboardService.js';
+import * as anomalyReportService from '../../services/anomalyReportService.js';
 import catchAsync from '../../shared/middleware/catchAsync.js';
 import {
   admissionBus,
@@ -20,6 +21,15 @@ export const getSnapshot = catchAsync(async (req, res) => {
   await dashboardService.getEventForViewer(req.params.eventId, req.user);
   const snapshot = await dashboardService.getSnapshot(req.params.eventId);
   res.status(200).json({ status: 'success', data: snapshot });
+});
+
+/** Tickets flagged by the anomaly detector (Phase 5) for this event. */
+export const getAnomalies = catchAsync(async (req, res) => {
+  const flagged = await anomalyReportService.getAnomaliesForEvent(
+    req.params.eventId,
+    req.user,
+  );
+  res.status(200).json({ status: 'success', data: { flagged } });
 });
 
 /**
