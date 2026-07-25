@@ -42,5 +42,7 @@ export const findByUser = (userId) =>
  */
 export const findByEvent = (eventId) =>
   new APIFeatures(Booking.find({ event: eventId }), {
-    fields: 'name email ticketType ticketId price isCheckedIn',
+    // Select `status` (not the old stored boolean); the `isCheckedIn` virtual is derived
+    // from it and included in the JSON response via toJSON virtuals.
+    fields: 'name email ticketType ticketId price status',
   }).limitFields().query;

@@ -124,5 +124,9 @@ export const checkInAttendee = async (ticketId, isCheckedIn, user) => {
     );
   }
 
-  return bookingRepository.updateById(ticketId, { $set: { isCheckedIn } });
+  // Bridge the legacy boolean API onto the new state machine: checking in an attendee
+  // moves the booking to `admitted`; un-checking returns it to `issued`. Phase 2 adds
+  // the full atomic scan endpoint; this keeps the existing check-in contract working.
+  const status = isCheckedIn ? 'admitted' : 'issued';
+  return bookingRepository.updateById(ticketId, { $set: { status } });
 };

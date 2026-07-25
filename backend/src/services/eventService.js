@@ -6,8 +6,24 @@ import AppError from '../shared/errors/AppError.js';
  * Framework-agnostic: no req/res/next.
  */
 
-export const createEvent = (eventData, userId) =>
-  eventRepository.create({ ...eventData, user: userId });
+/**
+ * An invite_only event admits guests purely from the organiser's guest list, so it must
+ * not carry purchasable ticket tiers. Enforced here (application layer) rather than as a
+ * schema conditional-required, which is brittle across sibling paths in Mongoose.
+ */
+const assertTiersMatchAccessMode = (accessMode, ticketDetails) => {
+  if (accessMode === 'invite_only' && ticketDetails?.length) {
+    throw new AppError(
+      'An invite-only event cannot have ticket tiers',
+      400,
+    );
+  }
+};
+
+export const createEvent = (eventData, userId) => {
+  assertTiersMatchAccessMode(eventData.accessMode, eventData.ticketDetails);
+  return eventRepository.create({ ...eventData, user: userId });
+};
 
 export const getAllEvents = (queryParams) =>
   eventRepository.findActiveWithFeatures(queryParams);
@@ -38,6 +54,11 @@ export const updateEvent = async (eventId, data, user) => {
   if (user.role !== 'admin' && !isOwner) {
     throw new AppError('You do not have permission to update this event', 403);
   }
+
+  // Validate against the effective post-update state (new value if provided, else current).
+  const effectiveAccessMode = data.accessMode ?? event.accessMode;
+  const effectiveTiers = data.ticketDetails ?? event.ticketDetails;
+  assertTiersMatchAccessMode(effectiveAccessMode, effectiveTiers);
 
   return eventRepository.updateById(eventId, data);
 };

@@ -59,9 +59,27 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Booking must have a ticket type.'],
     },
-    isCheckedIn: {
-      type: Boolean,
-      default: false,
+    // How this admission came to exist: a paid purchase or an organiser invite.
+    // Reporting-only — it never changes how admission is granted (see EntryPoint merge).
+    source: {
+      type: String,
+      enum: ['purchase', 'invite'],
+      required: true,
+      default: 'purchase',
+    },
+    // Admission lifecycle. Replaces the old boolean `isCheckedIn` with a state machine
+    // so we can distinguish delivered/scanned/rejected/revoked, not just in/out.
+    status: {
+      type: String,
+      enum: ['issued', 'delivered', 'scanned', 'admitted', 'rejected', 'revoked'],
+      default: 'issued',
+    },
+    // Signed, single-use token scanned at the door. `select: false` so it is never
+    // returned by default queries. Unique+sparse index below (purchase bookings may
+    // not carry one yet).
+    inviteToken: {
+      type: String,
+      select: false,
     },
   },
   {
@@ -70,6 +88,14 @@ const bookingSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+
+// Backwards-compatible boolean the frontend/attendee list still reads. Derived from the
+// state machine rather than stored, so there is a single source of truth for check-in.
+bookingSchema.virtual('isCheckedIn').get(function () {
+  return this.status === 'admitted';
+});
+
+bookingSchema.index({ inviteToken: 1 }, { unique: true, sparse: true });
 
 const Booking = mongoose.model('Booking', bookingSchema);
 

@@ -103,6 +103,16 @@ const eventSchema = new mongoose.Schema(
       },
     },
     ticketDetails: [ticketSchema],
+    // How guests get in:
+    //   public      — ticket tiers required, checkout open, listed in public discovery
+    //   invite_only — no tiers, checkout disabled, hidden from discovery, guest-list only
+    //   hybrid      — ticket tiers AND a guest list both active
+    // See the EntryPoint merge design note: one access mode, not two event types.
+    accessMode: {
+      type: String,
+      enum: ['public', 'invite_only', 'hybrid'],
+      default: 'public',
+    },
     totalQuantity: {
       type: Number,
       default: 0,

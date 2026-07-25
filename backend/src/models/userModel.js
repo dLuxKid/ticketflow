@@ -32,9 +32,15 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['user', 'creator', 'admin'],
+      enum: ['user', 'creator', 'admin', 'usher'],
       default: 'user',
       select: false,
+    },
+    // Events an usher is authorised to scan/admit for. Only meaningful when role === 'usher';
+    // door check-in is scoped to these events (enforced in Phase 2).
+    assignedEvents: {
+      type: [{ type: mongoose.Schema.ObjectId, ref: 'Event' }],
+      default: undefined,
     },
     password: {
       type: String,
