@@ -1,0 +1,90 @@
+name: CI
+
+# Runs on every push and PR. Two independent jobs: backend tests against a real
+# single-node MongoDB replica set (transactions — used by the atomic booking/check-in
+# paths — require one, a standalone mongod throws), and frontend typecheck/lint.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: backend
+        run: npm ci
+
+      # A plain `services:` Mongo container can't be started with --replSet (no custom
+      # command support there), so start it directly with docker run and initiate the
+      # replica set ourselves — the same requirement documented in
+      # IMPLEMENTATION_PROMPT.md's Phase 0 note.
+      - name: Start MongoDB as a single-node replica set
+        run: |
+          docker run -d --name mongo -p 27017:27017 mongo:7 --replSet rs0
+          for i in $(seq 1 30); do
+            docker exec mongo mongosh --quiet --eval "db.runCommand({ ping: 1 })" && break
+            echo "waiting for mongod..."; sleep 2
+          done
+          docker exec mongo mongosh --quiet --eval "rs.initiate()"
+          for i in $(seq 1 30); do
+            STATE=$(docker exec mongo mongosh --quiet --eval "rs.status().myState" 2>/dev/null || echo "")
+            [ "$STATE" = "1" ] && echo "replica set is PRIMARY" && break
+            echo "waiting for PRIMARY..."; sleep 2
+          done
+
+      - name: Run tests (sequential — see note below)
+        working-directory: backend
+        env:
+          MONGO_TEST_URI: mongodb://127.0.0.1:27017/ticketflow_ci?replicaSet=rs0
+          JWT_SECRET: ci-test-secret-do-not-use-in-production
+          JWT_EXPIRES_IN: 7d
+        # --test-concurrency=1: Node's test runner executes files concurrently by default.
+        # Under the free-tier Atlas cluster used for local development we measured real
+        # connection/replication contention from that concurrency (documented in the
+        # session history) — forcing sequential execution gave a reliable signal. A local
+        # single-node replica set is less contended than shared Atlas, but there's no
+        # reason to reintroduce the flakiness risk in CI for a marginal speed gain.
+        run: node --test --test-concurrency=1 "tests/**/*.test.js"
+
+      - name: Stop MongoDB
+        if: always()
+        run: docker rm -f mongo
+
+  frontend:
+    name: Frontend typecheck & lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: frontend
+        run: npx tsc --noEmit
+
+      - name: Lint
+        working-directory: frontend
+        run: npm run lint
