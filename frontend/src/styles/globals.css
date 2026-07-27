@@ -3,21 +3,25 @@
 @import "tailwindcss";
 
 @theme {
+  /* "Soft cotton" palette — cool, airy, low-glare. Softened from the original electric
+     scheme: the vivid purple becomes a calm cool indigo, near-black becomes a cool slate
+     (easier on the eyes, still AA-contrast), and the neutrals pick up a faint lavender-blue
+     so whites read as soft rather than clinical. Button text keeps ≥4.8:1 on the indigo. */
   --color-main-white: #fff;
-  --color-main-purple: #6528F7;
-  --color-main-black: #141619;
-  --color-main-light-grey: #d9d9d9;
-  --color-main-grey-bg: #F8F9FA;
-  --color-main-error-red: #EF1616;
+  --color-main-purple: #6c5ce7; /* soft cool indigo (was electric #6528F7) */
+  --color-main-black: #2e3244; /* cool slate for text (was harsh #141619) */
+  --color-main-light-grey: #e4e6f1; /* cool light grey w/ lavender hint (was #d9d9d9) */
+  --color-main-grey-bg: #f5f6fb; /* airy cool off-white (was #F8F9FA) */
+  --color-main-error-red: #e8556b; /* softened rose-red (was #EF1616) */
 
-  --color-sec-black: #1b1b1b;
-  --color-sec-grey: #fdfeff;
+  --color-sec-black: #3a3f52; /* soft slate for secondary text (was #1b1b1b) */
+  --color-sec-grey: #fbfcff; /* near-white cool input surface (was #fdfeff) */
 
   --breakpoint-nav: 900px;
   --breakpoint-mobile: 480px;
 
-  --radius-big: 0.625rem;
-  --radius-sm: 0.3125rem;
+  --radius-big: 0.875rem; /* plusher corners (was 0.625rem) */
+  --radius-sm: 0.5rem; /* softer small radius (was 0.3125rem) */
 }
 
 @layer base {
@@ -82,7 +86,7 @@ button:active {
 }
 
 button:disabled {
-  background-color: rgba(101, 40, 247, 0.3) !important;
+  background-color: rgba(108, 92, 231, 0.35) !important;
   color: #fff;
   font-size: 600;
   cursor: not-allowed;
@@ -91,7 +95,7 @@ button:disabled {
 }
 
 button:disabled:hover {
-  background-color: rgba(101, 40, 247, 0.3) !important;
+  background-color: rgba(108, 92, 231, 0.35) !important;
   color: #fff;
   outline: 0;
   border: 0;
@@ -103,14 +107,21 @@ section {
 
 main {
   @apply min-h-[100svh] w-full overflow-x-hidden relative;
-  /* A soft brand-purple glow at the top fading into the neutral grey — gives every page a
-     subtle sense of depth instead of flat white, without competing with content. */
+  /* Two overlapping, very soft cool washes — indigo up top, a faint sky-blue off to one
+     side — melting into the airy neutral. Diffuse and low-opacity so pages feel soft and
+     cool ("cotton") with gentle depth, never busy. */
   background-color: var(--color-main-grey-bg);
-  background-image: radial-gradient(
-    55rem 26rem at 50% -8%,
-    rgba(101, 40, 247, 0.07),
-    transparent 60%
-  );
+  background-image:
+    radial-gradient(
+      55rem 26rem at 50% -8%,
+      rgba(108, 92, 231, 0.06),
+      transparent 60%
+    ),
+    radial-gradient(
+      40rem 30rem at 100% 0%,
+      rgba(96, 165, 250, 0.05),
+      transparent 55%
+    );
   background-repeat: no-repeat;
   background-attachment: fixed;
 }
