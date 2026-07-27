@@ -35,8 +35,10 @@ export const API_URLS = {
   },
   bookings: {
     checkIn: (id: string) => `${baseUrl}/api/v1/bookings/check-in/${id}`,
-    eventBookings: (eventId: string) => `${baseUrl}/api/v1/bookings/event/${eventId}`,
+    eventBookings: (eventId: string) =>
+      `${baseUrl}/api/v1/bookings/event/${eventId}`,
     myTickets: `${baseUrl}/api/v1/bookings/my-tickets`,
     scan: `${baseUrl}/api/v1/bookings/scan`,
+    createBookings: `${baseUrl}/api/v1/bookings/create`,
   },
 };

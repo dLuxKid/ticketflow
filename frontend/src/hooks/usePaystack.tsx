@@ -9,7 +9,7 @@ import { usePaystackPayment } from "react-paystack";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
 
-import { baseUrl } from "@/utils/urls";
+import { API_URLS, baseUrl } from "@/utils/urls";
 import { getCookie } from "cookies-next";
 
 interface Props {
@@ -29,6 +29,7 @@ export const usePaystack = (props: Props) => {
   const config = {
     reference: new Date().getTime().toString(),
     email: props.email,
+
     amount: props.totalPrice * 100,
     publicKey: "pk_test_6ace9b13128336053a51ecb02a7554544fac14d9",
     metadata: {
@@ -50,7 +51,7 @@ export const usePaystack = (props: Props) => {
   const onSuccess = (reference: any) => {
     setLoading(true);
 
-    const url = `${baseUrl}/api/v1/bookings/create-booking`;
+    const url = API_URLS.bookings.createBookings;
 
     const ticketBuyers: any = [];
 
@@ -94,7 +95,7 @@ export const usePaystack = (props: Props) => {
                 ticketType,
               },
             ]);
-          }
+          },
         );
         setSuccess(true);
         toast.success("Registered all user(s) for the event");
@@ -105,7 +106,7 @@ export const usePaystack = (props: Props) => {
         toast.error(
           error.response
             ? error.response.data.message
-            : `Error registering your booking(s)`
+            : `Error registering your booking(s)`,
         );
       })
       .finally(() => {
@@ -121,8 +122,12 @@ export const usePaystack = (props: Props) => {
     return (
       <Button
         onClick={() => {
+          // if (props.totalPrice === 0)
+          //   onSuccess(new Date().getTime().toString());
+          // else {
           // @ts-ignore
           initializePayment(onSuccess, onClose);
+          // }
         }}
       >
         Continue
