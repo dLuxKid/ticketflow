@@ -29,7 +29,6 @@ export const usePaystack = (props: Props) => {
   const config = {
     reference: new Date().getTime().toString(),
     email: props.email,
-
     amount: props.totalPrice * 100,
     publicKey: "pk_test_6ace9b13128336053a51ecb02a7554544fac14d9",
     metadata: {
@@ -51,6 +50,12 @@ export const usePaystack = (props: Props) => {
   const onSuccess = (reference: any) => {
     setLoading(true);
 
+    const transactionStatus = reference.status;
+    const transactionNumber = reference.trans;
+
+    delete reference.status;
+    delete reference.trans;
+
     const url = API_URLS.bookings.createBookings;
 
     const ticketBuyers: any = [];
@@ -65,6 +70,9 @@ export const usePaystack = (props: Props) => {
           event: props.event,
           ticketType: ticket.name,
           currency: props.currency,
+          ticketUser: "Guest",
+          transactionNumber,
+          transactionStatus,
           ...reference,
         };
 
@@ -122,12 +130,17 @@ export const usePaystack = (props: Props) => {
     return (
       <Button
         onClick={() => {
-          // if (props.totalPrice === 0)
-          //   onSuccess(new Date().getTime().toString());
-          // else {
-          // @ts-ignore
-          initializePayment(onSuccess, onClose);
-          // }
+          if (props.totalPrice === 0)
+            onSuccess({
+              reference: new Date().getTime().toString(),
+              trans: Number(new Date().getTime().toString()),
+              status: "success",
+              message: "success",
+            });
+          else {
+            // @ts-ignore
+            initializePayment(onSuccess, onClose);
+          }
         }}
       >
         Continue
