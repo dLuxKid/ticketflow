@@ -3,6 +3,8 @@
 import { useEffect, useState, useTransition } from "react";
 
 import { getUshers, assignUsher, unassignUsher } from "@/utils/actions";
+import PageHeader from "@/components/ui/page-header";
+import { eventTabs } from "@/utils/event-tabs";
 
 /**
  * Door-staff (usher) management. Assigning someone here is what actually grants them
@@ -71,14 +73,12 @@ export default function TeamManager({ eventId }: { eventId: string }) {
 
   return (
     <section className="flex-center flex-col w-full max-w-screen-md mx-auto gap-6 py-10 px-4">
-      <div className="w-full">
-        <h1 className="text-main-purple title-text">Door staff</h1>
-        <p className="body-text text-main-black/70 mt-1">
-          Add anyone with a TicketFlow account by email — they&apos;ll be able to scan and
-          admit guests for this event only, without access to edit it or see your other
-          events.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="EntryPoint"
+        title="Door staff"
+        subtitle="Add anyone with a TicketFlow account by email — they can scan and admit guests for this event only, without access to edit it or see your other events."
+        tabs={eventTabs(eventId, "team")}
+      />
 
       <div className="w-full rounded-big bg-main-white shadow shadow-black/10 p-4 sm:p-6">
         <form onSubmit={handleAssign} className="flex gap-3">

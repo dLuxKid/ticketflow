@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { scanTicket } from "@/utils/actions";
+import PageHeader from "@/components/ui/page-header";
+import { eventTabs } from "@/utils/event-tabs";
 
 /**
  * Door scanner — the usher-facing UI for Phase 2's atomic scan-and-admit endpoint.
@@ -132,12 +134,12 @@ export default function Scanner({ eventId }: { eventId: string }) {
 
   return (
     <section className="flex-center flex-col w-full max-w-screen-sm mx-auto gap-6 py-10 px-4">
-      <div className="w-full">
-        <h1 className="text-main-purple title-text">Scan tickets</h1>
-        <p className="body-text text-main-black/70 mt-1">
-          Point the camera at a guest&apos;s QR code, or type their code below.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="EntryPoint"
+        title="Scan tickets"
+        subtitle="Point the camera at a guest's QR code, or type their code below."
+        tabs={eventTabs(eventId, "scan")}
+      />
 
       {cameraSupported ? (
         <div className="relative w-full aspect-square max-w-sm rounded-big overflow-hidden bg-main-black">

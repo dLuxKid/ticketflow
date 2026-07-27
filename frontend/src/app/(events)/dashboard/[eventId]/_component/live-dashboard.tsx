@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 
 import { getAnomalies } from "@/utils/actions";
+import PageHeader from "@/components/ui/page-header";
+import { eventTabs } from "@/utils/event-tabs";
 
 /**
  * Live arrivals dashboard. Subscribes to the same-origin SSE proxy and updates in place as
@@ -125,22 +127,27 @@ export default function LiveDashboard({ eventId }: { eventId: string }) {
 
   return (
     <section className="flex-center flex-col w-full max-w-screen-md mx-auto gap-6 py-10 px-4">
-      <header className="w-full flex-between">
-        <h1 className="text-main-purple title-text">Live arrivals</h1>
-        <span
-          role="status"
-          aria-live="polite"
-          className={`flex-center gap-2 rounded-big px-3 py-1 text-sm font-medium ${
-            connected ? "bg-green-100 text-green-700" : "bg-main-grey-bg text-main-black/60"
-          }`}
-        >
+      <PageHeader
+        eyebrow="EntryPoint"
+        title="Live arrivals"
+        subtitle="Watch guests arrive in real time as they're scanned at the door."
+        tabs={eventTabs(eventId, "dashboard")}
+        right={
           <span
-            aria-hidden="true"
-            className={`h-2 w-2 rounded-full ${connected ? "bg-green-500" : "bg-main-light-grey"}`}
-          />
-          {connected ? "Live" : "Reconnecting…"}
-        </span>
-      </header>
+            role="status"
+            aria-live="polite"
+            className={`flex-center gap-2 rounded-big px-3 py-1.5 text-sm font-medium ${
+              connected ? "bg-main-white text-green-700" : "bg-main-white/20 text-main-white"
+            }`}
+          >
+            <span
+              aria-hidden="true"
+              className={`h-2 w-2 rounded-full ${connected ? "bg-green-500 animate-pulse" : "bg-main-white/60"}`}
+            />
+            {connected ? "Live" : "Reconnecting…"}
+          </span>
+        }
+      />
 
       <div className="w-full grid grid-cols-3 gap-4">
         <Stat label="Admitted" value={admitted} />

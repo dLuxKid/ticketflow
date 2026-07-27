@@ -3,6 +3,8 @@
 import { useEffect, useState, useTransition } from "react";
 
 import { getEventGuests, importGuests, queryGuests, eraseGuest } from "@/utils/actions";
+import PageHeader from "@/components/ui/page-header";
+import { eventTabs } from "@/utils/event-tabs";
 
 /**
  * Guest-list manager for an invite_only / hybrid event. Two ways in: a one-guest-at-a-time
@@ -199,13 +201,12 @@ export default function GuestManager({ eventId }: { eventId: string }) {
 
   return (
     <section className="flex-center flex-col w-full max-w-screen-md mx-auto gap-6 py-10 px-4">
-      <div className="w-full">
-        <h1 className="text-main-purple title-text">Guest list</h1>
-        <p className="body-text text-main-black/70 mt-1">
-          Add guests one at a time, or import a whole list at once. Each new guest is
-          emailed a single-use QR invite.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="EntryPoint"
+        title="Guest list"
+        subtitle="Add guests one at a time, or import a whole list at once. Each new guest is emailed a single-use QR invite."
+        tabs={eventTabs(eventId, "guests")}
+      />
 
       <div className="w-full rounded-big bg-main-white shadow shadow-black/10 p-4 sm:p-6">
         <h2 className="sub-title-text text-main-black mb-4">Add a guest</h2>
