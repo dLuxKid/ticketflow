@@ -53,7 +53,28 @@ const isTicketInfoFilled = (ticketInfoArray: ticketType[]): boolean => {
 };
 
 export default function EditEventForm({ event }: { event: eventData }) {
-  const [eventData, setEventData] = useState<eventData>(event);
+  // Events from the DB can be missing nested objects (an invite-only event has no
+  // ticketDetails; older events predate accessMode; some events have no socialMediaLinks).
+  // Merge safe defaults so the form never dereferences an undefined nested field and 500s.
+  const [eventData, setEventData] = useState<eventData>({
+    ...event,
+    accessMode: event.accessMode ?? "public",
+    ticketDetails: event.ticketDetails ?? [],
+    socialMediaLinks: event.socialMediaLinks ?? {
+      twitter: "",
+      instagram: "",
+      youtube: "",
+      facebook: "",
+      others: "",
+    },
+    eventLocation: event.eventLocation ?? {
+      address: "",
+      city: "",
+      postalCode: "",
+      state: "",
+      country: "",
+    },
+  });
 
   const { data: countryOptions } = useQuery<CountryOptions[]>({
     queryKey: ["country"],
@@ -95,10 +116,13 @@ export default function EditEventForm({ event }: { event: eventData }) {
   const [loading, setLoading] = useState<boolean>(false);
 
   const [numberOfTickets, setNumberOfTickets] = useState<number>(
-    eventData.ticketDetails.length || 1
+    // Invite-only events have no ticket tiers — start with 0 rows so the ticket section
+    // renders nothing and never dereferences an empty ticketInfo array.
+    eventData.ticketDetails.length ||
+      (eventData.accessMode === "invite_only" ? 0 : 1)
   );
   const [ticketInfo, setTicketInfo] = useState<ticketType[]>(
-    eventData.ticketDetails
+    eventData.ticketDetails ?? []
   );
 
   const handleTicketInfo = (
@@ -727,6 +751,8 @@ export default function EditEventForm({ event }: { event: eventData }) {
           </div>
         </div>
 
+        {!isInviteOnly && (
+          <>
         <div className="flex-between">
           <h3 className="text-main-purple sub-title-text capitalize mt-4">
             Add Tickets
@@ -737,7 +763,11 @@ export default function EditEventForm({ event }: { event: eventData }) {
         </div>
 
         <div className="flex gap-4 items-stretch justify-center flex-col">
-          {Array.from({ length: numberOfTickets }).map((_, i) => (
+          {Array.from({ length: numberOfTickets }).map((_, i) => {
+            // Guard: if the row count ever exceeds the ticketInfo array (e.g. an event
+            // with no tiers), skip rather than dereference undefined and crash the page.
+            if (!ticketInfo[i]) return null;
+            return (
             <div className="flex flex-col gap-4 md:gap-6" key={i}>
               <div>
                 <div className="w-full flex items-center justify-between gap-4 mb-1">
@@ -830,7 +860,8 @@ export default function EditEventForm({ event }: { event: eventData }) {
                 </label>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         <hr className="h-0.5 rounded-sm w-full bg-transparent" />
@@ -1010,6 +1041,8 @@ export default function EditEventForm({ event }: { event: eventData }) {
             </label>
           </div>
         </div>
+          </>
+        )}
 
         <h3 className="text-main-purple sub-title-text capitalize mt-4">
           Image Upload

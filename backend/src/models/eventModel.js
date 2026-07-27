@@ -1,6 +1,12 @@
 import mongoose from 'mongoose';
 import slugify from 'slugify';
 
+// True when the event sells tickets (public/hybrid) — used to make sales-date fields
+// required only for those, since an invite_only event has no ticket sales at all.
+function requiredForTicketedEvent() {
+  return this.accessMode !== 'invite_only';
+}
+
 const ticketSchema = new mongoose.Schema({
   ticketName: {
     type: String,
@@ -123,21 +129,24 @@ const eventSchema = new mongoose.Schema(
     },
     refundPolicy: { type: String, default: 'No refunds' },
     additionalComments: { type: String },
+    // Sales dates only apply to events that actually sell tickets. An invite_only event
+    // has no tickets and no checkout, so these are required only when the event is not
+    // invite_only (public/hybrid). Required-as-a-function evaluates per-document at save.
     salesStartDate: {
       type: Date,
-      required: [true, 'Event must have a sales start date'],
+      required: [requiredForTicketedEvent, 'Event must have a sales start date'],
     },
     salesEndDate: {
       type: Date,
-      required: [true, 'Event must have a sales end date'],
+      required: [requiredForTicketedEvent, 'Event must have a sales end date'],
     },
     salesStartTime: {
       type: Date,
-      required: [true, 'Event must have a sales start time'],
+      required: [requiredForTicketedEvent, 'Event must have a sales start time'],
     },
     salesEndTime: {
       type: Date,
-      required: [true, 'Event must have a sales end time'],
+      required: [requiredForTicketedEvent, 'Event must have a sales end time'],
     },
     coverImage: {
       type: String,
