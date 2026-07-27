@@ -1,4 +1,4 @@
-import { baseUrl } from "@/utils/urls";
+import { API_URLS } from "@/utils/urls";
 import { getCookie } from "cookies-next";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
@@ -9,8 +9,8 @@ export const useMyEvents = (query?: string | null) => {
   return useQuery({
     queryKey: ["events", query],
     queryFn: async () => {
-      let url = `${baseUrl}/api/v1/events/my-events`;
-      if (query) url = `${baseUrl}/api/v1/events/my-events?eventName=${query}`;
+      let url = API_URLS.events.myEvents;
+      if (query) url = `${API_URLS.events.myEvents}?eventName=${query}`;
 
       const res = await axios.get(url, {
         headers: {
