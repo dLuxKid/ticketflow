@@ -7,9 +7,16 @@ import { usePathname } from "next/navigation";
 import { nav_items } from "@/assets/data/nav-items";
 import avatar from "@/assets/images/default-avatar.png";
 
-import Button from "../ui/cta-btn";
-
 import { deleteToken } from "@/utils/cookies";
+
+// Sleek nav-link styling: medium-weight, tight tracking, with an animated underline that
+// wipes in from the left on hover and stays on the active route.
+const navLink = (active: boolean) =>
+  `relative text-[15px] font-medium tracking-tight transition-colors after:absolute after:-bottom-1.5 after:left-0 after:h-[2px] after:w-full after:origin-left after:bg-main-purple after:transition-transform after:duration-300 hover:text-main-purple ${
+    active
+      ? "text-main-purple after:scale-x-100"
+      : "text-sec-black after:scale-x-0 hover:after:scale-x-100"
+  }`;
 
 type UserData = {
   photo?: string;
@@ -32,26 +39,17 @@ export default function DeskopNav({ data }: NavProps) {
 
   return (
     <div className="hidden nav:block">
-      <ul className="flex-center space-x-10">
+      <ul className="flex-center gap-9">
         <li>
-          <Link
-            href={"/"}
-            className={`nav-text hover:text-main-purple ${
-              pathname === "/" ? "text-main-purple" : "text-sec-black"
-            }`}
-          >
+          <Link href={"/"} className={navLink(pathname === "/")}>
             Home
           </Link>
         </li>
         {nav_items.map((item, idx) => (
-          <li key={idx} className="flex items-center gap-3 group">
+          <li key={idx} className="flex items-center gap-2 group">
             <Link
               href={item.href}
-              className={`nav-text group-hover:text-main-purple ${
-                pathname.includes(item.href)
-                  ? "text-main-purple"
-                  : "text-sec-black"
-              }`}
+              className={navLink(pathname.includes(item.href))}
             >
               {item.name}
             </Link>
@@ -75,7 +73,7 @@ export default function DeskopNav({ data }: NavProps) {
                   </svg>
                 </span>
                 <div className="hidden group-hover:block absolute -translate-x-10 pt-6 z-50">
-                  <div className="bg-main-white p-3 rounded-sm border-[.5px] border-[#6528F74D] w-32">
+                  <div className="bg-main-white p-3 rounded-big border border-main-light-grey/60 shadow-lg shadow-black/5 w-36">
                     <ul className="flex flex-col items-start justify-start gap-3">
                       {item.sublinks.map(({ name, href }, i) => (
                         <li key={i}>
@@ -121,7 +119,7 @@ export default function DeskopNav({ data }: NavProps) {
                   </svg>
                 </span>
                 <div className="hidden group-hover:block absolute -translate-x-20 pt-6 z-50">
-                  <div className="bg-main-white p-3 rounded-sm border-[.5px] border-[#6528F74D] w-32">
+                  <div className="bg-main-white p-3 rounded-big border border-main-light-grey/60 shadow-lg shadow-black/5 w-36">
                     <ul className="flex flex-col items-start justify-start gap-3">
                       <li>
                         <Link
@@ -147,8 +145,11 @@ export default function DeskopNav({ data }: NavProps) {
               </div>
             </div>
           ) : (
-            <Link href={"/login"}>
-              <Button title="get started">Get Started</Button>
+            <Link
+              href={"/login"}
+              className="inline-flex items-center rounded-full bg-main-purple px-5 py-2 text-sm font-semibold text-main-white shadow-sm shadow-main-purple/30 transition-all hover:bg-main-purple/90 hover:shadow-md hover:shadow-main-purple/30"
+            >
+              Get Started
             </Link>
           )}
         </li>
