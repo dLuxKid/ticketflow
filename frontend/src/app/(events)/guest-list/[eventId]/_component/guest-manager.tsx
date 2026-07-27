@@ -126,6 +126,60 @@ export default function GuestManager({ eventId }: { eventId: string }) {
     }
   };
 
+  const handleFile = async (file: File) => {
+    setError(null);
+    setResult(null);
+    try {
+      // Dynamically import SheetJS so it stays out of the initial page bundle — it only
+      // loads when someone actually picks a spreadsheet.
+      const XLSX = await import("xlsx");
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: "array" });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
+        defval: "",
+      });
+
+      // Map columns case-insensitively so "Name"/"name"/"EMAIL" all work.
+      const pick = (row: Record<string, unknown>, keys: string[]) => {
+        const found = Object.keys(row).find((k) =>
+          keys.includes(k.trim().toLowerCase()),
+        );
+        return found ? String(row[found]).trim() : "";
+      };
+
+      const guests = rows
+        .map((row) => ({
+          name: pick(row, ["name", "full name", "guest"]),
+          email: pick(row, ["email", "e-mail", "email address"]),
+          vip: /^(true|yes|1|vip)$/i.test(pick(row, ["vip"])),
+          plusOnes: Number.parseInt(pick(row, ["plusones", "plus ones", "+1s"]), 10) || 0,
+        }))
+        .filter((g) => g.name && g.email);
+
+      if (guests.length === 0) {
+        setError(
+          "No valid rows found. The sheet needs Name and Email columns (a header row).",
+        );
+        return;
+      }
+
+      startTransition(() => {
+        void (async () => {
+          const res = await importGuests(eventId, { guests });
+          if (res?.status === "success") {
+            setResult(res.data as ImportResult);
+            await loadGuests();
+          } else {
+            setError(res?.message ?? "Import failed. Check the file and try again.");
+          }
+        })();
+      });
+    } catch {
+      setError("Couldn't read that file. Use a .xlsx, .xls or .csv spreadsheet.");
+    }
+  };
+
   const handleAsk = () => {
     setQueryError(null);
     setAnswer(null);
@@ -229,10 +283,37 @@ export default function GuestManager({ eventId }: { eventId: string }) {
       </div>
 
       <div className="w-full rounded-big bg-main-white shadow shadow-black/10 p-4 sm:p-6">
-        <h2 className="sub-title-text text-main-black mb-1">Bulk import (CSV)</h2>
-        <p className="body-text text-main-black/60 mb-3">
+        <h2 className="sub-title-text text-main-black mb-1">Bulk import</h2>
+        <p className="body-text text-main-black/60 mb-4">
           For adding many guests at once — otherwise use &ldquo;Add a guest&rdquo; above.
         </p>
+
+        <label htmlFor="guest-file" className="text-sm font-semibold text-main-black mb-1 block">
+          Upload a spreadsheet (Excel or CSV)
+        </label>
+        <input
+          id="guest-file"
+          type="file"
+          accept=".xlsx,.xls,.csv"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) void handleFile(file);
+            e.target.value = ""; // allow re-selecting the same file
+          }}
+          className="block w-full text-sm text-main-black file:mr-4 file:rounded-big file:border-0 file:bg-main-purple file:px-5 file:py-2 file:text-main-white file:font-medium file:cursor-pointer"
+        />
+        <p className="text-xs text-main-black/60 mt-1 mb-5">
+          Needs <span className="font-semibold">Name</span> and{" "}
+          <span className="font-semibold">Email</span> columns (a header row). Optional:
+          VIP, plusOnes.
+        </p>
+
+        <div className="flex items-center gap-3 mb-4">
+          <span className="h-px flex-1 bg-main-light-grey/50" />
+          <span className="text-xs uppercase tracking-wide text-main-black/40">or paste CSV</span>
+          <span className="h-px flex-1 bg-main-light-grey/50" />
+        </div>
+
         <label htmlFor="guest-csv" className="text-sm font-semibold text-main-black mb-1 block">
           Guest list CSV
         </label>
