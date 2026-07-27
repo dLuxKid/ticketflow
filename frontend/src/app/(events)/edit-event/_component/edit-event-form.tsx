@@ -768,20 +768,32 @@ export default function EditEventForm({ event }: { event: eventData }) {
             // with no tiers), skip rather than dereference undefined and crash the page.
             if (!ticketInfo[i]) return null;
             return (
-            <div className="flex flex-col gap-4 md:gap-6" key={i}>
+            <div
+              className="flex flex-col gap-4 md:gap-6 rounded-big border border-main-light-grey bg-main-white p-4 sm:p-6"
+              key={i}
+            >
+              <div className="flex-between border-b border-main-light-grey/60 pb-3">
+                <span className="inline-flex items-center gap-2 text-sm font-semibold text-main-purple">
+                  <span className="flex-center h-6 w-6 rounded-full bg-main-purple/10 text-xs">
+                    {i + 1}
+                  </span>
+                  Ticket {i + 1}
+                </span>
+                {numberOfTickets > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeTicketInfo(i)}
+                    className="text-xs font-medium text-main-error-red"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
               <div>
                 <div className="w-full flex items-center justify-between gap-4 mb-1">
                   <p className="text-sm font-semibold text-main-black capitalize">
-                    TICKET NAME
+                    Ticket Name
                   </p>
-                  <span
-                    className={`cursor-pointer ${
-                      numberOfTickets <= 1 && "hidden"
-                    }`}
-                    onClick={() => removeTicketInfo(i)}
-                  >
-                    <CloseIcon />
-                  </span>
                 </div>
                 <label>
                   <input
