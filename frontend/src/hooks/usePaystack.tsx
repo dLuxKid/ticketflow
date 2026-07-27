@@ -9,7 +9,7 @@ import { usePaystackPayment } from "react-paystack";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
 
-import { baseUrl } from "@/utils/urls";
+import { API_URLS, baseUrl } from "@/utils/urls";
 import { getCookie } from "cookies-next";
 
 interface Props {
@@ -50,7 +50,13 @@ export const usePaystack = (props: Props) => {
   const onSuccess = (reference: any) => {
     setLoading(true);
 
-    const url = `${baseUrl}/api/v1/bookings/create-booking`;
+    const transactionStatus = reference.status;
+    const transactionNumber = reference.trans;
+
+    delete reference.status;
+    delete reference.trans;
+
+    const url = API_URLS.bookings.createBookings;
 
     const ticketBuyers: any = [];
 
@@ -64,6 +70,9 @@ export const usePaystack = (props: Props) => {
           event: props.event,
           ticketType: ticket.name,
           currency: props.currency,
+          ticketUser: "Guest",
+          transactionNumber,
+          transactionStatus,
           ...reference,
         };
 
@@ -94,7 +103,7 @@ export const usePaystack = (props: Props) => {
                 ticketType,
               },
             ]);
-          }
+          },
         );
         setSuccess(true);
         toast.success("Registered all user(s) for the event");
@@ -105,7 +114,7 @@ export const usePaystack = (props: Props) => {
         toast.error(
           error.response
             ? error.response.data.message
-            : `Error registering your booking(s)`
+            : `Error registering your booking(s)`,
         );
       })
       .finally(() => {
@@ -121,8 +130,17 @@ export const usePaystack = (props: Props) => {
     return (
       <Button
         onClick={() => {
-          // @ts-ignore
-          initializePayment(onSuccess, onClose);
+          if (props.totalPrice === 0)
+            onSuccess({
+              reference: new Date().getTime().toString(),
+              trans: Number(new Date().getTime().toString()),
+              status: "success",
+              message: "success",
+            });
+          else {
+            // @ts-ignore
+            initializePayment(onSuccess, onClose);
+          }
         }}
       >
         Continue

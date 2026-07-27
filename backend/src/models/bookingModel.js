@@ -56,7 +56,7 @@ const bookingSchema = new mongoose.Schema(
     },
     redirectUrl: {
       type: String,
-      required: requiredForPurchase,
+      // required: requiredForPurchase,
     },
     message: {
       type: String,
@@ -82,7 +82,14 @@ const bookingSchema = new mongoose.Schema(
     // so we can distinguish delivered/scanned/rejected/revoked, not just in/out.
     status: {
       type: String,
-      enum: ['issued', 'delivered', 'scanned', 'admitted', 'rejected', 'revoked'],
+      enum: [
+        'issued',
+        'delivered',
+        'scanned',
+        'admitted',
+        'rejected',
+        'revoked',
+      ],
       default: 'issued',
     },
     // Signed, single-use token scanned at the door. `select: false` so it is never
