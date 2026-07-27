@@ -18,6 +18,7 @@ type eventData = {
   coverImage: string;
   otherImages: string[];
   currency: string;
+  accessMode: "public" | "invite_only" | "hybrid";
 };
 
 type ticketType = {

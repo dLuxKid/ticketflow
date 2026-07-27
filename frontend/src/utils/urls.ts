@@ -27,10 +27,16 @@ export const API_URLS = {
       `${baseUrl}/api/v1/events/${eventId}/guests/query`,
     eraseGuest: (eventId: string, guestId: string) =>
       `${baseUrl}/api/v1/events/${eventId}/guests/${guestId}/erase`,
+    anomalies: (eventId: string) =>
+      `${baseUrl}/api/v1/events/${eventId}/anomalies`,
+    ushers: (eventId: string) => `${baseUrl}/api/v1/events/${eventId}/ushers`,
+    unassignUsher: (eventId: string, userId: string) =>
+      `${baseUrl}/api/v1/events/${eventId}/ushers/${userId}`,
   },
   bookings: {
     checkIn: (id: string) => `${baseUrl}/api/v1/bookings/check-in/${id}`,
     eventBookings: (eventId: string) => `${baseUrl}/api/v1/bookings/event/${eventId}`,
     myTickets: `${baseUrl}/api/v1/bookings/my-tickets`,
+    scan: `${baseUrl}/api/v1/bookings/scan`,
   },
 };

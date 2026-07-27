@@ -247,3 +247,92 @@ export const queryGuests = async (eventId: string, question: string) => {
     return error;
   }
 };
+
+export const getAnomalies = async (eventId: string) => {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("jwt")?.value;
+
+  try {
+    const res = await axios({
+      method: "GET",
+      url: API_URLS.events.anomalies(eventId),
+      headers: { Authorization: "Bearer " + token },
+    });
+    return res.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) return error.response?.data ?? error;
+    return error;
+  }
+};
+
+export const getUshers = async (eventId: string) => {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("jwt")?.value;
+
+  try {
+    const res = await axios({
+      method: "GET",
+      url: API_URLS.events.ushers(eventId),
+      headers: { Authorization: "Bearer " + token },
+    });
+    return res.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) return error.response?.data ?? error;
+    return error;
+  }
+};
+
+export const assignUsher = async (eventId: string, email: string) => {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("jwt")?.value;
+
+  try {
+    const res = await axios({
+      method: "POST",
+      url: API_URLS.events.ushers(eventId),
+      data: { email },
+      headers: { Authorization: "Bearer " + token },
+    });
+    revalidatePath(`/event-team/${eventId}`);
+    return res.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) return error.response?.data ?? error;
+    return error;
+  }
+};
+
+export const unassignUsher = async (eventId: string, userId: string) => {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("jwt")?.value;
+
+  try {
+    const res = await axios({
+      method: "DELETE",
+      url: API_URLS.events.unassignUsher(eventId, userId),
+      headers: { Authorization: "Bearer " + token },
+    });
+    revalidatePath(`/event-team/${eventId}`);
+    return res.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) return error.response?.data ?? error;
+    return error;
+  }
+};
+
+export const scanTicket = async (code: string, deviceId?: string) => {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("jwt")?.value;
+
+  try {
+    const res = await axios({
+      method: "POST",
+      url: API_URLS.bookings.scan,
+      data: { code, deviceId },
+      headers: { Authorization: "Bearer " + token },
+    });
+    return res.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) return error.response?.data ?? error;
+    return error;
+  }
+};

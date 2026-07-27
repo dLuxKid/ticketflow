@@ -10,6 +10,7 @@ type MyEvent = {
   endTime: Date;
   timezone: string;
   slug: string;
+  accessMode?: "public" | "invite_only" | "hybrid";
 };
 
 type category = "all" | "upcoming" | "past" | "live";

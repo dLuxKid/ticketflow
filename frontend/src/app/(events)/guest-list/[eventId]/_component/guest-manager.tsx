@@ -107,76 +107,81 @@ export default function GuestManager({ eventId }: { eventId: string }) {
   };
 
   return (
-    <section className="mx-auto max-w-3xl p-6">
-      <h1 className="mb-1 text-2xl font-bold">Guest list</h1>
-      <p className="mb-6 text-sm text-gray-600">
-        Paste a CSV with columns <code>name,email,vip,plusOnes</code>. Each new guest is
-        emailed a single-use QR invite.
-      </p>
-
-      <label htmlFor="guest-csv" className="mb-1 block text-sm font-medium text-gray-700">
-        Guest list CSV
-      </label>
-      <textarea
-        id="guest-csv"
-        value={csv}
-        onChange={(e) => setCsv(e.target.value)}
-        placeholder={"name,email,vip,plusOnes\nAda Lovelace,ada@example.com,yes,1"}
-        rows={6}
-        aria-describedby="guest-csv-hint"
-        className="mb-1 w-full rounded-lg border border-gray-200 p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-[#6528F7]"
-      />
-      <p id="guest-csv-hint" className="mb-3 text-xs text-gray-600">
-        One guest per line. A header row is optional.
-      </p>
-
-      <div className="mb-6 flex items-center gap-3">
-        <button
-          onClick={handleImport}
-          disabled={pending || csv.trim() === ""}
-          aria-busy={pending}
-          className="rounded-lg bg-[#6528F7] px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#6528F7] disabled:opacity-50"
-        >
-          {pending ? "Importing…" : "Import & send invites"}
-        </button>
-        {error && (
-          <span role="alert" className="text-sm text-red-600">
-            {error}
-          </span>
-        )}
+    <section className="flex-center flex-col w-full max-w-screen-md mx-auto gap-6 py-10 px-4">
+      <div className="w-full">
+        <h1 className="text-main-purple title-text">Guest list</h1>
+        <p className="body-text text-main-black/70 mt-1">
+          Paste a CSV with columns <code className="text-main-purple">name,email,vip,plusOnes</code>.
+          Each new guest is emailed a single-use QR invite.
+        </p>
       </div>
 
-      <div aria-live="polite" role="status">
-        {result && (
-          <div className="mb-6 rounded-lg border border-gray-100 p-4 text-sm">
-            <p className="text-green-700">Added: {result.added.length}</p>
-            {result.skipped.length > 0 && (
-              <p className="text-gray-600">
-                Skipped (already invited): {result.skipped.length}
-              </p>
-            )}
-            {result.failed.length > 0 && (
-              <p className="text-red-600">Failed: {result.failed.length}</p>
-            )}
-            {result.invalidRows.length > 0 && (
-              <p className="text-amber-700">
-                Unparseable rows: {result.invalidRows.length}
-              </p>
-            )}
-          </div>
-        )}
+      <div className="w-full rounded-big bg-main-white shadow shadow-black/10 p-4 sm:p-6">
+        <label htmlFor="guest-csv" className="text-sm font-semibold text-main-black mb-1 block">
+          Guest list CSV
+        </label>
+        <textarea
+          id="guest-csv"
+          value={csv}
+          onChange={(e) => setCsv(e.target.value)}
+          placeholder={"name,email,vip,plusOnes\nAda Lovelace,ada@example.com,yes,1"}
+          rows={6}
+          aria-describedby="guest-csv-hint"
+          className="w-full rounded-md border border-main-purple bg-sec-grey p-3 font-mono text-sm text-main-black"
+        />
+        <p id="guest-csv-hint" className="text-xs text-main-black/60 mt-1 mb-4">
+          One guest per line. A header row is optional.
+        </p>
+
+        <div className="flex flex-wrap items-center gap-4">
+          <button
+            type="button"
+            onClick={handleImport}
+            disabled={pending || csv.trim() === ""}
+            aria-busy={pending}
+            className="bg-main-purple text-main-white px-6 py-2 md:px-9 md:py-3 text-base rounded-big font-medium"
+          >
+            {pending ? "Importing…" : "Import & send invites"}
+          </button>
+          {error && (
+            <span role="alert" className="error-text">
+              {error}
+            </span>
+          )}
+        </div>
+
+        <div aria-live="polite" role="status">
+          {result && (
+            <div className="mt-4 rounded-md bg-main-grey-bg p-4 text-sm flex flex-col gap-1">
+              <p className="text-green-700 font-medium">Added: {result.added.length}</p>
+              {result.skipped.length > 0 && (
+                <p className="text-main-black/60">
+                  Skipped (already invited): {result.skipped.length}
+                </p>
+              )}
+              {result.failed.length > 0 && (
+                <p className="text-main-error-red">Failed: {result.failed.length}</p>
+              )}
+              {result.invalidRows.length > 0 && (
+                <p className="text-amber-700">
+                  Unparseable rows: {result.invalidRows.length}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="mb-8 rounded-lg border border-gray-100 p-4">
-        <h2 className="mb-2 text-lg font-semibold">Ask about your guest list</h2>
+      <div className="w-full rounded-big bg-main-white shadow shadow-black/10 p-4 sm:p-6">
+        <h2 className="sub-title-text text-main-black mb-1">Ask about your guest list</h2>
         <label htmlFor="guest-question" className="sr-only">
           Ask a question about your guest list
         </label>
-        <p id="guest-question-hint" className="mb-3 text-sm text-gray-600">
+        <p id="guest-question-hint" className="body-text text-main-black/60 mb-3">
           Try &ldquo;who hasn&apos;t arrived&rdquo; or &ldquo;how many VIPs have
           arrived&rdquo;.
         </p>
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <input
             id="guest-question"
             value={question}
@@ -184,13 +189,14 @@ export default function GuestManager({ eventId }: { eventId: string }) {
             onKeyDown={(e) => e.key === "Enter" && handleAsk()}
             placeholder="who hasn't arrived?"
             aria-describedby="guest-question-hint"
-            className="flex-1 rounded-lg border border-gray-200 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6528F7]"
+            className="flex-1 rounded-md border border-main-purple bg-sec-grey px-4 h-12 text-sm text-main-black"
           />
           <button
+            type="button"
             onClick={handleAsk}
             disabled={asking || question.trim() === ""}
             aria-busy={asking}
-            className="rounded-lg bg-[#6528F7] px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#6528F7] disabled:opacity-50"
+            className="bg-main-purple text-main-white px-6 text-sm rounded-big font-medium shrink-0"
           >
             {asking ? "Asking…" : "Ask"}
           </button>
@@ -198,20 +204,20 @@ export default function GuestManager({ eventId }: { eventId: string }) {
 
         <div aria-live="polite" role="status">
           {queryError && (
-            <p role="alert" className="mt-3 text-sm text-red-600">
+            <p role="alert" className="error-text mt-3">
               {queryError}
             </p>
           )}
 
           {answer && (
             <div className="mt-3 text-sm">
-              <p className="font-medium">
+              <p className="font-medium text-main-black">
                 {answer.action === "count"
                   ? `${answer.count} guest${answer.count === 1 ? "" : "s"}`
                   : `${answer.count} guest${answer.count === 1 ? "" : "s"} found`}
               </p>
               {answer.action === "list" && answer.guests.length > 0 && (
-                <ul className="mt-2 list-disc pl-5 text-gray-700">
+                <ul className="mt-2 list-disc pl-5 text-main-black/70">
                   {answer.guests.map((g) => (
                     <li key={g.email}>
                       {g.name} {g.vip && "(VIP)"}
@@ -224,52 +230,55 @@ export default function GuestManager({ eventId }: { eventId: string }) {
         </div>
       </div>
 
-      <h2 className="mb-3 text-lg font-semibold">
-        Invited guests ({guests.length})
-      </h2>
-      {guests.length === 0 ? (
-        <p className="text-sm text-gray-600">No guests yet.</p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="text-xs uppercase tracking-wide text-gray-600">
-              <tr>
-                <th scope="col" className="py-2">Name</th>
-                <th scope="col" className="py-2">Email</th>
-                <th scope="col" className="py-2">VIP</th>
-                <th scope="col" className="py-2">+1s</th>
-                <th scope="col" className="py-2">
-                  <span className="sr-only">Actions</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {guests.map((g) => (
-                <tr key={g._id}>
-                  <td className="py-2">{g.name}</td>
-                  <td className="py-2">{g.email}</td>
-                  <td className="py-2">{g.vip ? "Yes" : "—"}</td>
-                  <td className="py-2 tabular-nums">{g.plusOnes}</td>
-                  <td className="py-2 text-right">
-                    {g.erasedAt ? (
-                      <span className="text-xs text-gray-600">Data erased</span>
-                    ) : (
-                      <button
-                        onClick={() => handleErase(g)}
-                        disabled={erasing === g._id}
-                        aria-label={`Erase ${g.name}'s personal data`}
-                        className="text-xs text-red-600 underline decoration-dotted underline-offset-2 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-600 disabled:opacity-50"
-                      >
-                        {erasing === g._id ? "Erasing…" : "Erase data"}
-                      </button>
-                    )}
-                  </td>
+      <div className="w-full rounded-big bg-main-white shadow shadow-black/10 p-4 sm:p-6">
+        <h2 className="sub-title-text text-main-black mb-4">
+          Invited guests ({guests.length})
+        </h2>
+        {guests.length === 0 ? (
+          <p className="body-text text-main-black/60">No guests yet.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="text-xs uppercase tracking-wide text-main-black/60">
+                <tr>
+                  <th scope="col" className="py-2 pr-4">Name</th>
+                  <th scope="col" className="py-2 pr-4">Email</th>
+                  <th scope="col" className="py-2 pr-4">VIP</th>
+                  <th scope="col" className="py-2 pr-4">+1s</th>
+                  <th scope="col" className="py-2">
+                    <span className="sr-only">Actions</span>
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
+              <tbody className="divide-y divide-main-light-grey/40">
+                {guests.map((g) => (
+                  <tr key={g._id}>
+                    <td className="py-3 pr-4 text-main-black">{g.name}</td>
+                    <td className="py-3 pr-4 text-main-black/80">{g.email}</td>
+                    <td className="py-3 pr-4 text-main-black/80">{g.vip ? "Yes" : "—"}</td>
+                    <td className="py-3 pr-4 tabular-nums text-main-black/80">{g.plusOnes}</td>
+                    <td className="py-3 text-right">
+                      {g.erasedAt ? (
+                        <span className="text-xs text-main-black/50">Data erased</span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleErase(g)}
+                          disabled={erasing === g._id}
+                          aria-label={`Erase ${g.name}'s personal data`}
+                          className="text-xs text-main-error-red underline decoration-dotted underline-offset-2"
+                        >
+                          {erasing === g._id ? "Erasing…" : "Erase data"}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </section>
   );
 }

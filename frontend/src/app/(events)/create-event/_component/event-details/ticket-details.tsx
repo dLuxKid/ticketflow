@@ -93,7 +93,14 @@ export function TicketDetails({
     }
   };
 
+  const isInviteOnly = eventData.accessMode === "invite_only";
+
   const isAllInputFilled = () => {
+    // Invite-only events admit guests from a guest list, not a purchase — they carry no
+    // ticket tiers at all (the backend rejects tiers on an invite_only event outright),
+    // so sales dates and ticket fields simply don't apply here.
+    if (isInviteOnly) return true;
+
     return (
       eventData.ticketDetails.length &&
       isTicketInfoFilled(eventData.ticketDetails) &&
@@ -112,6 +119,16 @@ export function TicketDetails({
           new Date().getTime()
     );
   }, []);
+
+  // Defensive: if the organiser goes back and switches to invite-only after already
+  // filling in ticket tiers, clear them — an invite_only event must carry none.
+  useEffect(() => {
+    if (isInviteOnly && eventData.ticketDetails.length > 0) {
+      setTicketInfo([]);
+      setEventData((prev) => ({ ...prev, ticketDetails: [] }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isInviteOnly]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,7 +150,18 @@ export function TicketDetails({
         onSubmit={handleSubmit}
         className="w-full flex items-stretch justify-center flex-col gap-4 md:gap-6"
       >
-        <div className="w-full relative">
+        {isInviteOnly && (
+          <div className="w-full rounded-md border border-main-purple bg-main-purple/5 p-6">
+            <h4 className="sub-title-text mb-2">No tickets needed</h4>
+            <p className="body-text text-main-black/80">
+              This is an invite-only event — there&apos;s nothing to sell here. Once the
+              event is created, build your guest list and send invites from the event&apos;s
+              Guest List page.
+            </p>
+          </div>
+        )}
+
+        <div className={`w-full relative ${isInviteOnly ? "hidden" : ""}`}>
           <div className="flex-between mb-4">
             <h4 className="sub-title-text">ADD TICKET</h4>
             <span onClick={addTicketInfoInput} className="cursor-pointer">
@@ -238,9 +266,9 @@ export function TicketDetails({
           </div>
         </div>
 
-        <hr className="h-0.5 rounded-sm w-full bg-sec-grey" />
+        <hr className={`h-0.5 rounded-sm w-full bg-sec-grey ${isInviteOnly ? "hidden" : ""}`} />
 
-        <div>
+        <div className={isInviteOnly ? "hidden" : ""}>
           <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
               <p className="text-sm font-semibold text-main-black mb-1 capitalize flex items-center gap-1">
@@ -339,7 +367,7 @@ export function TicketDetails({
           </div>
         </div>
 
-        <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className={`w-full grid grid-cols-1 sm:grid-cols-2 gap-6 ${isInviteOnly ? "hidden" : ""}`}>
           <div>
             <p className="text-sm font-semibold text-main-black mb-1 capitalize flex items-center gap-1">
               Ticket sale end date

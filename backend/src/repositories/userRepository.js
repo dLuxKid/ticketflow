@@ -22,6 +22,42 @@ export const findByIdWithPassword = (id) =>
 export const findByEmail = (email) =>
   User.findOne({ email }).select('+password +role');
 
+/** Loads a user by email including role/assignedEvents, for usher management. */
+export const findByEmailWithRole = (email) =>
+  User.findOne({ email }).select('+role');
+
+/**
+ * Adds `eventId` to a user's assignedEvents, promoting them to the `usher` role if they
+ * aren't already `creator`/`admin`. `$addToSet` so assigning the same event twice is a
+ * no-op, not a duplicate entry.
+ */
+export const assignToEvent = (userId, eventId) =>
+  User.findOneAndUpdate(
+    { _id: userId, role: { $nin: ['creator', 'admin'] } },
+    { $set: { role: 'usher' }, $addToSet: { assignedEvents: eventId } },
+    { new: true, select: '+role' },
+  ).then(
+    (updated) =>
+      updated ??
+      // Already a creator/admin — leave their role untouched, just record the assignment.
+      User.findByIdAndUpdate(
+        userId,
+        { $addToSet: { assignedEvents: eventId } },
+        { new: true, select: '+role' },
+      ),
+  );
+
+export const unassignFromEvent = (userId, eventId) =>
+  User.findByIdAndUpdate(
+    userId,
+    { $pull: { assignedEvents: eventId } },
+    { new: true, select: '+role' },
+  );
+
+/** Users (any role) assigned to a given event — the event's door-staff roster. */
+export const findAssignedToEvent = (eventId) =>
+  User.find({ assignedEvents: eventId }).select('+role');
+
 export const updateById = (
   id,
   data,

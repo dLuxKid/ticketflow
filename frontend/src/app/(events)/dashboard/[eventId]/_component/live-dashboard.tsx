@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { getAnomalies } from "@/utils/actions";
+
 /**
  * Live arrivals dashboard. Subscribes to the same-origin SSE proxy and updates in place as
  * guests are admitted or rejected at the door — no polling, no refresh.
@@ -43,7 +45,19 @@ type RejectedEvent = {
   reason?: string;
 };
 
+type FlaggedTicket = {
+  bookingId: string;
+  flags: string[];
+  scanCount: number;
+};
+
 const MAX_FEED = 25;
+
+const FLAG_LABEL: Record<string, string> = {
+  repeated_rejects: "Repeated rejected scans",
+  multi_device: "Scanned from multiple devices",
+  rapid_sequential: "Scans too close together",
+};
 
 export default function LiveDashboard({ eventId }: { eventId: string }) {
   const [connected, setConnected] = useState(false);
@@ -52,12 +66,23 @@ export default function LiveDashboard({ eventId }: { eventId: string }) {
   const [admitted, setAdmitted] = useState(0);
   const [noShow, setNoShow] = useState<NoShowPrediction | null>(null);
   const [feed, setFeed] = useState<RecentScan[]>([]);
+  const [flagged, setFlagged] = useState<FlaggedTicket[]>([]);
   const feedRef = useRef<RecentScan[]>([]);
 
   const pushFeed = (scan: RecentScan) => {
     feedRef.current = [scan, ...feedRef.current].slice(0, MAX_FEED);
     setFeed(feedRef.current);
   };
+
+  const loadAnomalies = () =>
+    getAnomalies(eventId).then((res) => {
+      if (res?.status === "success") setFlagged(res.data.flagged ?? []);
+    });
+
+  useEffect(() => {
+    loadAnomalies();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventId]);
 
   useEffect(() => {
     const source = new EventSource(`/api/events/${eventId}/stream`);
@@ -89,43 +114,43 @@ export default function LiveDashboard({ eventId }: { eventId: string }) {
         reason: r.reason,
         at: new Date().toISOString(),
       });
+      loadAnomalies(); // a rejection can flip a ticket into "flagged" — refresh
     });
 
     return () => source.close();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventId]);
 
   const pct = capacity > 0 ? Math.min(100, Math.round((admitted / capacity) * 100)) : 0;
 
   return (
-    <section className="mx-auto max-w-3xl p-6">
-      <header className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Live arrivals</h1>
+    <section className="flex-center flex-col w-full max-w-screen-md mx-auto gap-6 py-10 px-4">
+      <header className="w-full flex-between">
+        <h1 className="text-main-purple title-text">Live arrivals</h1>
         <span
           role="status"
           aria-live="polite"
-          className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm ${
-            connected ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
+          className={`flex-center gap-2 rounded-big px-3 py-1 text-sm font-medium ${
+            connected ? "bg-green-100 text-green-700" : "bg-main-grey-bg text-main-black/60"
           }`}
         >
           <span
             aria-hidden="true"
-            className={`h-2 w-2 rounded-full ${
-              connected ? "bg-green-500" : "bg-gray-400"
-            }`}
+            className={`h-2 w-2 rounded-full ${connected ? "bg-green-500" : "bg-main-light-grey"}`}
           />
           {connected ? "Live" : "Reconnecting…"}
         </span>
       </header>
 
-      <div className="mb-6 grid grid-cols-3 gap-4">
+      <div className="w-full grid grid-cols-3 gap-4">
         <Stat label="Admitted" value={admitted} />
         <Stat label="Sold" value={sold} />
         <Stat label="Capacity" value={capacity} />
       </div>
 
-      <div className="mb-6">
-        <div className="mb-1 flex justify-between text-sm text-gray-600">
-          <span id="arrivals-label">Arrivals</span>
+      <div className="w-full rounded-big bg-main-white shadow shadow-black/10 p-4 sm:p-6">
+        <div className="flex-between text-sm text-main-black/70 mb-1">
+          <span id="arrivals-label" className="font-semibold">Arrivals</span>
           <span>{pct}% of capacity</span>
         </div>
         <div
@@ -134,18 +159,18 @@ export default function LiveDashboard({ eventId }: { eventId: string }) {
           aria-valuenow={pct}
           aria-valuemin={0}
           aria-valuemax={100}
-          className="h-3 w-full overflow-hidden rounded-full bg-gray-200"
+          className="h-3 w-full overflow-hidden rounded-full bg-main-grey-bg"
         >
           <div
-            className="h-full rounded-full bg-[#6528F7] transition-all"
+            className="h-full rounded-full bg-main-purple transition-all"
             style={{ width: `${pct}%` }}
           />
         </div>
       </div>
 
       {noShow && noShow.pendingCount > 0 && (
-        <div className="mb-8 rounded-lg border border-amber-100 bg-amber-50 p-4 text-sm">
-          <p className="font-medium text-amber-800">
+        <div className="w-full rounded-big border border-amber-200 bg-amber-50 p-4 sm:p-6 text-sm">
+          <p className="font-semibold text-amber-800">
             ~{noShow.expectedNoShows} of the {noShow.pendingCount} remaining guest
             {noShow.pendingCount === 1 ? "" : "s"} may not show up
           </p>
@@ -158,44 +183,63 @@ export default function LiveDashboard({ eventId }: { eventId: string }) {
         </div>
       )}
 
-      <h2 className="mb-3 text-lg font-semibold">Recent scans</h2>
-      {feed.length === 0 ? (
-        <p className="text-sm text-gray-600">No scans yet.</p>
-      ) : (
-        <ul aria-live="polite" className="divide-y divide-gray-100">
-          {feed.map((scan, i) => (
-            <li
-              key={`${scan.bookingId}-${i}`}
-              className="flex items-center justify-between py-2 text-sm"
-            >
-              <span
-                className={
-                  scan.outcome === "admitted" ? "text-green-700" : "text-red-600"
-                }
-              >
-                {scan.outcome === "admitted"
-                  ? "Admitted"
-                  : `Rejected — ${scan.reason ?? "unknown"}`}
-              </span>
-              <time
-                dateTime={scan.at}
-                className="text-gray-600"
-              >
-                {new Date(scan.at).toLocaleTimeString()}
-              </time>
-            </li>
-          ))}
-        </ul>
+      {flagged.length > 0 && (
+        <div className="w-full rounded-big border border-main-error-red/30 bg-main-error-red/5 p-4 sm:p-6">
+          <h2 className="sub-title-text text-main-error-red mb-3">
+            Flagged tickets ({flagged.length})
+          </h2>
+          <ul className="flex flex-col gap-3">
+            {flagged.map((f) => (
+              <li key={f.bookingId} className="text-sm">
+                <p className="font-medium text-main-black">
+                  Ticket ending {f.bookingId.slice(-6)} — {f.scanCount} scans
+                </p>
+                <p className="text-main-black/60">
+                  {f.flags.map((flag) => FLAG_LABEL[flag] ?? flag).join(", ")}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
+
+      <div className="w-full rounded-big bg-main-white shadow shadow-black/10 p-4 sm:p-6">
+        <h2 className="sub-title-text text-main-black mb-3">Recent scans</h2>
+        {feed.length === 0 ? (
+          <p className="body-text text-main-black/60">No scans yet.</p>
+        ) : (
+          <ul aria-live="polite" className="divide-y divide-main-light-grey/40">
+            {feed.map((scan, i) => (
+              <li
+                key={`${scan.bookingId}-${i}`}
+                className="flex-between py-2 text-sm"
+              >
+                <span
+                  className={
+                    scan.outcome === "admitted" ? "text-green-700" : "text-main-error-red"
+                  }
+                >
+                  {scan.outcome === "admitted"
+                    ? "Admitted"
+                    : `Rejected — ${scan.reason ?? "unknown"}`}
+                </span>
+                <time dateTime={scan.at} className="text-main-black/60">
+                  {new Date(scan.at).toLocaleTimeString()}
+                </time>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </section>
   );
 }
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-lg border border-gray-100 p-4 text-center">
-      <div className="text-3xl font-bold tabular-nums">{value}</div>
-      <div className="text-xs uppercase tracking-wide text-gray-600">{label}</div>
+    <div className="rounded-big bg-main-white shadow shadow-black/10 p-4 text-center">
+      <div className="text-3xl font-bold tabular-nums text-main-purple">{value}</div>
+      <div className="text-xs uppercase tracking-wide text-main-black/60">{label}</div>
     </div>
   );
 }

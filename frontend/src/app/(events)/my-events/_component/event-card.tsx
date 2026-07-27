@@ -76,6 +76,35 @@ export default function EventCard({ event }: { event: MyEvent }) {
             </p>
           </div>
         </div>
+
+        <div className="flex-start gap-3 flex-wrap">
+          {event.accessMode !== "public" && (
+            <Link
+              href={`/guest-list/${event._id}`}
+              className="text-sm font-semibold text-main-purple underline underline-offset-2"
+            >
+              Guest list
+            </Link>
+          )}
+          <Link
+            href={`/dashboard/${event._id}`}
+            className="text-sm font-semibold text-main-purple underline underline-offset-2"
+          >
+            Live dashboard
+          </Link>
+          <Link
+            href={`/scan/${event._id}`}
+            className="text-sm font-semibold text-main-purple underline underline-offset-2"
+          >
+            Scan tickets
+          </Link>
+          <Link
+            href={`/event-team/${event._id}`}
+            className="text-sm font-semibold text-main-purple underline underline-offset-2"
+          >
+            Door staff
+          </Link>
+        </div>
       </div>
     </div>
   );

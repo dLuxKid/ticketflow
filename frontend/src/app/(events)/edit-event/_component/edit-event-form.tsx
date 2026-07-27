@@ -227,8 +227,10 @@ export default function EditEventForm({ event }: { event: eventData }) {
     ),
   ];
 
+  const isInviteOnly = eventData.accessMode === "invite_only";
+
   const isAllInputFilled = () => {
-    return (
+    const base =
       eventData.eventName &&
       eventData.startDate &&
       eventData.startTime &&
@@ -240,7 +242,14 @@ export default function EditEventForm({ event }: { event: eventData }) {
       eventData.eventLocation.country &&
       eventData.eventLocation.state &&
       eventData.eventCategory &&
-      eventData.eventDescription &&
+      eventData.eventDescription;
+
+    // Invite-only events carry no ticket tiers (the backend rejects tiers on one
+    // outright), so sales dates/ticket fields simply don't apply.
+    if (isInviteOnly) return base;
+
+    return (
+      base &&
       eventData.ticketDetails.length &&
       isTicketInfoFilled(eventData.ticketDetails) &&
       eventData.salesStartDate &&
@@ -304,6 +313,7 @@ export default function EditEventForm({ event }: { event: eventData }) {
       coverImage: eventData.coverImage,
       currency: eventData.currency,
       otherImages: eventData.otherImages,
+      accessMode: eventData.accessMode,
     };
 
     try {
@@ -348,6 +358,46 @@ export default function EditEventForm({ event }: { event: eventData }) {
               onChange={handleChange}
             />
           </label>
+        </div>
+        <div className="w-full">
+          <p className="text-sm font-semibold text-main-black mb-1 capitalize">
+            Who can attend?
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {(
+              [
+                { value: "public", label: "Public", description: "Anyone can find and buy a ticket." },
+                { value: "invite_only", label: "Invite-only", description: "No public tickets — guest list only." },
+                { value: "hybrid", label: "Hybrid", description: "Public tickets plus invited guests." },
+              ] as { value: eventData["accessMode"]; label: string; description: string }[]
+            ).map((mode) => (
+              <label
+                key={mode.value}
+                className={`cursor-pointer rounded-md border p-4 transition-colors ${
+                  eventData.accessMode === mode.value
+                    ? "border-main-purple bg-main-purple/5"
+                    : "border-main-light-grey bg-sec-grey"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="accessMode"
+                  value={mode.value}
+                  checked={eventData.accessMode === mode.value}
+                  onChange={() =>
+                    setEventData((prev) => ({ ...prev, accessMode: mode.value }))
+                  }
+                  className="sr-only"
+                />
+                <span className="block text-sm font-semibold text-main-black">
+                  {mode.label}
+                </span>
+                <span className="mt-1 block text-xs text-main-black/70">
+                  {mode.description}
+                </span>
+              </label>
+            ))}
+          </div>
         </div>
         <div className="w-full">
           <p className="text-sm font-semibold text-main-black mb-1 capitalize">

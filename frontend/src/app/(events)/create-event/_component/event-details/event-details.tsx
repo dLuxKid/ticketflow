@@ -110,11 +110,68 @@ export function EventDetails({
     if (isAllInputFilled()) nextStep();
   };
 
+  const ACCESS_MODES: {
+    value: eventData["accessMode"];
+    label: string;
+    description: string;
+  }[] = [
+    {
+      value: "public",
+      label: "Public",
+      description: "Anyone can find and buy a ticket.",
+    },
+    {
+      value: "invite_only",
+      label: "Invite-only",
+      description: "No public tickets — you build the guest list and send invites.",
+    },
+    {
+      value: "hybrid",
+      label: "Hybrid",
+      description: "Sell public tickets and invite specific guests to the same event.",
+    },
+  ];
+
   return (
     <form
       onSubmit={handleSubmit}
       className="w-full flex items-stretch justify-center flex-col gap-4 md:gap-6"
     >
+      <div className="w-full">
+        <p className="text-sm font-semibold text-main-black mb-1 capitalize">
+          Who can attend?
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {ACCESS_MODES.map((mode) => (
+            <label
+              key={mode.value}
+              className={`cursor-pointer rounded-md border p-4 transition-colors ${
+                eventData.accessMode === mode.value
+                  ? "border-main-purple bg-main-purple/5"
+                  : "border-main-light-grey bg-sec-grey"
+              }`}
+            >
+              <input
+                type="radio"
+                name="accessMode"
+                value={mode.value}
+                checked={eventData.accessMode === mode.value}
+                onChange={() =>
+                  setEventData((prev) => ({ ...prev, accessMode: mode.value }))
+                }
+                className="sr-only"
+              />
+              <span className="block text-sm font-semibold text-main-black">
+                {mode.label}
+              </span>
+              <span className="mt-1 block text-xs text-main-black/70">
+                {mode.description}
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
+
       <div className="w-full">
         <p className="text-sm font-semibold text-main-black mb-1 capitalize">
           Event Start

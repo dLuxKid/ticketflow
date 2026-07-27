@@ -16,7 +16,7 @@ import { socialMediaURLs } from "@/assets/data/create-event-data";
 
 import { hardcodedCountries, hardcodedStates } from "@/assets/data/react-select-options";
 
-const initialState = {
+const initialState: eventData = {
   eventName: "",
   startDate: null,
   startTime: null,
@@ -41,6 +41,7 @@ const initialState = {
   coverImage: "",
   otherImages: [],
   currency: "",
+  accessMode: "public",
 };
 
 export default function CreateEvent() {

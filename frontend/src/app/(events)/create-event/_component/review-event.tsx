@@ -74,7 +74,7 @@ export default function ReviewEvent({
   };
 
   const isAllInputFilled = () => {
-    return (
+    const base =
       eventData.eventName &&
       eventData.startDate &&
       eventData.startTime &&
@@ -87,13 +87,20 @@ export default function ReviewEvent({
       eventData.eventLocation.state &&
       eventData.eventCategory &&
       eventData.eventDescription &&
+      isSocialsAvailable();
+
+    // Invite-only events carry no ticket tiers (the backend rejects tiers on one
+    // outright), so ticket/sales fields simply don't apply — mirrors ticket-details.tsx.
+    if (eventData.accessMode === "invite_only") return base;
+
+    return (
+      base &&
       eventData.ticketDetails.length &&
       isTicketInfoFilled(eventData.ticketDetails) &&
       eventData.salesStartDate &&
       eventData.salesEndDate &&
       eventData.salesEndTime &&
-      eventData.salesStartTime &&
-      isSocialsAvailable()
+      eventData.salesStartTime
     );
   };
 
@@ -121,6 +128,7 @@ export default function ReviewEvent({
       coverImage: eventData.coverImage,
       currency: eventData.currency,
       otherImages: eventData.otherImages,
+      accessMode: eventData.accessMode,
     };
 
     try {

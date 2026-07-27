@@ -3,6 +3,7 @@ import * as eventController from '../controllers/eventController.js';
 import * as dashboardController from '../controllers/dashboardController.js';
 import * as guestController from '../controllers/guestController.js';
 import * as nlQueryController from '../controllers/nlQueryController.js';
+import * as usherController from '../controllers/usherController.js';
 import * as authController from '../controllers/authController.js';
 import handleImg from '../../shared/middleware/uploadImage.js';
 
@@ -46,5 +47,14 @@ router.post('/:eventId/guests/query', nlQueryController.query);
 // GDPR: erase one guest's PII immediately, ahead of the scheduled retention sweep
 // (scripts/gdpr-retention-sweep.js). Same organiser/admin access rule.
 router.delete('/:eventId/guests/:guestId/erase', guestController.eraseGuest);
+
+// ─── Door staff (organiser / admin) ─────────────────────────────────────────────
+// Assigning someone here is what actually grants them scan-and-admit access — it sets the
+// same assignedEvents field admissionService.authorizeScan checks (Phase 2).
+router
+  .route('/:eventId/ushers')
+  .get(usherController.listUshers)
+  .post(usherController.assignUsher);
+router.delete('/:eventId/ushers/:userId', usherController.unassignUsher);
 
 export default router;
