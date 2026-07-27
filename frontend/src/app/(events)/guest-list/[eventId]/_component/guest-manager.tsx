@@ -5,9 +5,10 @@ import { useEffect, useState, useTransition } from "react";
 import { getEventGuests, importGuests, queryGuests, eraseGuest } from "@/utils/actions";
 
 /**
- * Guest-list manager for an invite_only / hybrid event. Paste or type a CSV
- * (name,email,vip,plusOnes) and issue invites; the backend emails each new guest a
- * scannable QR. The current list refreshes after an import.
+ * Guest-list manager for an invite_only / hybrid event. Two ways in: a one-guest-at-a-time
+ * form (the common case) and a CSV bulk-import for large lists — both call the same
+ * backend import endpoint, just with a one-item array vs. a parsed CSV string. Each new
+ * guest is emailed a single-use QR invite; the list refreshes after either path.
  */
 
 type Guest = {
@@ -35,6 +36,12 @@ type QueryAnswer = {
 export default function GuestManager({ eventId }: { eventId: string }) {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [csv, setCsv] = useState("");
+  const [manualName, setManualName] = useState("");
+  const [manualEmail, setManualEmail] = useState("");
+  const [manualVip, setManualVip] = useState(false);
+  const [manualPlusOnes, setManualPlusOnes] = useState(0);
+  const [manualError, setManualError] = useState<string | null>(null);
+  const [manualAdding, startManualAdd] = useTransition();
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState<QueryAnswer | null>(null);
   const [queryError, setQueryError] = useState<string | null>(null);
@@ -68,6 +75,36 @@ export default function GuestManager({ eventId }: { eventId: string }) {
           await loadGuests();
         } else {
           setError(res?.message ?? "Import failed. Check the format and try again.");
+        }
+      })();
+    });
+  };
+
+  const handleAddOne = (e: React.FormEvent) => {
+    e.preventDefault();
+    setManualError(null);
+    setResult(null);
+    startManualAdd(() => {
+      void (async () => {
+        const res = await importGuests(eventId, {
+          guests: [
+            {
+              name: manualName.trim(),
+              email: manualEmail.trim(),
+              vip: manualVip,
+              plusOnes: manualPlusOnes,
+            },
+          ],
+        });
+        if (res?.status === "success") {
+          setResult(res.data as ImportResult);
+          setManualName("");
+          setManualEmail("");
+          setManualVip(false);
+          setManualPlusOnes(0);
+          await loadGuests();
+        } else {
+          setManualError(res?.message ?? "Couldn't add this guest. Check the details.");
         }
       })();
     });
@@ -111,12 +148,91 @@ export default function GuestManager({ eventId }: { eventId: string }) {
       <div className="w-full">
         <h1 className="text-main-purple title-text">Guest list</h1>
         <p className="body-text text-main-black/70 mt-1">
-          Paste a CSV with columns <code className="text-main-purple">name,email,vip,plusOnes</code>.
-          Each new guest is emailed a single-use QR invite.
+          Add guests one at a time, or import a whole list at once. Each new guest is
+          emailed a single-use QR invite.
         </p>
       </div>
 
       <div className="w-full rounded-big bg-main-white shadow shadow-black/10 p-4 sm:p-6">
+        <h2 className="sub-title-text text-main-black mb-4">Add a guest</h2>
+        <form onSubmit={handleAddOne} className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="manual-name" className="text-sm font-semibold text-main-black mb-1 block">
+                Name
+              </label>
+              <input
+                id="manual-name"
+                required
+                value={manualName}
+                onChange={(e) => setManualName(e.target.value)}
+                placeholder="Ada Lovelace"
+                className="w-full rounded-md border border-main-purple bg-sec-grey px-4 h-12 text-sm text-main-black"
+              />
+            </div>
+            <div>
+              <label htmlFor="manual-email" className="text-sm font-semibold text-main-black mb-1 block">
+                Email
+              </label>
+              <input
+                id="manual-email"
+                type="email"
+                required
+                value={manualEmail}
+                onChange={(e) => setManualEmail(e.target.value)}
+                placeholder="ada@example.com"
+                className="w-full rounded-md border border-main-purple bg-sec-grey px-4 h-12 text-sm text-main-black"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-6">
+            <label htmlFor="manual-plusones" className="flex items-center gap-2 text-sm text-main-black">
+              Plus-ones
+              <input
+                id="manual-plusones"
+                type="number"
+                min={0}
+                value={manualPlusOnes}
+                onChange={(e) => setManualPlusOnes(Math.max(0, Number(e.target.value)))}
+                className="w-20 rounded-md border border-main-purple bg-sec-grey px-3 h-10 text-sm text-main-black"
+              />
+            </label>
+            <label htmlFor="manual-vip" className="flex items-center gap-2 cursor-pointer text-sm text-main-black">
+              <input
+                id="manual-vip"
+                type="checkbox"
+                className="cursor-pointer hidden peer"
+                checked={manualVip}
+                onChange={(e) => setManualVip(e.target.checked)}
+              />
+              <span className="bg-transparent peer-checked:bg-main-purple border border-main-purple h-5 w-5 rounded-sm inline-block" />
+              VIP
+            </label>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <button
+              type="submit"
+              disabled={manualAdding || !manualName.trim() || !manualEmail.trim()}
+              className="bg-main-purple text-main-white px-6 py-2 md:px-9 md:py-3 text-base rounded-big font-medium"
+            >
+              {manualAdding ? "Adding…" : "Add guest & send invite"}
+            </button>
+            {manualError && (
+              <span role="alert" className="error-text">
+                {manualError}
+              </span>
+            )}
+          </div>
+        </form>
+      </div>
+
+      <div className="w-full rounded-big bg-main-white shadow shadow-black/10 p-4 sm:p-6">
+        <h2 className="sub-title-text text-main-black mb-1">Bulk import (CSV)</h2>
+        <p className="body-text text-main-black/60 mb-3">
+          For adding many guests at once — otherwise use &ldquo;Add a guest&rdquo; above.
+        </p>
         <label htmlFor="guest-csv" className="text-sm font-semibold text-main-black mb-1 block">
           Guest list CSV
         </label>
