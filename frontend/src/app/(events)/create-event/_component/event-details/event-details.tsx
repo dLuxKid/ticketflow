@@ -1,8 +1,6 @@
+import { categoriesStyles, timezoneStyles } from "@/styles/react-select.styles";
 import { subDays } from "date-fns";
 import ReactDatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-
-import { categoriesStyles, timezoneStyles } from "@/styles/react-select.styles";
 import Select, { SingleValue } from "react-select";
 
 import { categories, timzezones } from "@/assets/data/react-select-options";
@@ -54,12 +52,12 @@ export function EventDetails({
   const excludeDates = [
     new Date(),
     ...Array.from({ length: minDate.getDate() }).map((_, i) =>
-      subDays(minDate, i)
+      subDays(minDate, i),
     ),
   ];
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setEventData((prev) => ({ ...prev, [name]: value }));
@@ -78,16 +76,6 @@ export function EventDetails({
     }));
   };
 
-  const isSocialsAvailable = () => {
-    return (
-      eventData.socialMediaLinks.facebook ||
-      eventData.socialMediaLinks.instagram ||
-      eventData.socialMediaLinks.others ||
-      eventData.socialMediaLinks.twitter ||
-      eventData.socialMediaLinks.youtube
-    );
-  };
-
   const isAllInputFilled = () => {
     return (
       eventData.startDate &&
@@ -100,8 +88,7 @@ export function EventDetails({
       eventData.eventLocation.country &&
       eventData.eventLocation.state &&
       eventData.eventCategory &&
-      eventData.eventDescription &&
-      isSocialsAvailable()
+      eventData.eventDescription
     );
   };
 
@@ -123,12 +110,14 @@ export function EventDetails({
     {
       value: "invite_only",
       label: "Invite-only",
-      description: "No public tickets — you build the guest list and send invites.",
+      description:
+        "No public tickets — you build the guest list and send invites.",
     },
     {
       value: "hybrid",
       label: "Hybrid",
-      description: "Sell public tickets and invite specific guests to the same event.",
+      description:
+        "Sell public tickets and invite specific guests to the same event.",
     },
   ];
 
@@ -276,7 +265,7 @@ export function EventDetails({
           <Select
             styles={timezoneStyles}
             value={timzezones.find(
-              (option) => option.value === eventData.timezone || null
+              (option) => option.value === eventData.timezone || null,
             )}
             classNamePrefix="select"
             options={timzezones}
@@ -322,7 +311,7 @@ export function EventDetails({
               styles={categoriesStyles}
               value={
                 countryOptions?.find(
-                  (option) => option.value === eventData.eventLocation.country
+                  (option) => option.value === eventData.eventLocation.country,
                 ) || null
               }
               classNamePrefix="select"
@@ -350,7 +339,7 @@ export function EventDetails({
               styles={categoriesStyles}
               value={
                 stateOptions?.find(
-                  (option) => option.value === eventData.eventLocation.state
+                  (option) => option.value === eventData.eventLocation.state,
                 ) || null
               }
               classNamePrefix="select"
@@ -407,7 +396,7 @@ export function EventDetails({
             styles={categoriesStyles}
             value={
               categories.find(
-                (option) => option.value === eventData.eventCategory
+                (option) => option.value === eventData.eventCategory,
               ) || null
             }
             classNamePrefix="select"

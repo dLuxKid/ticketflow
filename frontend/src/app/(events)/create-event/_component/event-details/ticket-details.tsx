@@ -1,19 +1,13 @@
 import { useEffect, useState } from "react";
 
-import ReactDatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import Tippy from "@tippyjs/react";
-import "tippy.js/dist/tippy.css";
-
 import { newTicketInfo } from "@/assets/data/create-event-data";
 import AddIcon from "@/assets/svg/add-icon";
-import CloseIcon from "@/assets/svg/close-svg";
-import { IoMdArrowRoundBack } from "react-icons/io";
 import InfoIcon from "@/assets/svg/info-icon";
-
 import Button from "@/components/ui/submit-btn";
-
 import { calculateExcludeDates } from "@/utils/utils";
+import Tippy from "@tippyjs/react";
+import ReactDatePicker from "react-datepicker";
+import { IoMdArrowRoundBack } from "react-icons/io";
 
 type Props = {
   eventData: eventData;
@@ -40,17 +34,19 @@ export function TicketDetails({
   prev,
 }: Props) {
   const [numberOfTickets, setNumberOfTickets] = useState<number>(
-    eventData.ticketDetails.length || 1
+    eventData.ticketDetails.length || 1,
   );
   const [ticketInfo, setTicketInfo] = useState<ticketType[]>(
-    !!eventData.ticketDetails.length ? eventData.ticketDetails : [newTicketInfo]
+    !!eventData.ticketDetails.length
+      ? eventData.ticketDetails
+      : [newTicketInfo],
   );
 
   const [isSellingNow, setIsSellingNow] = useState<boolean>(false);
 
   const handleTicketInfo = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-    idx: number
+    idx: number,
   ) => {
     const { name, value } = e.target;
 
@@ -116,7 +112,7 @@ export function TicketDetails({
       new Date(eventData.salesStartDate as Date).getDate() ===
         new Date().getDate() &&
         new Date(eventData.salesStartTime as Date).getTime() ===
-          new Date().getTime()
+          new Date().getTime(),
     );
   }, []);
 
@@ -154,9 +150,9 @@ export function TicketDetails({
           <div className="w-full rounded-md border border-main-purple bg-main-purple/5 p-6">
             <h4 className="sub-title-text mb-2">No tickets needed</h4>
             <p className="body-text text-main-black/80">
-              This is an invite-only event — there&apos;s nothing to sell here. Once the
-              event is created, build your guest list and send invites from the event&apos;s
-              Guest List page.
+              This is an invite-only event — there&apos;s nothing to sell here.
+              Once the event is created, build your guest list and send invites
+              from the event&apos;s Guest List page.
             </p>
           </div>
         )}
@@ -278,7 +274,9 @@ export function TicketDetails({
           </div>
         </div>
 
-        <hr className={`h-0.5 rounded-sm w-full bg-sec-grey ${isInviteOnly ? "hidden" : ""}`} />
+        <hr
+          className={`h-0.5 rounded-sm w-full bg-sec-grey ${isInviteOnly ? "hidden" : ""}`}
+        />
 
         <div className={isInviteOnly ? "hidden" : ""}>
           <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -317,7 +315,7 @@ export function TicketDetails({
                   minDate={new Date()}
                   excludeDates={calculateExcludeDates(
                     new Date(),
-                    eventData.startDate as Date
+                    eventData.startDate as Date,
                   )}
                 />
               </label>
@@ -379,7 +377,9 @@ export function TicketDetails({
           </div>
         </div>
 
-        <div className={`w-full grid grid-cols-1 sm:grid-cols-2 gap-6 ${isInviteOnly ? "hidden" : ""}`}>
+        <div
+          className={`w-full grid grid-cols-1 sm:grid-cols-2 gap-6 ${isInviteOnly ? "hidden" : ""}`}
+        >
           <div>
             <p className="text-sm font-semibold text-main-black mb-1 capitalize flex items-center gap-1">
               Ticket sale end date
@@ -412,7 +412,7 @@ export function TicketDetails({
                 minDate={eventData.salesEndDate || new Date()}
                 excludeDates={calculateExcludeDates(
                   eventData.startDate as Date,
-                  eventData.endDate as Date
+                  eventData.endDate as Date,
                 )}
               />
             </label>

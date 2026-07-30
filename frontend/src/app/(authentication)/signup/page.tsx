@@ -41,7 +41,7 @@ export default function SignupForm() {
 
   const validateFormData = () => {
     setIsNameValid(
-      fullNameRegex.test(formData.name) && formData.name.length >= 4
+      fullNameRegex.test(formData.name) && formData.name.length >= 4,
     );
     setIsEmailValid(validator.isEmail(formData.email));
     setIsPasswordValid(formData.password.length >= 8);
@@ -79,7 +79,7 @@ export default function SignupForm() {
   };
 
   const handleConfirmPasswordChange = (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const passwordConfirm = e.target.value.trim();
     setFormData((prev) => ({ ...prev, passwordConfirm }));
@@ -96,7 +96,9 @@ export default function SignupForm() {
     const result = await authenticateUser(formData, "signup");
 
     if (result.status === "success") {
-      toast.success(`Welcome to the TicketFlow family ${result.data.user.name}`);
+      toast.success(
+        `Welcome to the TicketFlow family ${result.data.user.name}`,
+      );
       document.cookie = `jwt=${result.token}; path=/; max-age=${
         30 * 24 * 60 * 60
       }; expires=${Date.now() - 30 * 24 * 60 * 60 * 1000}`;
@@ -143,7 +145,8 @@ export default function SignupForm() {
               onChange={handleNameChange}
               onBlur={() =>
                 setIsNameValid(
-                  fullNameRegex.test(formData.name) && formData.name.length >= 4
+                  fullNameRegex.test(formData.name) &&
+                    formData.name.length >= 4,
                 )
               }
               disabled={loading}
@@ -225,7 +228,7 @@ export default function SignupForm() {
                 onChange={handleConfirmPasswordChange}
                 onBlur={() =>
                   setIsConfirmPasswordValid(
-                    formData.passwordConfirm === formData.password
+                    formData.passwordConfirm === formData.password,
                   )
                 }
                 disabled={loading}
@@ -243,7 +246,7 @@ export default function SignupForm() {
           </div>
 
           <p className="text-sm text-main-black -mt-2 w-full text-start">
-            By completing sign up, you agree to TicketFlow's{" "}
+            By completing sign up, you agree to TicketFlow&apos;s{" "}
             <span className="text-main-purple cursor-pointer font-medium">
               Terms & Condition
             </span>

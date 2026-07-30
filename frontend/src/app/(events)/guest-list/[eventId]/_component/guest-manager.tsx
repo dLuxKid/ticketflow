@@ -1,10 +1,15 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
-
-import { getEventGuests, importGuests, queryGuests, eraseGuest } from "@/utils/actions";
 import PageHeader from "@/components/ui/page-header";
+import {
+  eraseGuest,
+  getEventGuests,
+  importGuests,
+  queryGuests,
+} from "@/utils/actions";
 import { eventTabs } from "@/utils/event-tabs";
+import { readGuestsFromFile } from "@/utils/guest-import";
+import { useEffect, useState, useTransition } from "react";
 
 /**
  * Guest-list manager for an invite_only / hybrid event. Two ways in: a one-guest-at-a-time
@@ -76,7 +81,9 @@ export default function GuestManager({ eventId }: { eventId: string }) {
           setCsv("");
           await loadGuests();
         } else {
-          setError(res?.message ?? "Import failed. Check the format and try again.");
+          setError(
+            res?.message ?? "Import failed. Check the format and try again.",
+          );
         }
       })();
     });
@@ -106,7 +113,9 @@ export default function GuestManager({ eventId }: { eventId: string }) {
           setManualPlusOnes(0);
           await loadGuests();
         } else {
-          setManualError(res?.message ?? "Couldn't add this guest. Check the details.");
+          setManualError(
+            res?.message ?? "Couldn't add this guest. Check the details.",
+          );
         }
       })();
     });
@@ -128,57 +137,108 @@ export default function GuestManager({ eventId }: { eventId: string }) {
     }
   };
 
+  // const handleFile = async (file: File) => {
+  //   setError(null);
+  //   setResult(null);
+  //   try {
+  //     // Dynamically import SheetJS so it stays out of the initial page bundle — it only
+  //     // loads when someone actually picks a spreadsheet.
+  //     const res = await axios.get(file.webkitRelativePath, {
+  //       responseType: "arraybuffer",
+  //     });
+  //     const workbook = XLSX.read(res.data);
+  //     const worksheets = workbook.SheetNames.map((name) => ({
+  //       sheetName: name,
+  //       data: XLSX.utils.sheet_to_json(workbook.Sheets[name]),
+  //     }));
+  //     const XLSX = await import("xlsx");
+  //     const buf = await file.arrayBuffer();
+  //     const wb = XLSX.read(buf, { type: "array" });
+  //     const sheet = wb.Sheets[wb.SheetNames[0]];
+  //     const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
+  //       defval: "",
+  //     });
+
+  //     // Map columns case-insensitively so "Name"/"name"/"EMAIL" all work.
+  //     const pick = (row: Record<string, unknown>, keys: string[]) => {
+  //       const found = Object.keys(row).find((k) =>
+  //         keys.includes(k.trim().toLowerCase()),
+  //       );
+  //       return found ? String(row[found]).trim() : "";
+  //     };
+
+  //     const guests = rows
+  //       .map((row) => ({
+  //         name: pick(row, ["name", "full name", "guest"]),
+  //         email: pick(row, ["email", "e-mail", "email address"]),
+  //         vip: /^(true|yes|1|vip)$/i.test(pick(row, ["vip"])),
+  //         plusOnes:
+  //           Number.parseInt(pick(row, ["plusones", "plus ones", "+1s"]), 10) ||
+  //           0,
+  //       }))
+  //       .filter((g) => g.name && g.email);
+
+  //     if (guests.length === 0) {
+  //       setError(
+  //         "No valid rows found. The sheet needs Name and Email columns (a header row).",
+  //       );
+  //       return;
+  //     }
+
+  //     startTransition(() => {
+  //       void (async () => {
+  //         const res = await importGuests(eventId, { guests });
+  //         if (res?.status === "success") {
+  //           setResult(res.data as ImportResult);
+  //           await loadGuests();
+  //         } else {
+  //           setError(
+  //             res?.message ?? "Import failed. Check the file and try again.",
+  //           );
+  //         }
+  //       })();
+  //     });
+  //   } catch {
+  //     setError(
+  //       "Couldn't read that file. Use a .xlsx, .xls or .csv spreadsheet.",
+  //     );
+  //   }
+  // };
+
   const handleFile = async (file: File) => {
     setError(null);
     setResult(null);
+
     try {
-      // Dynamically import SheetJS so it stays out of the initial page bundle — it only
-      // loads when someone actually picks a spreadsheet.
-      const XLSX = await import("xlsx");
-      const buf = await file.arrayBuffer();
-      const wb = XLSX.read(buf, { type: "array" });
-      const sheet = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
-        defval: "",
-      });
-
-      // Map columns case-insensitively so "Name"/"name"/"EMAIL" all work.
-      const pick = (row: Record<string, unknown>, keys: string[]) => {
-        const found = Object.keys(row).find((k) =>
-          keys.includes(k.trim().toLowerCase()),
-        );
-        return found ? String(row[found]).trim() : "";
-      };
-
-      const guests = rows
-        .map((row) => ({
-          name: pick(row, ["name", "full name", "guest"]),
-          email: pick(row, ["email", "e-mail", "email address"]),
-          vip: /^(true|yes|1|vip)$/i.test(pick(row, ["vip"])),
-          plusOnes: Number.parseInt(pick(row, ["plusones", "plus ones", "+1s"]), 10) || 0,
-        }))
-        .filter((g) => g.name && g.email);
-
-      if (guests.length === 0) {
-        setError(
-          "No valid rows found. The sheet needs Name and Email columns (a header row).",
-        );
-        return;
-      }
+      const guestList = await readGuestsFromFile(file);
 
       startTransition(() => {
         void (async () => {
-          const res = await importGuests(eventId, { guests });
-          if (res?.status === "success") {
-            setResult(res.data as ImportResult);
-            await loadGuests();
-          } else {
-            setError(res?.message ?? "Import failed. Check the file and try again.");
+          try {
+            const res = await importGuests(eventId, { guests: guestList });
+            if (res?.status === "success") {
+              setResult(res.data as ImportResult);
+              await loadGuests();
+            } else {
+              setError(
+                res?.message ?? "Import failed. Check the file and try again.",
+              );
+            }
+          } catch (err) {
+            setError(
+              err instanceof Error
+                ? err.message
+                : "Import failed. Check the file and try again.",
+            );
           }
         })();
       });
-    } catch {
-      setError("Couldn't read that file. Use a .xlsx, .xls or .csv spreadsheet.");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Couldn't read that file. Use a .xlsx, .xls or .csv spreadsheet.",
+      );
     }
   };
 
@@ -192,7 +252,8 @@ export default function GuestManager({ eventId }: { eventId: string }) {
           setAnswer(res.data as QueryAnswer);
         } else {
           setQueryError(
-            res?.message ?? "Couldn't understand that question. Try rephrasing it.",
+            res?.message ??
+              "Couldn't understand that question. Try rephrasing it.",
           );
         }
       })();
@@ -213,7 +274,10 @@ export default function GuestManager({ eventId }: { eventId: string }) {
         <form onSubmit={handleAddOne} className="flex flex-col gap-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="manual-name" className="text-sm font-semibold text-main-black mb-1 block">
+              <label
+                htmlFor="manual-name"
+                className="text-sm font-semibold text-main-black mb-1 block"
+              >
                 Name
               </label>
               <input
@@ -226,7 +290,10 @@ export default function GuestManager({ eventId }: { eventId: string }) {
               />
             </div>
             <div>
-              <label htmlFor="manual-email" className="text-sm font-semibold text-main-black mb-1 block">
+              <label
+                htmlFor="manual-email"
+                className="text-sm font-semibold text-main-black mb-1 block"
+              >
                 Email
               </label>
               <input
@@ -242,18 +309,26 @@ export default function GuestManager({ eventId }: { eventId: string }) {
           </div>
 
           <div className="flex flex-wrap items-center gap-6">
-            <label htmlFor="manual-plusones" className="flex items-center gap-2 text-sm text-main-black">
+            <label
+              htmlFor="manual-plusones"
+              className="flex items-center gap-2 text-sm text-main-black"
+            >
               Plus-ones
               <input
                 id="manual-plusones"
                 type="number"
                 min={0}
                 value={manualPlusOnes}
-                onChange={(e) => setManualPlusOnes(Math.max(0, Number(e.target.value)))}
+                onChange={(e) =>
+                  setManualPlusOnes(Math.max(0, Number(e.target.value)))
+                }
                 className="w-20 rounded-md border border-main-purple bg-sec-grey px-3 h-10 text-sm text-main-black"
               />
             </label>
-            <label htmlFor="manual-vip" className="flex items-center gap-2 cursor-pointer text-sm text-main-black">
+            <label
+              htmlFor="manual-vip"
+              className="flex items-center gap-2 cursor-pointer text-sm text-main-black"
+            >
               <input
                 id="manual-vip"
                 type="checkbox"
@@ -269,7 +344,9 @@ export default function GuestManager({ eventId }: { eventId: string }) {
           <div className="flex items-center gap-4">
             <button
               type="submit"
-              disabled={manualAdding || !manualName.trim() || !manualEmail.trim()}
+              disabled={
+                manualAdding || !manualName.trim() || !manualEmail.trim()
+              }
               className="bg-main-purple text-main-white px-6 py-2 md:px-9 md:py-3 text-base rounded-big font-medium"
             >
               {manualAdding ? "Adding…" : "Add guest & send invite"}
@@ -286,10 +363,14 @@ export default function GuestManager({ eventId }: { eventId: string }) {
       <div className="w-full rounded-big bg-main-white shadow shadow-black/10 p-4 sm:p-6">
         <h2 className="sub-title-text text-main-black mb-1">Bulk import</h2>
         <p className="body-text text-main-black/60 mb-4">
-          For adding many guests at once — otherwise use &ldquo;Add a guest&rdquo; above.
+          For adding many guests at once — otherwise use &ldquo;Add a
+          guest&rdquo; above.
         </p>
 
-        <label htmlFor="guest-file" className="text-sm font-semibold text-main-black mb-1 block">
+        <label
+          htmlFor="guest-file"
+          className="text-sm font-semibold text-main-black mb-1 block"
+        >
           Upload a spreadsheet (Excel or CSV)
         </label>
         <input
@@ -305,24 +386,31 @@ export default function GuestManager({ eventId }: { eventId: string }) {
         />
         <p className="text-xs text-main-black/60 mt-1 mb-5">
           Needs <span className="font-semibold">Name</span> and{" "}
-          <span className="font-semibold">Email</span> columns (a header row). Optional:
-          VIP, plusOnes.
+          <span className="font-semibold">Email</span> columns (a header row).
+          Optional: VIP, plusOnes.
         </p>
 
         <div className="flex items-center gap-3 mb-4">
           <span className="h-px flex-1 bg-main-light-grey/50" />
-          <span className="text-xs uppercase tracking-wide text-main-black/40">or paste CSV</span>
+          <span className="text-xs uppercase tracking-wide text-main-black/40">
+            or paste CSV
+          </span>
           <span className="h-px flex-1 bg-main-light-grey/50" />
         </div>
 
-        <label htmlFor="guest-csv" className="text-sm font-semibold text-main-black mb-1 block">
+        <label
+          htmlFor="guest-csv"
+          className="text-sm font-semibold text-main-black mb-1 block"
+        >
           Guest list CSV
         </label>
         <textarea
           id="guest-csv"
           value={csv}
           onChange={(e) => setCsv(e.target.value)}
-          placeholder={"name,email,vip,plusOnes\nAda Lovelace,ada@example.com,yes,1"}
+          placeholder={
+            "name,email,vip,plusOnes\nAda Lovelace,ada@example.com,yes,1"
+          }
           rows={6}
           aria-describedby="guest-csv-hint"
           className="w-full rounded-md border border-main-purple bg-sec-grey p-3 font-mono text-sm text-main-black"
@@ -351,14 +439,18 @@ export default function GuestManager({ eventId }: { eventId: string }) {
         <div aria-live="polite" role="status">
           {result && (
             <div className="mt-4 rounded-md bg-main-grey-bg p-4 text-sm flex flex-col gap-1">
-              <p className="text-green-700 font-medium">Added: {result.added.length}</p>
+              <p className="text-green-700 font-medium">
+                Added: {result.added.length}
+              </p>
               {result.skipped.length > 0 && (
                 <p className="text-main-black/60">
                   Skipped (already invited): {result.skipped.length}
                 </p>
               )}
               {result.failed.length > 0 && (
-                <p className="text-main-error-red">Failed: {result.failed.length}</p>
+                <p className="text-main-error-red">
+                  Failed: {result.failed.length}
+                </p>
               )}
               {result.invalidRows.length > 0 && (
                 <p className="text-amber-700">
@@ -371,11 +463,16 @@ export default function GuestManager({ eventId }: { eventId: string }) {
       </div>
 
       <div className="w-full rounded-big bg-main-white shadow shadow-black/10 p-4 sm:p-6">
-        <h2 className="sub-title-text text-main-black mb-1">Ask about your guest list</h2>
+        <h2 className="sub-title-text text-main-black mb-1">
+          Ask about your guest list
+        </h2>
         <label htmlFor="guest-question" className="sr-only">
           Ask a question about your guest list
         </label>
-        <p id="guest-question-hint" className="body-text text-main-black/60 mb-3">
+        <p
+          id="guest-question-hint"
+          className="body-text text-main-black/60 mb-3"
+        >
           Try &ldquo;who hasn&apos;t arrived&rdquo; or &ldquo;how many VIPs have
           arrived&rdquo;.
         </p>
@@ -439,10 +536,18 @@ export default function GuestManager({ eventId }: { eventId: string }) {
             <table className="w-full text-left text-sm">
               <thead className="text-xs uppercase tracking-wide text-main-black/60">
                 <tr>
-                  <th scope="col" className="py-2 pr-4">Name</th>
-                  <th scope="col" className="py-2 pr-4">Email</th>
-                  <th scope="col" className="py-2 pr-4">VIP</th>
-                  <th scope="col" className="py-2 pr-4">+1s</th>
+                  <th scope="col" className="py-2 pr-4">
+                    Name
+                  </th>
+                  <th scope="col" className="py-2 pr-4">
+                    Email
+                  </th>
+                  <th scope="col" className="py-2 pr-4">
+                    VIP
+                  </th>
+                  <th scope="col" className="py-2 pr-4">
+                    +1s
+                  </th>
                   <th scope="col" className="py-2">
                     <span className="sr-only">Actions</span>
                   </th>
@@ -453,11 +558,17 @@ export default function GuestManager({ eventId }: { eventId: string }) {
                   <tr key={g._id}>
                     <td className="py-3 pr-4 text-main-black">{g.name}</td>
                     <td className="py-3 pr-4 text-main-black/80">{g.email}</td>
-                    <td className="py-3 pr-4 text-main-black/80">{g.vip ? "Yes" : "—"}</td>
-                    <td className="py-3 pr-4 tabular-nums text-main-black/80">{g.plusOnes}</td>
+                    <td className="py-3 pr-4 text-main-black/80">
+                      {g.vip ? "Yes" : "—"}
+                    </td>
+                    <td className="py-3 pr-4 tabular-nums text-main-black/80">
+                      {g.plusOnes}
+                    </td>
                     <td className="py-3 text-right">
                       {g.erasedAt ? (
-                        <span className="text-xs text-main-black/50">Data erased</span>
+                        <span className="text-xs text-main-black/50">
+                          Data erased
+                        </span>
                       ) : (
                         <button
                           type="button"

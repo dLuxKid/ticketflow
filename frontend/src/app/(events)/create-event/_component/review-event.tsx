@@ -1,15 +1,3 @@
-import Image from "next/image";
-import { useState } from "react";
-
-import {
-  ReviewCategoriesStyles,
-  ReviewTimezoneStyles,
-} from "@/styles/react-select.styles";
-import ReactDatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import Select from "react-select";
-import { toast } from "sonner";
-
 import { newTicketInfo } from "@/assets/data/create-event-data";
 import { categories, timzezones } from "@/assets/data/react-select-options";
 import FacebookWhite from "@/assets/svg/fb-white";
@@ -18,12 +6,19 @@ import GlobeWhite from "@/assets/svg/globe-white";
 import IGWhite from "@/assets/svg/ig-white";
 import XWhite from "@/assets/svg/x-white";
 import YoutubeWhite from "@/assets/svg/yt-white";
-import { FaPlus } from "react-icons/fa";
-
 import Loader from "@/components/ui/loader";
 import Button from "@/components/ui/submit-btn";
-
+import {
+  ReviewCategoriesStyles,
+  ReviewTimezoneStyles,
+} from "@/styles/react-select.styles";
 import { createEvent } from "@/utils/actions";
+import Image from "next/image";
+import { useState } from "react";
+import ReactDatePicker from "react-datepicker";
+import { FaPlus } from "react-icons/fa";
+import Select from "react-select";
+import { toast } from "sonner";
 
 type Props = {
   eventData: eventData;
@@ -60,7 +55,9 @@ export default function ReviewEvent({
   const [loading, setLoading] = useState<boolean>(false);
 
   const [ticketInfo] = useState<ticketType[]>(
-    !!eventData.ticketDetails.length ? eventData.ticketDetails : [newTicketInfo]
+    !!eventData.ticketDetails.length
+      ? eventData.ticketDetails
+      : [newTicketInfo],
   );
 
   const isSocialsAvailable = () => {
@@ -107,6 +104,7 @@ export default function ReviewEvent({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isAllInputFilled()) return;
+
     setLoading(true);
 
     const body: eventData = {
@@ -142,7 +140,7 @@ export default function ReviewEvent({
       toast.error(
         error.response
           ? error.response.data.message
-          : "Error creating your event"
+          : "Error creating your event",
       );
     }
     setLoading(false);
@@ -267,7 +265,7 @@ export default function ReviewEvent({
               <Select
                 styles={ReviewTimezoneStyles}
                 value={timzezones.find(
-                  (option) => option.value === eventData.timezone || null
+                  (option) => option.value === eventData.timezone || null,
                 )}
                 isDisabled
               />
@@ -303,7 +301,7 @@ export default function ReviewEvent({
                   value={
                     countryOptions?.find(
                       (option) =>
-                        option.value === eventData.eventLocation.country
+                        option.value === eventData.eventLocation.country,
                     ) || null
                   }
                   isDisabled
@@ -314,7 +312,8 @@ export default function ReviewEvent({
                   styles={ReviewCategoriesStyles}
                   value={
                     stateOptions?.find(
-                      (option) => option.value === eventData.eventLocation.state
+                      (option) =>
+                        option.value === eventData.eventLocation.state,
                     ) || null
                   }
                   isDisabled
@@ -358,7 +357,7 @@ export default function ReviewEvent({
                 styles={ReviewCategoriesStyles}
                 value={
                   categories.find(
-                    (option) => option.value === eventData.eventCategory
+                    (option) => option.value === eventData.eventCategory,
                   ) || null
                 }
                 isDisabled
