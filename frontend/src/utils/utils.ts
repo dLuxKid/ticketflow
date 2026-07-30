@@ -28,7 +28,7 @@ export const calculateExcludeDates = (minDate: Date, maxDate: Date) => {
   const today = new Date(
     currentDate.getFullYear(),
     currentDate.getMonth(),
-    currentDate.getDate()
+    currentDate.getDate(),
   ); // Remove time component from currentDate
   // Add all dates before today and after eventData.startDate to excludedDates
   for (
@@ -76,7 +76,7 @@ export function formatDateRange(startDate: Date, endDate: Date) {
     if (monthYear === formattedEndDate.slice(0, 7)) {
       return `${formattedStartDate.slice(0, 6)} - ${formattedEndDate.slice(
         0,
-        6
+        6,
       )}`;
     } else {
       return `${formattedStartDate} - ${formattedEndDate}`;

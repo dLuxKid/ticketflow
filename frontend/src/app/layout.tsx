@@ -3,6 +3,7 @@ import "@/styles/globals.css";
 import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import "react-datepicker/dist/react-datepicker.css";
+import "tippy.js/dist/tippy.css";
 
 const roboto = Roboto({
   weight: ["100", "300", "400", "500", "700", "900"],
