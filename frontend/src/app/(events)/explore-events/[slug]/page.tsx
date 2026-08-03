@@ -1,7 +1,3 @@
-import { Metadata, ResolvingMetadata } from "next";
-import Image from "next/image";
-import { redirect } from "next/navigation";
-
 import avatar from "@/assets/images/default-avatar.png";
 import DateIcon from "@/assets/svg/date-icon";
 import FacebookIcon from "@/assets/svg/fb-color";
@@ -10,13 +6,14 @@ import InstagramIcon from "@/assets/svg/ig-color";
 import LocationIcon from "@/assets/svg/location-icon";
 import XIcon from "@/assets/svg/x-icon";
 import Youtube from "@/assets/svg/youtube";
-
 import Container from "@/components/container";
-import BuyTicketBtn from "../_components/buy-ticket-btn";
 import NumberOfAttendees from "@/components/ui/number-of-attendees";
-
 import { getEvent } from "@/utils/queries";
 import { formatDateRange, formatTimeRange } from "@/utils/utils";
+import { Metadata, ResolvingMetadata } from "next";
+import Image from "next/image";
+import { redirect } from "next/navigation";
+import BuyTicketBtn from "../_components/buy-ticket-btn";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -24,7 +21,7 @@ type Props = {
 
 export async function generateMetadata(
   { params }: Props,
-  parent: ResolvingMetadata
+  parent: ResolvingMetadata,
 ): Promise<Metadata> {
   const resolvedParams = await params;
   const data = await getEvent(resolvedParams.slug);
@@ -77,13 +74,13 @@ export default async function Event({ params }: Props) {
                     <p className="text-sm font-medium text-[#1f1f1f]">
                       {formatDateRange(
                         new Date(event.startDate),
-                        new Date(event.endDate)
+                        new Date(event.endDate),
                       )}
                     </p>
                     <p className="text-sm font-medium text-[#1f1f1f]/80">
                       {formatTimeRange(
                         new Date(event.startTime),
-                        new Date(event.endTime)
+                        new Date(event.endTime),
                       )}{" "}
                       {event.timezone}
                     </p>
