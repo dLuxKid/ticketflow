@@ -49,7 +49,7 @@ function MyEventContent() {
             <Button>Create Event</Button>
           </Link>
         </div>
-        <div className="w-full">
+        <div className="w-full bg-red-900">
           <ul className="flex-start gap-4">
             {eventCategories.map((category) => (
               <li
