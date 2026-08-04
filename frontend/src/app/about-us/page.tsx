@@ -1,18 +1,41 @@
-import Image from "next/image";
-
 import CommunicateWithUs from "@/assets/images/Chat.png";
 import createEvent from "@/assets/images/Events.png";
 import Location from "@/assets/images/Location.png";
-
 import Container from "@/components/container";
 import SignupSection from "@/components/signup-section";
+import Image from "next/image";
 
 const team_item = [
-  { name: "Marvellous Adetunji", photo: "https://ui-avatars.com/api/?name=Marvellous+Adetunji&background=6528F7&color=fff&size=256", role: "Frontend Developer" },
-  { name: "Olasubomi Abiola", photo: "https://ui-avatars.com/api/?name=Olasubomi+Abiola&background=6528F7&color=fff&size=256", role: "UI/UX Designer" },
-  { name: "Opeyemi Akoki", photo: "https://ui-avatars.com/api/?name=Opeyemi+Akoki&background=6528F7&color=fff&size=256", role: "DevOps Engineer" },
-  { name: "Ofejiro Ederhi", photo: "https://ui-avatars.com/api/?name=Ofejiro+Ederhi&background=6528F7&color=fff&size=256", role: "Backend Developer" },
-  { name: "Desmond Ijeoma", photo: "https://ui-avatars.com/api/?name=Desmond+Ijeoma&background=6528F7&color=fff&size=256", role: "Project Manager" },
+  {
+    name: "Marvellous Adetunji",
+    photo:
+      "https://ui-avatars.com/api/?name=Marvellous+Adetunji&background=6528F7&color=fff&size=256",
+    role: "Frontend Developer",
+  },
+  {
+    name: "Olasubomi Abiola",
+    photo:
+      "https://ui-avatars.com/api/?name=Olasubomi+Abiola&background=6528F7&color=fff&size=256",
+    role: "UI/UX Designer",
+  },
+  {
+    name: "Opeyemi Akoki",
+    photo:
+      "https://ui-avatars.com/api/?name=Opeyemi+Akoki&background=6528F7&color=fff&size=256",
+    role: "DevOps Engineer",
+  },
+  {
+    name: "Ofejiro Ederhi",
+    photo:
+      "https://ui-avatars.com/api/?name=Ofejiro+Ederhi&background=6528F7&color=fff&size=256",
+    role: "Backend Developer",
+  },
+  {
+    name: "Desmond Ijeoma",
+    photo:
+      "https://ui-avatars.com/api/?name=Desmond+Ijeoma&background=6528F7&color=fff&size=256",
+    role: "Project Manager",
+  },
 ];
 
 export default function AboutUs() {
@@ -26,13 +49,13 @@ export default function AboutUs() {
             </h1>
             <p className="body-text text-center md:text-start text-main-black">
               TicketFlow is an event ticketing and discovery platform designed
-              to transform the event space and enhance event attendee experience.
-              Our mission is to connect event attendees with a wide range of
-              events while providing event organisers with event management
-              tools and resources to create events that transcend the norm. Not
-              only are we building a community of event enthusiasts, TicketFlow
-              in its entirety guarantees event experiences that are more
-              accessible, personalized and memorable.
+              to transform the event space and enhance event attendee
+              experience. Our mission is to connect event attendees with a wide
+              range of events while providing event organisers with event
+              management tools and resources to create events that transcend the
+              norm. Not only are we building a community of event enthusiasts,
+              TicketFlow in its entirety guarantees event experiences that are
+              more accessible, personalized and memorable.
             </p>
           </div>
           <div className="w-full flex-center flex-1 min-h-[10rem]">
@@ -109,7 +132,11 @@ export default function AboutUs() {
                   className="flex-center flex-col text-center gap-2 md:gap-4"
                   key={i}
                 >
-                  <img src={member.photo} alt={member.name} className="rounded-full w-48 h-48 object-cover mb-4" />
+                  <img
+                    src={member.photo}
+                    alt={member.name}
+                    className="rounded-full w-48 h-48 object-cover mb-4"
+                  />
                   <h3 className="sub-title-text text-main-black">
                     {member.name}
                   </h3>
