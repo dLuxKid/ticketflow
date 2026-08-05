@@ -3,6 +3,7 @@ import Image from "next/image";
 import CommunicateWithUs from "@/assets/images/Chat.png";
 import EventsGraphic from "@/assets/images/Events.png";
 import LocationGraphic from "@/assets/images/Location.png";
+import OfejiroImage from "@/assets/images/Ofejiro.jpeg";
 
 import Container from "@/components/container";
 import SignupSection from "@/components/signup-section";
@@ -20,7 +21,7 @@ const team = [
   { name: "Marvellous Adetunji", role: "Frontend Developer" },
   { name: "Olasubomi Abiola", role: "UI/UX Designer" },
   { name: "Opeyemi Akoki", role: "DevOps Engineer" },
-  { name: "Ofejiro Ederhi", role: "Backend Developer" },
+  { name: "Ofejiro Ederhi", role: "Backend Developer", image: OfejiroImage, },
   { name: "Desmond Ijeoma", role: "Project Manager" },
 ];
 
@@ -171,9 +172,8 @@ export default function AboutUs() {
             {features.map((feature, i) => (
               <div
                 key={feature.step}
-                className={`flex flex-col items-center gap-8 md:gap-14 ${
-                  i % 2 === 1 ? "md:flex-row-reverse" : "md:flex-row"
-                }`}
+                className={`flex flex-col items-center gap-8 md:gap-14 ${i % 2 === 1 ? "md:flex-row-reverse" : "md:flex-row"
+                  }`}
               >
                 <div className="flex flex-1 flex-col items-center gap-3 text-center md:items-start md:text-left">
                   <span className="text-sm font-bold tabular-nums text-main-purple/50">
@@ -219,12 +219,20 @@ export default function AboutUs() {
                 key={member.name}
                 className="group flex flex-col items-center gap-3 text-center"
               >
-                <span
-                  aria-hidden="true"
-                  className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-main-purple to-[#8b7bf0] text-2xl font-bold text-main-white shadow-lg shadow-main-purple/25 ring-4 ring-main-white transition-transform duration-300 group-hover:-translate-y-1 sm:h-28 sm:w-28 sm:text-3xl"
-                >
-                  {initials(member.name)}
-                </span>
+                {member.image ? (
+                  <Image
+                    src={member.image}
+                    alt={member.name}
+                    className="h-24 w-24 rounded-full object-cover shadow-lg ring-4 ring-main-white transition-transform duration-300 group-hover:-translate-y-1 sm:h-28 sm:w-28"
+                  />
+                ) : (
+                  <span
+                    aria-hidden="true"
+                    className="flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-main-purple to-[#8b7bf0] text-2xl font-bold text-main-white shadow-lg shadow-main-purple/25 ring-4 ring-main-white transition-transform duration-300 group-hover:-translate-y-1 sm:h-28 sm:w-28 sm:text-3xl"
+                  >
+                    {initials(member.name)}
+                  </span>
+                )}
                 <div>
                   <h3 className="text-sm font-bold text-main-black sm:text-base">
                     {member.name}
