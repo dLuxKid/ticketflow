@@ -12,11 +12,22 @@ const router = Router();
 router.post('/webhook/paystack', paymentController.paystackWebhook);
 
 // ─── Optionally-authenticated routes ───────────────────────────────────────────
-// Guest bookings are supported (isLoggedIn sets req.user if present)
+// Guest bookings are supported (isLoggedIn sets req.user if present).
+// `/create` reserves seats and returns the reference to pay against — it runs BEFORE
+// checkout, so a charge can never exist without a booking behind it.
 router.post(
   '/create',
   authController.isLoggedIn,
   bookingController.createBooking,
+);
+
+// Post-checkout confirmation. Unauthenticated for the same reason as /create: guest buyers
+// have no session. Safe because the body carries only a reference, and the charge is
+// verified against Paystack server-side before the reservation is confirmed.
+router.post(
+  '/confirm',
+  authController.isLoggedIn,
+  paymentController.confirmCheckout,
 );
 
 // ─── Protected routes ──────────────────────────────────────────────────────────

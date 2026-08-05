@@ -1,7 +1,10 @@
 import mongoose from 'mongoose';
 import * as bookingRepository from '../repositories/bookingRepository.js';
 import * as auditLogRepository from '../repositories/auditLogRepository.js';
-import { emitAdmitted, emitRejected } from '../shared/events/admissionEvents.js';
+import {
+  emitAdmitted,
+  emitRejected,
+} from '../shared/events/admissionEvents.js';
 import AppError from '../shared/errors/AppError.js';
 
 /**
@@ -19,18 +22,21 @@ const equalsId = (a, b) => Boolean(a && b && a.equals?.(b));
 /**
  * Pure authorization decision: may `actor` admit guests for `event`?
  *  - admin: any event
- *  - creator: only their own event
+ *  - the event's owner: their own event
  *  - usher: only events they are assigned to (otherwise it's a wrong-event scan)
  * Exported for unit testing.
+ *
+ * Ownership is checked on its own, not in combination with the `creator` role. Role is not
+ * a reliable proxy for it: accounts that own events are not all labelled `creator` (see
+ * eventService.updateEvent, which likewise gates on ownership alone), and pairing the two
+ * locked an organiser out of admitting guests to the event they had just created.
  *
  * @returns {{ok: true} | {ok: false, httpStatus: number, reason?: string, auditable?: boolean}}
  */
 export const authorizeScan = (actor, event) => {
   if (!actor || !event) return { ok: false, httpStatus: 403 };
   if (actor.role === 'admin') return { ok: true };
-  if (actor.role === 'creator' && equalsId(event.user, actor._id)) {
-    return { ok: true };
-  }
+  if (equalsId(event.user, actor._id)) return { ok: true };
   if (actor.role === 'usher') {
     const assigned = (actor.assignedEvents || []).some((id) =>
       equalsId(id, event._id),
@@ -56,6 +62,33 @@ const REJECTION_MESSAGE = {
   already_admitted: 'This ticket has already been admitted',
   revoked: 'This ticket has been revoked',
   not_admittable: 'This ticket cannot be admitted',
+  at_capacity:
+    'The venue has reached its safe capacity. Admitting more people requires a supervisor override.',
+};
+
+/**
+ * Pure: may one more person be admitted right now? Exported for unit testing.
+ *
+ * Venue occupancy limits are a fire-safety obligation, not a commercial one, so the door
+ * enforces them rather than trusting ticket inventory — organisers deliberately oversell
+ * against expected no-shows, which would make totalQuantity the wrong number to stop on if a
+ * venueCapacity has been set.
+ *
+ * The limit is a stop-and-confirm, not a hard block: refusing entry outright would strand a
+ * paying guest at the door with no recourse, so a supervisor may override. The override is
+ * recorded on the audit row, which means exceeding capacity leaves evidence naming who
+ * authorised it rather than happening silently.
+ *
+ * @param {{admitted:number, capacity:number, override?:boolean}} args
+ * @returns {{allow:boolean, reason?:string}}
+ */
+export const capacityDecision = ({ admitted, capacity, override = false }) => {
+  // No capacity configured — an invite-only event carries no ticket inventory, and blocking
+  // admission because a number is absent would be worse than not enforcing one.
+  if (!capacity || capacity <= 0) return { allow: true };
+  if (admitted < capacity) return { allow: true };
+  if (override) return { allow: true, reason: 'capacity_override' };
+  return { allow: false, reason: 'at_capacity' };
 };
 
 /**
@@ -82,7 +115,13 @@ export const checkInByScan = async (code, actor, context = {}) => {
   if (!auth.ok) {
     // A usher scanning a ticket for an event they don't work is a recorded security event.
     if (auth.auditable) {
-      await recordRejection(event._id, booking._id, actor._id, auth.reason, context);
+      await recordRejection(
+        event._id,
+        booking._id,
+        actor._id,
+        auth.reason,
+        context,
+      );
     }
     throw new AppError(
       REJECTION_MESSAGE[auth.reason] ??
@@ -95,8 +134,24 @@ export const checkInByScan = async (code, actor, context = {}) => {
   // didn't happen (or vice versa). NOTE: requires MongoDB running as a replica set.
   const session = await mongoose.startSession();
   let admitted;
+  let capacity = { allow: true };
   try {
     await session.withTransaction(async () => {
+      // Counted inside the transaction, not before it: two scanners working the same door at
+      // capacity-1 would otherwise both read "one seat left" and both admit.
+      const effectiveCapacity = event.venueCapacity ?? event.totalQuantity ?? 0;
+      const admittedCount = await bookingRepository.countByEventAndStatus(
+        event._id,
+        'admitted',
+        session,
+      );
+      capacity = capacityDecision({
+        admitted: admittedCount,
+        capacity: effectiveCapacity,
+        override: context.overrideCapacity === true,
+      });
+      if (!capacity.allow) return;
+
       admitted = await bookingRepository.admitById(booking._id, session);
       if (admitted) {
         await auditLogRepository.record(
@@ -105,6 +160,9 @@ export const checkInByScan = async (code, actor, context = {}) => {
             booking: booking._id,
             actor: actor._id,
             outcome: 'admitted',
+            // Present only on an override, so the log distinguishes a routine admission
+            // from one that knowingly took the room past its safe occupancy.
+            reason: capacity.reason,
             deviceId: context.deviceId,
             ip: context.ip,
           },
@@ -114,6 +172,20 @@ export const checkInByScan = async (code, actor, context = {}) => {
     });
   } finally {
     await session.endSession();
+  }
+
+  // Refused on capacity: recorded outside the transaction, which was rolled back.
+  if (!capacity.allow) {
+    await recordRejection(
+      event._id,
+      booking._id,
+      actor._id,
+      'at_capacity',
+      context,
+    );
+    // Coded so the scanner can offer a supervisor override for this refusal specifically,
+    // and not for an already-admitted or revoked ticket, where overriding is meaningless.
+    throw new AppError(REJECTION_MESSAGE.at_capacity, 409, 'at_capacity');
   }
 
   if (admitted) {
@@ -135,7 +207,13 @@ export const checkInByScan = async (code, actor, context = {}) => {
 };
 
 /** Writes a rejection audit row and publishes the rejection event. */
-const recordRejection = async (eventId, bookingId, actorId, reason, context = {}) => {
+const recordRejection = async (
+  eventId,
+  bookingId,
+  actorId,
+  reason,
+  context = {},
+) => {
   await auditLogRepository.record({
     event: eventId,
     booking: bookingId,

@@ -319,7 +319,16 @@ export const unassignUsher = async (eventId: string, userId: string) => {
   }
 };
 
-export const scanTicket = async (code: string, deviceId?: string) => {
+/**
+ * @param overrideCapacity - admit even though the venue is at its safe occupancy. Sent only
+ *   after the door has been refused with `code: "at_capacity"` and a supervisor has
+ *   explicitly confirmed; the server records the override on the audit row.
+ */
+export const scanTicket = async (
+  code: string,
+  deviceId?: string,
+  overrideCapacity?: boolean,
+) => {
   const cookieStore = await cookies();
   const token = cookieStore.get("jwt")?.value;
 
@@ -327,7 +336,7 @@ export const scanTicket = async (code: string, deviceId?: string) => {
     const res = await axios({
       method: "POST",
       url: API_URLS.bookings.scan,
-      data: { code, deviceId },
+      data: { code, deviceId, overrideCapacity },
       headers: { Authorization: "Bearer " + token },
     });
     return res.data;

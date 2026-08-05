@@ -57,6 +57,35 @@ export const reserveTicketInventory = (eventId, ticketName, count, session) =>
   );
 
 /**
+ * Returns `count` tickets of a given type to an event's inventory — the inverse of
+ * reserveTicketInventory.
+ *
+ * Used when a reservation is abandoned: the charge failed, the buyer walked away, or the
+ * hold expired. Without this, every abandoned checkout would permanently shrink the
+ * sellable inventory and the event would report a phantom sell-out.
+ *
+ * Deliberately unguarded on quantity (there is no upper bound to violate), but it must only
+ * ever be called once per reservation — callers guarantee that by flipping the booking out
+ * of `pending` in the same transaction.
+ *
+ * @returns {Promise<object|null>} the updated event, or null if the tier no longer exists
+ */
+export const releaseTicketInventory = (eventId, ticketName, count, session) =>
+  Event.findOneAndUpdate(
+    {
+      _id: eventId,
+      ticketDetails: { $elemMatch: { ticketName } },
+    },
+    {
+      $inc: {
+        'ticketDetails.$.ticketQuantity': count,
+        numberOfAttendees: -count,
+      },
+    },
+    { new: true, session },
+  );
+
+/**
  * Returns all active events (currently running or yet to start) with
  * query string filtering, sorting, field limiting, and pagination applied.
  */

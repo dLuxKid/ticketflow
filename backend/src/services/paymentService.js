@@ -1,4 +1,4 @@
-import * as bookingRepository from '../repositories/bookingRepository.js';
+import * as bookingService from './bookingService.js';
 import { isValidPaystackSignature } from '../shared/utils/paystack.js';
 import AppError from '../shared/errors/AppError.js';
 
@@ -34,18 +34,95 @@ export const handlePaystackWebhook = async (rawBody, signature) => {
   const reference = payload?.data?.reference;
 
   if (eventType === 'charge.success' && reference != null) {
-    await bookingRepository.updateStatusByReference(reference, 'success');
-    return { handled: true, event: eventType };
+    // Confirms the reservation and delivers tickets. Safe under Paystack's retries — the
+    // guarded transition inside confirmReservation makes repeat deliveries impossible.
+    const result = await bookingService.confirmReservation(reference, {
+      transactionNumber: payload?.data?.id,
+      message: payload?.data?.gateway_response,
+    });
+    return { handled: true, event: eventType, ...result };
   }
 
   if (
     (eventType === 'charge.failed' || eventType === 'charge.abandoned') &&
     reference != null
   ) {
-    await bookingRepository.updateStatusByReference(reference, 'failed');
-    return { handled: true, event: eventType };
+    // Give the seats back — an abandoned checkout must not shrink sellable inventory.
+    const result = await bookingService.releaseReservation(reference, 'failed');
+    return { handled: true, event: eventType, ...result };
   }
 
   // Unknown/irrelevant event — acknowledged but no state change.
   return { handled: false, event: eventType };
+};
+
+/** Paystack's transaction-verification endpoint. */
+const VERIFY_URL = 'https://api.paystack.co/transaction/verify';
+
+/**
+ * Asks Paystack directly whether a reference was actually paid.
+ *
+ * Exported so tests can stub the network call.
+ *
+ * @returns {Promise<{paid: boolean, id?: number, message?: string}>}
+ */
+export const verifyTransaction = async (reference, fetchImpl = fetch) => {
+  const secretKey = process.env.PAYSTACK_SECRET_KEY;
+  const res = await fetchImpl(
+    `${VERIFY_URL}/${encodeURIComponent(reference)}`,
+    {
+      headers: { Authorization: `Bearer ${secretKey}` },
+    },
+  );
+
+  if (!res.ok) return { paid: false };
+
+  const body = await res.json();
+  return {
+    paid: body?.data?.status === 'success',
+    id: body?.data?.id,
+    message: body?.data?.gateway_response,
+  };
+};
+
+/**
+ * Confirms a checkout from the buyer's browser callback, after verifying the charge with
+ * Paystack server-side.
+ *
+ * The webhook is the primary confirmation path, but it is not guaranteed to arrive — it can
+ * be delayed, misconfigured, or blocked in local development. Without this the buyer's
+ * reservation would sit `pending` and be swept away 15 minutes after they successfully paid.
+ * The client's claim of success is never trusted: it only names the reference, and the
+ * charge is checked against Paystack's API before anything is confirmed.
+ *
+ * When no secret key is configured the deployment cannot take real payments at all, so the
+ * reservation is confirmed directly. That keeps local development working without turning
+ * into a bypass in production, where the key is always present.
+ *
+ * @param {number|string} reference
+ * @returns {Promise<{confirmed:boolean, ticketsSent:number}>}
+ */
+export const confirmCheckout = async (reference) => {
+  if (reference == null || reference === '') {
+    throw new AppError('A payment reference is required', 400);
+  }
+
+  const secretKey = process.env.PAYSTACK_SECRET_KEY;
+  if (!secretKey) {
+    console.warn(
+      'PAYSTACK_SECRET_KEY is not set — confirming checkout without verification. ' +
+        'This is development-only behaviour; configure the key before taking payments.',
+    );
+    return bookingService.confirmReservation(reference);
+  }
+
+  const verified = await verifyTransaction(reference);
+  if (!verified.paid) {
+    throw new AppError('Payment could not be verified', 402);
+  }
+
+  return bookingService.confirmReservation(reference, {
+    transactionNumber: verified.id,
+    message: verified.message,
+  });
 };

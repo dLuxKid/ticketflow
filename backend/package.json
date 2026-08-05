@@ -15,7 +15,9 @@
     "test:unit": "node --test \"tests/unit/**/*.test.js\"",
     "migrate:numeric-tickets": "node scripts/migrate-numeric-ticket-fields.js",
     "migrate:phase1-backfill": "node scripts/migrate-phase1-backfill.js",
+    "migrate:ticket-ids": "node scripts/migrate-ticket-ids.js",
     "gdpr:sweep": "node scripts/gdpr-retention-sweep.js",
+    "reservations:release": "node scripts/release-expired-reservations.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write ."

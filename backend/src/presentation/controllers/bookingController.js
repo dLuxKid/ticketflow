@@ -6,19 +6,26 @@ import catchAsync from '../../shared/middleware/catchAsync.js';
  * Handles HTTP concerns only — delegates all business logic to bookingService.
  */
 
+/**
+ * Holds seats and creates `pending` bookings before the buyer is sent to checkout.
+ * The response carries the server-issued reference the client must pay against.
+ */
 export const createBooking = catchAsync(async (req, res) => {
   const userId = req.user?._id;
 
-  const booking = await bookingService.createBooking(
-    req.body.ticketBuyers,
-    req.body.event,
-    userId,
-  );
+  const { reference, bookings, requiresPayment } =
+    await bookingService.reserveBooking(
+      req.body.ticketBuyers,
+      req.body.event,
+      userId,
+    );
 
   res.status(201).json({
     status: 'success',
-    message: 'You have successfully registered for this event',
-    data: { booking },
+    message: requiresPayment
+      ? 'Your tickets are reserved — complete payment to confirm'
+      : 'You have successfully registered for this event',
+    data: { booking: bookings, reference, requiresPayment },
   });
 });
 

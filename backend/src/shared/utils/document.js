@@ -14,6 +14,7 @@ const pdfTemplate = async (ticketBodyDetails) => {
     price,
     organizer,
     ticketId,
+    qr,
   } = ticketBodyDetails;
 
   const formattedDate = new Date(startDate).toLocaleDateString('en-GB', {
@@ -138,6 +139,11 @@ const pdfTemplate = async (ticketBodyDetails) => {
                                     <td style="font-size: 1rem; font-weight: bold; color: #1f1f1f;">${organizer}</td>
                                 </tr>
                             </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.5rem 0" align="center">
+                            <img src="${qr}" alt="Ticket QR code" width="180" height="180" />
                         </td>
                     </tr>
                     <tr>

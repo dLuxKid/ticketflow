@@ -23,7 +23,10 @@ test('creator may admit only for their own event', () => {
   const creatorId = oid();
   const owned = { _id: oid(), user: creatorId };
   const other = { _id: oid(), user: oid() };
-  assert.equal(authorizeScan({ _id: creatorId, role: 'creator' }, owned).ok, true);
+  assert.equal(
+    authorizeScan({ _id: creatorId, role: 'creator' }, owned).ok,
+    true,
+  );
   assert.equal(
     authorizeScan({ _id: creatorId, role: 'creator' }, other).ok,
     false,
@@ -50,6 +53,14 @@ test('usher scanning an unassigned event is a wrong_event rejection (auditable)'
 test('a plain user may not admit', () => {
   const event = { _id: oid(), user: oid() };
   assert.equal(authorizeScan({ _id: oid(), role: 'user' }, event).ok, false);
+});
+
+test('the event owner may admit whatever their role label is', () => {
+  // Owning the event is the authorising fact; not every organiser account carries the
+  // `creator` role, and requiring both locked owners out of their own door.
+  const ownerId = oid();
+  const event = { _id: oid(), user: ownerId };
+  assert.equal(authorizeScan({ _id: ownerId, role: 'user' }, event).ok, true);
 });
 
 test('missing actor or event is denied', () => {

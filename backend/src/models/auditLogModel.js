@@ -26,12 +26,21 @@ const auditLogSchema = new mongoose.Schema(
     },
     outcome: {
       type: String,
-      enum: ['admitted', 'rejected'],
+      enum: ['admitted', 'rejected', 'revoked'],
       required: [true, 'Audit entry must record an outcome'],
     },
     // Populated on rejection, e.g. 'already_admitted' | 'revoked' | 'wrong_event'.
     reason: {
       type: String,
+    },
+    // True when an organiser or usher set the status by hand instead of scanning a QR
+    // (damaged code, flat battery). Recorded so the log stays a complete account of who
+    // admitted whom, but excluded from anomaly detection: a manual entry has no device
+    // fingerprint and no scan timing, so feeding it to the detector would only manufacture
+    // false `rapid_sequential` flags next to a genuine scan.
+    manual: {
+      type: Boolean,
+      default: false,
     },
     // Best-effort fingerprint of the scanning device, used only as an anomaly-detection
     // signal (Phase 5) — never for authorization. Optional: older rows and non-web

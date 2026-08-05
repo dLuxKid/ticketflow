@@ -20,17 +20,60 @@ export const updateById = (id, data, options = { new: true }) =>
 export const findByIdWithEventOwner = (id) =>
   Booking.findById(id).populate({ path: 'event', select: 'user' });
 
+/** Every booking held under one Paystack reference (one checkout, N ticket buyers). */
+export const findByReference = (reference) => Booking.find({ reference });
+
 /**
- * Sets the transaction status for every booking under a Paystack reference.
- * Called from the verified webhook so payment state is server-authoritative.
+ * Confirms a reservation: flips every still-`pending` booking under this reference to
+ * `success` and drops the expiry hold.
+ *
+ * Guarded on `transactionStatus: 'pending'` so it is idempotent — Paystack retries its
+ * webhook, and the client also calls the verify endpoint, so this runs more than once per
+ * checkout by design. `modifiedCount > 0` identifies the single call that actually won the
+ * transition, which is what gates ticket delivery so nobody is emailed twice.
  */
-export const updateStatusByReference = (reference, transactionStatus) =>
-  Booking.updateMany({ reference }, { $set: { transactionStatus } });
+export const confirmByReference = (reference, fields = {}, session) =>
+  Booking.updateMany(
+    { reference, transactionStatus: 'pending' },
+    {
+      $set: { transactionStatus: 'success', ...fields },
+      $unset: { reservationExpiresAt: '' },
+    },
+    session ? { session } : undefined,
+  );
+
+/**
+ * Marks a reservation dead (`failed` or `expired`) and revokes its tickets, but only while
+ * it is still `pending`. Same guard, same reason: whoever gets `modifiedCount > 0` is the
+ * one call responsible for returning the inventory, so seats are never released twice.
+ */
+export const releaseByReference = (reference, transactionStatus, session) =>
+  Booking.updateMany(
+    { reference, transactionStatus: 'pending' },
+    {
+      $set: { transactionStatus, status: 'revoked' },
+      $unset: { reservationExpiresAt: '' },
+    },
+    session ? { session } : undefined,
+  );
+
+/**
+ * Distinct references of reservations whose hold has lapsed. Returns references rather than
+ * documents because release operates per checkout, not per ticket.
+ */
+export const findExpiredPendingReferences = (now = new Date()) =>
+  Booking.distinct('reference', {
+    transactionStatus: 'pending',
+    reservationExpiresAt: { $ne: null, $lte: now },
+  });
 
 export const findById = (id) => Booking.findById(id);
 
-export const countByEventAndStatus = (eventId, status) =>
-  Booking.countDocuments({ event: eventId, status });
+export const countByEventAndStatus = (eventId, status, session) =>
+  Booking.countDocuments(
+    { event: eventId, status },
+    session ? { session } : undefined,
+  );
 
 /**
  * Bookings not yet admitted/rejected/revoked — the population a no-show prediction is

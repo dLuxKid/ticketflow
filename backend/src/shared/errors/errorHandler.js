@@ -27,6 +27,7 @@ const sendErrorDev = (err, res) => {
     status: err.status,
     error: err,
     message: err.message,
+    ...(err.code && { code: err.code }),
     stack: err.stack,
   });
 };
@@ -37,6 +38,8 @@ const sendErrorProd = (err, res) => {
     res.status(err.statusCode).json({
       status: err.status,
       message: err.message,
+      // Safe to expose: an identifier we chose, carrying no internal detail.
+      ...(err.code && { code: err.code }),
     });
   } else {
     // Programming or unknown error: don't leak details

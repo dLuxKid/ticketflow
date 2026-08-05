@@ -88,3 +88,10 @@ jobs:
       - name: Lint
         working-directory: frontend
         run: npm run lint
+
+      # Component tests (Vitest + React Testing Library). Playwright covers whole journeys
+      # and needs a running stack; these run headless in seconds and guard rendering logic
+      # such as the ticket QR encoding the scannable ticketId.
+      - name: Unit tests
+        working-directory: frontend
+        run: npm test

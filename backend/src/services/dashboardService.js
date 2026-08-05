@@ -28,7 +28,10 @@ export const getEventForViewer = async (eventId, user) => {
   const event = await eventRepository.findById(eventId);
   if (!event) throw new AppError('No event found with that ID', 404);
   if (!canViewDashboard(user, event)) {
-    throw new AppError('You do not have permission to view this dashboard', 403);
+    throw new AppError(
+      'You do not have permission to view this dashboard',
+      403,
+    );
   }
   return event;
 };
@@ -45,9 +48,18 @@ export const getSnapshot = async (eventId) => {
     getNoShowPrediction(eventId),
   ]);
 
+  // Safe occupancy if the organiser set one, otherwise ticket inventory — the same
+  // precedence the door enforces (admissionService.capacityDecision).
+  const capacity = event?.venueCapacity ?? event?.totalQuantity ?? 0;
+
   return {
     eventId: String(eventId),
-    capacity: event?.totalQuantity ?? 0,
+    capacity,
+    // Surfaced so the dashboard can warn before the door starts refusing people, rather
+    // than the organiser first learning of it from a queue outside.
+    remaining: capacity > 0 ? Math.max(capacity - admitted, 0) : null,
+    atCapacity: capacity > 0 && admitted >= capacity,
+    capacitySource: event?.venueCapacity ? 'venueCapacity' : 'ticketInventory',
     sold: event?.numberOfAttendees ?? 0,
     admitted,
     noShow,
@@ -102,9 +114,7 @@ export const getNoShowPrediction = async (eventId) => {
     // Sum of individual probabilities, not count * average — same value here, but this is
     // the form that stays correct if probabilities are ever computed per-guest with
     // meaningfully different inputs (which they already are).
-    expectedNoShows: Math.round(
-      probabilities.reduce((sum, p) => sum + p, 0),
-    ),
+    expectedNoShows: Math.round(probabilities.reduce((sum, p) => sum + p, 0)),
     averageProbability,
   };
 };

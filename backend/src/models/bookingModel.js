@@ -38,10 +38,14 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       required: requiredForPurchase,
     },
+    // Only known once the charge settles — a purchase booking is now reserved BEFORE
+    // checkout (see bookingService.reserveBooking), so this cannot be required at insert.
     transactionNumber: {
       type: Number,
-      required: requiredForPurchase,
     },
+    // The code a purchased ticket's QR carries, and what the door scanner resolves against
+    // (see bookingRepository.findByInviteTokenOrTicketId). Always server-issued by
+    // shared/utils/ticketIdGenerator.js — never accepted from the client. Unique index below.
     ticketId: {
       type: String,
       required: requiredForPurchase,
@@ -50,17 +54,25 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       required: requiredForPurchase,
     },
+    // Payment lifecycle for a purchase booking. `pending` is the state a reservation sits
+    // in between holding the seats and Paystack confirming (or failing) the charge.
     transactionStatus: {
       type: String,
-      required: requiredForPurchase,
+      enum: ['pending', 'success', 'failed', 'expired'],
+      default: 'pending',
     },
     redirectUrl: {
       type: String,
-      // required: requiredForPurchase,
     },
+    // Provider message, only present after the charge resolves.
     message: {
       type: String,
-      required: requiredForPurchase,
+    },
+    // When an unpaid reservation stops holding its seats. Cleared once the charge is
+    // confirmed; the sweep in bookingService.releaseExpiredReservations returns the
+    // inventory of anything still pending past this instant.
+    reservationExpiresAt: {
+      type: Date,
     },
     reference: {
       type: Number,
@@ -121,6 +133,17 @@ bookingSchema.virtual('isCheckedIn').get(function () {
 });
 
 bookingSchema.index({ inviteToken: 1 }, { unique: true, sparse: true });
+// Two bookings must never share an admission code. Partial rather than sparse: invite
+// bookings carry no ticketId at all, and a sparse unique index would still index any
+// document that sets the field to an explicit null, colliding on the second such write.
+bookingSchema.index(
+  { ticketId: 1 },
+  { unique: true, partialFilterExpression: { ticketId: { $type: 'string' } } },
+);
+// Confirm/release look every booking up by its Paystack reference.
+bookingSchema.index({ reference: 1 });
+// Expiry sweep query pattern: still-pending reservations whose hold has lapsed.
+bookingSchema.index({ transactionStatus: 1, reservationExpiresAt: 1 });
 // Retention sweep query pattern: bookings for a set of expired events not yet erased.
 bookingSchema.index({ event: 1, piiErasedAt: 1 });
 

@@ -87,7 +87,7 @@ if (skipReason) {
     );
     await assert.rejects(
       () =>
-        bookingService.createBooking(
+        bookingService.reserveBooking(
           [{ ticketType: 'General', name: 'Buyer', email: 'b@e.com' }],
           event._id,
           owner._id,

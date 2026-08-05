@@ -20,6 +20,9 @@ export const getAnomaliesForEvent = async (eventId, user) => {
   const rows = await auditLogRepository.findByEvent(eventId, 1000);
   const byBooking = new Map();
   for (const r of rows) {
+    // Manual check-ins are audited but never scanned, so they carry no device fingerprint
+    // and no meaningful inter-scan timing. Including them would only fabricate flags.
+    if (r.manual) continue;
     const key = String(r.booking);
     if (!byBooking.has(key)) byBooking.set(key, []);
     byBooking.get(key).push(r);
@@ -29,7 +32,11 @@ export const getAnomaliesForEvent = async (eventId, user) => {
   for (const [bookingId, bookingRows] of byBooking) {
     const result = detectAnomalies(bookingRows);
     if (result.anomalous) {
-      flagged.push({ bookingId, flags: result.flags, scanCount: bookingRows.length });
+      flagged.push({
+        bookingId,
+        flags: result.flags,
+        scanCount: bookingRows.length,
+      });
     }
   }
   return flagged;

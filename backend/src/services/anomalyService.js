@@ -11,16 +11,25 @@
  *  - multi_device       — this token was scanned from several distinct devices/IPs
  *  - rapid_sequential   — scans of this token arrived implausibly close together
  *
- * Thresholds are deliberately conservative (see eval report in
- * scripts/eval-anomaly.js) — a couple of fumbled scans from one phone is normal door
- * behaviour and must not be flagged.
+ * Thresholds are deliberately conservative (see eval report in scripts/eval-anomaly.js):
+ * repeated fumbled scans from one phone are normal door behaviour, so the reject and
+ * device counts both require 3+ before flagging.
+ *
+ * `rapid_sequential` is intentionally fingerprint-agnostic — it compares consecutive scans
+ * by timestamp alone. The canonical replay is one device re-presenting a screenshotted QR,
+ * so requiring two *different* fingerprints would miss it (measured: recall 0.821 → 0.522
+ * on the labelled set). The cost is a small false-positive rate where two legitimate scans
+ * from one device land under the threshold by coincidence.
  */
 
 export const DEFAULT_THRESHOLDS = {
   repeatedRejectsCount: 3, // >=3 rejections on one ticket
   multiDeviceDistinctCount: 3, // >=3 distinct device/IP fingerprints
   multiDeviceWindowMs: 5 * 60 * 1000, // ...within a 5-minute window
-  rapidSequentialMs: 2000, // two scans <2s apart
+  // Two scans <1.2s apart. Tightened from 2000ms: at 2s, legitimate double-scans from one
+  // device occasionally fell inside the window (precision 0.932). 1200ms still sits well
+  // above the sub-second replay signature, so recall is unaffected — 0.948/0.821 measured.
+  rapidSequentialMs: 1200,
 };
 
 /**

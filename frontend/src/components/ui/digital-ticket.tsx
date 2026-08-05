@@ -129,7 +129,7 @@ export default function DigitalTicket({ ticketBodyDetails }: Props) {
             <div className="relative flex-center z-10">
               <QRCode
                 size={200}
-                value={ticketBodyDetails.name}
+                value={ticketBodyDetails.ticketId}
                 style={{
                   borderRadius: 16,
                   padding: 16,

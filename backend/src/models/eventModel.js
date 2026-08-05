@@ -127,6 +127,16 @@ const eventSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    // Safe physical occupancy of the venue, as distinct from how many tickets were put on
+    // sale. Organisers routinely oversell against expected no-shows, so ticket inventory is
+    // the wrong number to enforce at the door — fire-safety occupancy limits apply to bodies
+    // in the room. Optional: when unset the door falls back to totalQuantity, and an event
+    // with neither (an invite-only event carries no ticket inventory) is treated as
+    // unlimited rather than blocked. See admissionService.capacityDecision.
+    venueCapacity: {
+      type: Number,
+      min: [1, 'Venue capacity must be at least 1'],
+    },
     refundPolicy: { type: String, default: 'No refunds' },
     additionalComments: { type: String },
     // Sales dates only apply to events that actually sell tickets. An invite_only event
@@ -134,7 +144,10 @@ const eventSchema = new mongoose.Schema(
     // invite_only (public/hybrid). Required-as-a-function evaluates per-document at save.
     salesStartDate: {
       type: Date,
-      required: [requiredForTicketedEvent, 'Event must have a sales start date'],
+      required: [
+        requiredForTicketedEvent,
+        'Event must have a sales start date',
+      ],
     },
     salesEndDate: {
       type: Date,
@@ -142,7 +155,10 @@ const eventSchema = new mongoose.Schema(
     },
     salesStartTime: {
       type: Date,
-      required: [requiredForTicketedEvent, 'Event must have a sales start time'],
+      required: [
+        requiredForTicketedEvent,
+        'Event must have a sales start time',
+      ],
     },
     salesEndTime: {
       type: Date,

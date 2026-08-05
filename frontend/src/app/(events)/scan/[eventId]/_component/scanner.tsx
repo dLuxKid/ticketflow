@@ -22,9 +22,18 @@ type ScanResult = {
   outcome: "admitted";
   ticketType?: string;
   name?: string;
+  /** Admitted past the venue's safe occupancy, on a supervisor's authority. */
+  overridden?: boolean;
 } | null;
 
 type ScanError = { message: string } | null;
+
+/**
+ * A refusal the usher can act on rather than just read: the venue is at its safe occupancy,
+ * and a supervisor may admit anyway. Held separately from `error` because it must NOT clear
+ * on the usual timer — the guest is standing there and the decision belongs to a person.
+ */
+type CapacityPrompt = { code: string } | null;
 
 const SCAN_INTERVAL_MS = 400;
 const RESULT_DISPLAY_MS = 2500;
@@ -46,32 +55,59 @@ export default function Scanner({ eventId }: { eventId: string }) {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<ScanResult>(null);
   const [error, setError] = useState<ScanError>(null);
+  const [capacityPrompt, setCapacityPrompt] = useState<CapacityPrompt>(null);
 
-  const submitCode = useCallback(async (code: string) => {
-    if (!code.trim() || cooldownRef.current) return;
-    cooldownRef.current = true;
-    setBusy(true);
-    setResult(null);
-    setError(null);
-
-    const res = await scanTicket(code.trim());
-    setBusy(false);
-
-    if (res?.status === "success") {
-      setResult({
-        outcome: "admitted",
-        ticketType: res.data?.booking?.ticketType,
-        name: res.data?.booking?.name,
-      });
-    } else {
-      setError({ message: res?.message ?? "Scan failed. Try again." });
-    }
-
-    setTimeout(() => {
+  const submitCode = useCallback(
+    async (code: string, overrideCapacity = false) => {
+      const trimmed = code.trim();
+      if (!trimmed || cooldownRef.current) return;
+      cooldownRef.current = true;
+      setBusy(true);
       setResult(null);
       setError(null);
-      cooldownRef.current = false;
-    }, RESULT_DISPLAY_MS);
+      setCapacityPrompt(null);
+
+      const res = await scanTicket(trimmed, undefined, overrideCapacity);
+      setBusy(false);
+
+      if (res?.status === "success") {
+        setResult({
+          outcome: "admitted",
+          ticketType: res.data?.booking?.ticketType,
+          name: res.data?.booking?.name,
+          overridden: overrideCapacity,
+        });
+      } else if (res?.code === "at_capacity") {
+        // Branching on the server's stable code, not its wording. Hold the scanner here:
+        // no auto-clear and no cooldown release, so the camera cannot admit the next person
+        // in the queue while this decision is still open.
+        setCapacityPrompt({ code: trimmed });
+        return;
+      } else {
+        setError({ message: res?.message ?? "Scan failed. Try again." });
+      }
+
+      setTimeout(() => {
+        setResult(null);
+        setError(null);
+        cooldownRef.current = false;
+      }, RESULT_DISPLAY_MS);
+    },
+    [],
+  );
+
+  /** Supervisor confirmed: re-scan the same code, this time authorising the override. */
+  const confirmOverride = useCallback(() => {
+    const pending = capacityPrompt;
+    if (!pending) return;
+    setCapacityPrompt(null);
+    cooldownRef.current = false; // release so submitCode is not rejected by its own guard
+    void submitCode(pending.code, true);
+  }, [capacityPrompt, submitCode]);
+
+  const cancelOverride = useCallback(() => {
+    setCapacityPrompt(null);
+    cooldownRef.current = false;
   }, []);
 
   // Camera + BarcodeDetector loop
@@ -187,14 +223,71 @@ export default function Scanner({ eventId }: { eventId: string }) {
         </button>
       </form>
 
+      {capacityPrompt && (
+        <div
+          role="alertdialog"
+          aria-modal="false"
+          aria-labelledby="capacity-title"
+          aria-describedby="capacity-desc"
+          className="w-full rounded-big bg-amber-50 border-2 border-amber-500 p-6 text-center"
+        >
+          <p id="capacity-title" className="text-2xl font-bold text-amber-900">
+            ⚠ Venue at capacity
+          </p>
+          <p id="capacity-desc" className="mt-2 body-text text-amber-900/80">
+            This event has reached its safe occupancy limit. Admitting another
+            person exceeds it. Only continue if a supervisor authorises it —
+            the override is recorded against your account.
+          </p>
+          <div className="mt-5 flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              type="button"
+              onClick={cancelOverride}
+              className="px-6 h-12 rounded-big border border-main-black/20 font-medium text-main-black focus:outline-none focus:ring-2 focus:ring-offset-2"
+            >
+              Do not admit
+            </button>
+            <button
+              type="button"
+              onClick={confirmOverride}
+              disabled={busy}
+              className="px-6 h-12 rounded-big bg-amber-600 text-main-white font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-700"
+            >
+              {busy ? "Admitting…" : "Override and admit"}
+            </button>
+          </div>
+        </div>
+      )}
+
       <div aria-live="assertive" role="status" className="w-full">
         {result && (
-          <div className="w-full rounded-big bg-green-50 border border-green-200 p-6 text-center">
-            <p className="text-2xl font-bold text-green-700">✓ Admitted</p>
+          <div
+            className={`w-full rounded-big p-6 text-center border ${
+              result.overridden
+                ? "bg-amber-50 border-amber-300"
+                : "bg-green-50 border-green-200"
+            }`}
+          >
+            <p
+              className={`text-2xl font-bold ${
+                result.overridden ? "text-amber-900" : "text-green-700"
+              }`}
+            >
+              {result.overridden ? "✓ Admitted over capacity" : "✓ Admitted"}
+            </p>
             {result.name && (
-              <p className="mt-1 body-text text-green-800">
+              <p
+                className={`mt-1 body-text ${
+                  result.overridden ? "text-amber-900/80" : "text-green-800"
+                }`}
+              >
                 {result.name}
                 {result.ticketType ? ` — ${result.ticketType}` : ""}
+              </p>
+            )}
+            {result.overridden && (
+              <p className="mt-2 text-sm text-amber-900/70">
+                Recorded as a capacity override in the event audit log.
               </p>
             )}
           </div>

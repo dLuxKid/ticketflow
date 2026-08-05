@@ -93,8 +93,8 @@ test('regression guard: full labelled eval set stays within reported bounds', ()
   const precision = tp / (tp + fp) || 0;
   const recall = tp / (tp + fn) || 0;
 
-  // Bounds set just below the measured 0.932/0.821 (see scripts/eval-anomaly.js) so a
+  // Bounds set just below the measured 0.948/0.821 (see scripts/eval-anomaly.js) so a
   // regression fails this test before it reaches a report or a demo.
-  assert.ok(precision >= 0.9, `precision dropped: ${precision}`);
+  assert.ok(precision >= 0.93, `precision dropped: ${precision}`);
   assert.ok(recall >= 0.75, `recall dropped: ${recall}`);
 });
