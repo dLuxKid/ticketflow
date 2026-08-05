@@ -22,6 +22,10 @@ router.use(authController.protect);
 
 router.post('/create', handleImg, eventController.createEvent);
 router.get('/my/events', eventController.getMyEvents);
+// Two segments, so it cannot be swallowed by the public single-segment '/:slug' above.
+// Any role may call it: door staff are scoped by their own assignedEvents, and a user with
+// none simply gets an empty list.
+router.get('/my/assigned-events', eventController.getAssignedEvents);
 // Ownership is enforced in eventService.updateEvent; the service allows the event's
 // own creator or an admin. No role gate here so any user who owns an event can edit it.
 router.patch('/update/:eventId', eventController.updateEvent);

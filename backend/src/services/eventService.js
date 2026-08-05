@@ -13,10 +13,7 @@ import AppError from '../shared/errors/AppError.js';
  */
 const assertTiersMatchAccessMode = (accessMode, ticketDetails) => {
   if (accessMode === 'invite_only' && ticketDetails?.length) {
-    throw new AppError(
-      'An invite-only event cannot have ticket tiers',
-      400,
-    );
+    throw new AppError('An invite-only event cannot have ticket tiers', 400);
   }
 };
 
@@ -35,6 +32,22 @@ export const getAllEventsCount = async () => {
 
 export const getMyEvents = (userId, queryParams) =>
   eventRepository.findByUserWithFeatures(userId, queryParams);
+
+/**
+ * Events the caller works as door staff.
+ *
+ * Reads straight off the authenticated user's `assignedEvents` — the same field
+ * admissionService.authorizeScan checks — so the list can never show an event the holder
+ * would then be refused at the door.
+ *
+ * @param {object} user - req.user
+ * @returns {Promise<object[]>}
+ */
+export const getAssignedEvents = (user) => {
+  const assigned = user?.assignedEvents ?? [];
+  if (assigned.length === 0) return Promise.resolve([]);
+  return eventRepository.findByIds(assigned);
+};
 
 export const getEventBySlug = async (slug) => {
   const event = await eventRepository.findBySlug(slug);

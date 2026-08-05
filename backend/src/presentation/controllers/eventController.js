@@ -43,6 +43,16 @@ export const getMyEvents = catchAsync(async (req, res) => {
   });
 });
 
+/** Events the caller has been assigned to work as door staff (usher). */
+export const getAssignedEvents = catchAsync(async (req, res) => {
+  const events = await eventService.getAssignedEvents(req.user);
+
+  res.status(200).json({
+    status: 'success',
+    data: { events },
+  });
+});
+
 export const getEvent = catchAsync(async (req, res) => {
   const event = await eventService.getEventBySlug(req.params.slug);
 

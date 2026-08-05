@@ -9,8 +9,10 @@ import { LoadingMyEvent } from "@/components/skeletons";
 import NoEvents from "@/components/ui/no-events-card";
 import Search from "@/components/ui/searchbar";
 import EventCard from "./_component/event-card";
+import AssignedEventCard from "./_component/assigned-event-card";
 
 import { useMyEvents } from "@/store/useMyEvents";
+import { useAssignedEvents } from "@/store/useAssignedEvents";
 
 /**
  * Organiser's event list.
@@ -33,6 +35,9 @@ function MyEventContent() {
   const query = searchParams.get("query") || undefined;
 
   const { data: events, isLoading, error } = useMyEvents(query);
+  const { data: assigned } = useAssignedEvents();
+
+  const assignedEvents: MyEvent[] = assigned?.data?.events ?? [];
 
   useEffect(() => {
     if (events) {
@@ -127,6 +132,34 @@ function MyEventContent() {
 
       <div className="px-[5%] py-10 md:py-12">
         <div className="mx-auto max-w-screen-2xl">
+          {/* Door-staff assignments come first: someone working a door is here to scan, not
+              to browse events they created — and until this section existed they had no
+              route to the scanner at all. Hidden entirely when there are none, so it never
+              adds noise for organisers who do not work doors. */}
+          {assignedEvents.length > 0 && (
+            <div className="mb-12">
+              <div className="mb-4 flex items-baseline gap-3">
+                <h2 className="text-lg font-bold text-main-black">
+                  Events you&apos;re working
+                </h2>
+                <span className="text-sm text-sec-black/60">
+                  {assignedEvents.length} assigned to you as door staff
+                </span>
+              </div>
+              <div className="flex flex-col gap-4">
+                {assignedEvents.map((event) => (
+                  <AssignedEventCard event={event} key={event._id} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {assignedEvents.length > 0 && (
+            <h2 className="mb-4 text-lg font-bold text-main-black">
+              Events you created
+            </h2>
+          )}
+
           {isLoading ? (
             <LoadingMyEvent />
           ) : myEvents.length === 0 ? (

@@ -119,6 +119,17 @@ export const countActive = () => {
 };
 
 /**
+ * Returns the events a user has been assigned to work as door staff.
+ *
+ * Distinct from findByUserWithFeatures, which returns events a user *created*. Until this
+ * existed, `assignedEvents` was only ever written and then read inside authorizeScan — an
+ * usher was authorised to scan but had no way to discover which events, so the scanner was
+ * only reachable if somebody sent them the raw /scan/<id> URL.
+ */
+export const findByIds = (ids) =>
+  Event.find({ _id: { $in: ids ?? [] } }).sort('-startDate');
+
+/**
  * Returns events belonging to a specific user.
  */
 export const findByUserWithFeatures = (userId, queryParams) => {
