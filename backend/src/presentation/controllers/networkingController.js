@@ -87,7 +87,18 @@ export const streamNetwork = catchAsync(async (req, res) => {
     networkingService.getGroupHistory(eventId, req.user),
     networkingService.getDirectory(eventId, req.user),
   ]);
-  send('snapshot', { eventId, isLive: event.isLive, group, directory });
+  // startDate/endDate travel alongside isLive so the client can keep recomputing liveness
+  // itself as time passes, rather than trusting a string snapshotted once at connect time —
+  // a long-open tab would otherwise show a stale "Live" long after the window actually
+  // closed (or opened), silently disagreeing with what a send attempt gets rejected for.
+  send('snapshot', {
+    eventId,
+    isLive: event.isLive,
+    startDate: event.startDate,
+    endDate: event.endDate,
+    group,
+    directory,
+  });
 
   const onMessage = (payload) => {
     if (payload.eventId !== eventId) return;

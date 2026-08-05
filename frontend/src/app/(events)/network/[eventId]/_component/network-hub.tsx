@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import {
   getDmThread,
@@ -17,6 +18,11 @@ import { useUser } from "@/store/useUser";
  * Sending is a normal REST call — SSE is receive-only — and the sender sees their own
  * message arrive back over the same stream, so there's no optimistic local state to keep in
  * sync, matching how the live dashboard handles scans.
+ *
+ * Liveness is recomputed client-side on a timer from the event's actual start/end
+ * (delivered once in the snapshot), not held as a static string from that snapshot — a tab
+ * left open across the boundary would otherwise keep showing "Live" long after the window
+ * closed, while the server correctly rejects sends, with nothing on screen explaining why.
  */
 
 type SenderRef = { _id: string; name: string };
@@ -44,7 +50,12 @@ export default function NetworkHub({ eventId }: { eventId: string }) {
   const myId: string | undefined = userData?.data?.user?._id;
 
   const [connected, setConnected] = useState(false);
-  const [isLive, setIsLive] = useState<string | null>(null);
+  const [eventWindow, setEventWindow] = useState<{ startDate: string; endDate: string } | null>(
+    null,
+  );
+  const [liveStatus, setLiveStatus] = useState<"loading" | "upcoming" | "live" | "past">(
+    "loading",
+  );
   const [tab, setTab] = useState<Tab>("group");
 
   const [groupMessages, setGroupMessages] = useState<ChatMessage[]>([]);
@@ -68,7 +79,7 @@ export default function NetworkHub({ eventId }: { eventId: string }) {
 
     source.addEventListener("snapshot", (e) => {
       const s = JSON.parse((e as MessageEvent).data);
-      setIsLive(s.isLive);
+      setEventWindow({ startDate: s.startDate, endDate: s.endDate });
       setGroupMessages(s.group ?? []);
       setDirectory(s.directory ?? []);
       const mine = (s.directory ?? []).find(
@@ -106,14 +117,34 @@ export default function NetworkHub({ eventId }: { eventId: string }) {
     dmEndRef.current?.scrollIntoView({ block: "end" });
   }, [dmThreads, activePeer]);
 
-  const live = isLive === "live";
+  // Recompute liveness against the wall clock every few seconds, rather than trusting the
+  // one-time string the snapshot carried — the whole reason this exists (see file header).
+  useEffect(() => {
+    if (!eventWindow) return;
+
+    const recompute = () => {
+      const now = Date.now();
+      const start = new Date(eventWindow.startDate).getTime();
+      const end = new Date(eventWindow.endDate).getTime();
+      setLiveStatus(now < start ? "upcoming" : now <= end ? "live" : "past");
+    };
+
+    recompute();
+    const id = setInterval(recompute, 5000);
+    return () => clearInterval(id);
+  }, [eventWindow]);
+
+  const live = liveStatus === "live";
 
   const sendGroup = async (e: React.FormEvent) => {
     e.preventDefault();
     const body = groupInput.trim();
     if (!body) return;
     setGroupInput("");
-    await postGroupMessage(eventId, body);
+    const res = await postGroupMessage(eventId, body);
+    if (res?.status !== "success") {
+      toast.error(res?.message ?? "Couldn't send your message");
+    }
   };
 
   const openDm = async (peer: DirectoryEntry) => {
@@ -131,14 +162,21 @@ export default function NetworkHub({ eventId }: { eventId: string }) {
     const body = dmInput.trim();
     if (!body || !activePeer?.user) return;
     setDmInput("");
-    await postDm(eventId, activePeer.user, body);
+    const res = await postDm(eventId, activePeer.user, body);
+    if (res?.status !== "success") {
+      toast.error(res?.message ?? "Couldn't send your message");
+    }
   };
 
   const saveProfile = async () => {
-    await setNetworkOptIn(eventId, {
+    const res = await setNetworkOptIn(eventId, {
       networkingOptIn: !optedIn,
       networkingBio: bioInput,
     });
+    if (res?.status !== "success") {
+      toast.error(res?.message ?? "Couldn't update your profile");
+      return;
+    }
     setOptedIn((v) => !v);
   };
 
@@ -162,7 +200,13 @@ export default function NetworkHub({ eventId }: { eventId: string }) {
               aria-hidden="true"
               className={`h-2 w-2 rounded-full ${live ? "bg-green-500 animate-pulse" : "bg-main-white/60"}`}
             />
-            {isLive === null ? "Loading…" : live ? "Live" : "Not live yet"}
+            {liveStatus === "loading"
+              ? "Loading…"
+              : liveStatus === "live"
+                ? "Live"
+                : liveStatus === "past"
+                  ? "Ended"
+                  : "Not live yet"}
           </span>
         }
       />
