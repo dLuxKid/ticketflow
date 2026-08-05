@@ -7,6 +7,8 @@ import { useState } from "react";
 import ReactDatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
+import { FILTER_FIELD_WRAPPER } from "./field-styles";
+
 export default function SearchDate() {
   const [startDate, setStartDate] = useState<Date | null>(null);
 
@@ -34,12 +36,12 @@ export default function SearchDate() {
   ];
 
   return (
-    <div className="relative flex flex-1 flex-shrink-0 bg-[#1f1f1f] rounded-sm">
+    <div className={FILTER_FIELD_WRAPPER}>
       <ReactDatePicker
         selected={startDate}
         placeholderText="Date"
         onChange={(date: Date | null) => handleSearch(date)}
-        className="w-full h-12 bg-transparent pl-10 pr-3 text-main-white placeholder:text-main-white"
+        className="h-12 w-full bg-transparent pl-10 pr-3 text-main-white placeholder:text-main-white/60 focus:outline-none"
         excludeDates={excludeDates}
       />
       <span className="absolute left-3 bottom-[15px] h-[18px] w-[18px] text-main-white">

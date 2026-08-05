@@ -78,9 +78,9 @@ function PaginationNumber({
     "rounded-full"
   } 
   ${isActive && "z-10 bg-main-purple text-main-white"} ${
-    !isActive && position !== "middle" && "hover:bg-gray-100 text-[#141619]/50"
+    !isActive && position !== "middle" && "hover:bg-gray-100 text-main-black/50"
   }
-  ${position === "middle" && "text-[#141619]/50"}
+  ${position === "middle" && "text-main-black/50"}
   `;
 
   return isActive || position === "middle" ? (
@@ -119,7 +119,7 @@ function PaginationArrow({
         >
           <path
             d="M1 22L12 11.5L1 1"
-            stroke="#6528F7"
+            stroke="#6c5ce7"
             strokeWidth="2"
             strokeLinecap="round"
           />
@@ -136,7 +136,7 @@ function PaginationArrow({
         >
           <path
             d="M1 22L12 11.5L1 1"
-            stroke="#6528F7"
+            stroke="#6c5ce7"
             strokeWidth="2"
             strokeLinecap="round"
           />

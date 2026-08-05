@@ -111,7 +111,7 @@ export default function Checkout() {
                 alt="Event image"
                 width={500}
                 height={320}
-                className="w-full h-full object-fill object-center rounded-big"
+                className="w-full h-full object-cover object-center rounded-big"
               />
             </div>
           </div>
@@ -125,13 +125,13 @@ export default function Checkout() {
                   <DateIcon />
                 </span>
                 <div>
-                  <p className="text-sm font-medium text-[#1f1f1f]">
+                  <p className="text-sm font-medium text-main-black">
                     {formatDateRange(
                       new Date(event.startDate),
                       new Date(event.endDate)
                     )}
                   </p>
-                  <p className="text-sm font-medium text-[#1f1f1f]/80">
+                  <p className="text-sm font-medium text-main-black/80">
                     {formatTimeRange(
                       new Date(event.startTime),
                       new Date(event.endTime)
@@ -145,7 +145,7 @@ export default function Checkout() {
                   <LocationIcon />
                 </span>
                 <div>
-                  <p className="text-sm font-medium text-[#1f1f1f]">
+                  <p className="text-sm font-medium text-main-black">
                     {event.eventLocation.address} {event.eventLocation.city},{" "}
                     {event.eventLocation.state}, {event.eventLocation.country}
                   </p>

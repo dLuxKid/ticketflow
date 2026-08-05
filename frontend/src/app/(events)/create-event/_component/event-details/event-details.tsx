@@ -179,7 +179,7 @@ export function EventDetails({
                     endDate: null,
                   }));
               }}
-              className="bg-transparent text-main-black placeholder:text-[#1f1f1f66]"
+              className="bg-transparent text-main-black placeholder:text-main-black/40"
               minDate={minDate}
               excludeDates={excludeDates}
             />
@@ -202,7 +202,7 @@ export function EventDetails({
               timeIntervals={15}
               timeCaption="Time"
               dateFormat="h:mm aa"
-              className="bg-transparent text-main-black placeholder:text-[#1f1f1f66]"
+              className="bg-transparent text-main-black placeholder:text-main-black/40"
             />
           </label>
         </div>
@@ -225,7 +225,7 @@ export function EventDetails({
                     endDate: date,
                   }));
               }}
-              className="bg-transparent text-main-black placeholder:text-[#1f1f1f66]"
+              className="bg-transparent text-main-black placeholder:text-main-black/40"
               minDate={eventData.startDate || minDate}
               excludeDates={
                 eventData.startDate
@@ -251,7 +251,7 @@ export function EventDetails({
               timeIntervals={15}
               timeCaption="Time"
               dateFormat="h:mm aa"
-              className="bg-transparent text-main-black placeholder:text-[#1f1f1f66]"
+              className="bg-transparent text-main-black placeholder:text-main-black/40"
             />
           </label>
         </div>
@@ -362,7 +362,7 @@ export function EventDetails({
             name="city"
             type="text"
             placeholder="City"
-            className="rounded-md bg-sec-grey h-12 w-full px-4 text-main-black placeholder:text-[#1F1F1F66] border border-main-purple"
+            className="rounded-md bg-sec-grey h-12 w-full px-4 text-main-black placeholder:text-main-black/40 border border-main-purple"
             value={eventData.eventLocation.city}
             onChange={handleEventLocation}
           />
@@ -370,7 +370,7 @@ export function EventDetails({
             name="postalCode"
             type="tel"
             placeholder="Postal Code"
-            className="rounded-md bg-sec-grey h-12 w-full px-4 text-main-black placeholder:text-[#1F1F1F66] border border-main-purple"
+            className="rounded-md bg-sec-grey h-12 w-full px-4 text-main-black placeholder:text-main-black/40 border border-main-purple"
             value={eventData.eventLocation.postalCode}
             onChange={handleEventLocation}
           />
@@ -380,7 +380,7 @@ export function EventDetails({
             name="address"
             type="text"
             placeholder="Fill in venue address"
-            className="bg-transparent text-main-black placeholder:text-[#1f1f1f66] w-full"
+            className="bg-transparent text-main-black placeholder:text-main-black/40 w-full"
             value={eventData.eventLocation.address}
             onChange={handleEventLocation}
           />
@@ -424,7 +424,7 @@ export function EventDetails({
               name="twitter"
               placeholder="Twitter URL"
               type="text"
-              className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-[#1f1f1f66]"
+              className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-main-black/40"
               value={eventData.socialMediaLinks.twitter}
               onChange={handleSocialMediaLink}
             />
@@ -437,7 +437,7 @@ export function EventDetails({
               name="instagram"
               type="text"
               placeholder="Instagram URL"
-              className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-[#1f1f1f66]"
+              className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-main-black/40"
               value={eventData.socialMediaLinks.instagram}
               onChange={handleSocialMediaLink}
             />
@@ -450,7 +450,7 @@ export function EventDetails({
               name="youtube"
               type="text"
               placeholder="Youtube URL"
-              className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-[#1f1f1f66]"
+              className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-main-black/40"
               value={eventData.socialMediaLinks.youtube}
               onChange={handleSocialMediaLink}
             />
@@ -463,7 +463,7 @@ export function EventDetails({
               name="facebook"
               type="text"
               placeholder="Facebook URL"
-              className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-[#1f1f1f66]"
+              className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-main-black/40"
               value={eventData.socialMediaLinks.facebook}
               onChange={handleSocialMediaLink}
             />
@@ -476,7 +476,7 @@ export function EventDetails({
               name="others"
               type="text"
               placeholder="Website URL"
-              className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-[#1f1f1f66]"
+              className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-main-black/40"
               value={eventData.socialMediaLinks.others}
               onChange={handleSocialMediaLink}
             />

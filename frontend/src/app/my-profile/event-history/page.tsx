@@ -56,7 +56,7 @@ export default async function EventHistory({
                     <h2 className="text-lg md:text-xl font-bold text-main-black self-start">
                       {event.eventName}
                     </h2>
-                    <p className="text-base font-medium text-[#1f1f1f]/70 self-start flex-center">
+                    <p className="text-base font-medium text-main-black/70 self-start flex-center">
                       <span className="mr-1">
                         <DateIcon />
                       </span>
@@ -65,7 +65,7 @@ export default async function EventHistory({
                         new Date(event.endDate)
                       )}
                     </p>
-                    <p className="text-sm font-normal text-[#1f1f1f]/70 self-start flex-center">
+                    <p className="text-sm font-normal text-main-black/70 self-start flex-center">
                       <span className="mr-1">
                         <LocationIcon />
                       </span>

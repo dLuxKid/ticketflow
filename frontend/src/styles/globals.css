@@ -101,8 +101,25 @@ button:disabled:hover {
   border: 0;
 }
 
-section {
-  @apply py-[3.75rem] md:py-[7.5%] px-[5%] md:min-h-[100svh] w-full;
+/* Section rhythm.
+   In @layer base so per-element Tailwind utilities can override it. Unlayered, this rule
+   beat every utility regardless of specificity — cascade layers outrank specificity — so a
+   section could not opt out of these defaults, and classes written on the element (the
+   scanner's own py-10 px-4, for instance) were silently discarded.
+
+   No min-height: sections size to their content. `md:min-h-[100svh]` here forced EVERY
+   section to fill the viewport on desktop, which is why short pages carried acres of dead
+   space. A section that genuinely should fill the screen — the home hero — opts in with
+   `min-h-[100svh]` on the element.
+
+   Vertical padding is a fixed scale rather than the previous `md:py-[7.5%]`: percentage
+   padding resolves against the container's WIDTH, so the gap grew with the monitor
+   (~105px at 1400px, ~192px at 2560px). md:py-24 is 96px, close to the old value at a
+   typical desktop width, and stable across displays. */
+@layer base {
+  section {
+    @apply w-full px-[5%] py-[3.75rem] md:py-24;
+  }
 }
 
 main {

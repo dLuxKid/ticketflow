@@ -1,5 +1,16 @@
 import Button from "./cta-btn";
 
+/**
+ * The card's call to action, which doubles as its status indicator: whether tickets are on
+ * sale, not yet open, closed, or gone is expressed by this one control rather than by a
+ * separate badge that could contradict it.
+ *
+ * Sized down from the default button because it sits inside a card, not on a page.
+ */
+
+// Compact override for card context — appended, so it wins over the default padding.
+const compact = "px-4 py-2 md:px-5 md:py-2.5 text-sm rounded-full";
+
 export default function MoreDetailsBtn({ event }: { event: AllEventData }) {
   const currentDateTime = new Date();
   const salesStartDate = new Date(event.salesStartDate);
@@ -14,22 +25,40 @@ export default function MoreDetailsBtn({ event }: { event: AllEventData }) {
   combinedSalesEnd.setHours(salesEndTime.getHours());
   combinedSalesEnd.setMinutes(salesEndTime.getMinutes());
 
+  // Muted treatment for the three unavailable states: they are information, not invitations,
+  // so they should not carry the same visual weight as a live "Buy Ticket".
+  const muted = `${compact} bg-main-grey-bg text-sec-black/70 hover:bg-main-grey-bg`;
+
   if (combinedSalesStart > currentDateTime)
-    return <Button disabled>Coming soon</Button>;
+    return (
+      <Button disabled className={muted}>
+        Coming soon
+      </Button>
+    );
 
   if (combinedSalesEnd < currentDateTime)
-    return <Button disabled>Sales ended</Button>;
+    return (
+      <Button disabled className={muted}>
+        Sales ended
+      </Button>
+    );
 
   if (event.totalQuantity <= 1)
     return (
-      <button
-        type="button"
+      <Button
         disabled
-        className="bg-main-white text-main-error-red border-main-error-red border px-6 py-2 md:px-9 md:py-3 text-base rounded-big font-medium"
+        className={`${compact} border border-main-error-red/30 bg-main-error-red/[0.06] text-main-error-red hover:bg-main-error-red/[0.06]`}
       >
         Sold out
-      </button>
+      </Button>
     );
 
-  return <Button title="buy ticket">Buy Ticket</Button>;
+  return (
+    <Button
+      title="buy ticket"
+      className={`${compact} shadow-md shadow-main-purple/25 group-hover:shadow-lg group-hover:shadow-main-purple/30`}
+    >
+      Buy Ticket
+    </Button>
+  );
 }

@@ -3,6 +3,8 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
 
+import { FILTER_FIELD } from "./field-styles";
+
 export default function Location() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -25,7 +27,7 @@ export default function Location() {
         placeholder="Search for your city"
         type="text"
         name="location"
-        className="w-full bg-[#1f1f1f] text-main-white placeholder:font-normal placeholder:text-main-white h-12 rounded-sm pl-10 pr-3"
+        className={FILTER_FIELD}
         onChange={(e) => handleSearch(e.target.value)}
         defaultValue={searchParams.get("eventLocation")?.toString() || ""}
       />

@@ -155,7 +155,7 @@ export default function Profile() {
             <Image
               src={formData.photo || avatar}
               alt="profile picture"
-              className="w-full h-full object-fill object-center rounded-full"
+              className="w-full h-full object-cover object-center rounded-full"
               width={100}
               height={100}
             />

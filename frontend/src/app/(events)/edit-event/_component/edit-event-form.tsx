@@ -627,7 +627,7 @@
 //               name="city"
 //               type="text"
 //               placeholder="City"
-//               className="rounded-md bg-sec-grey h-12 w-full px-4 text-main-black placeholder:text-[#1F1F1F66] border border-main-purple"
+//               className="rounded-md bg-sec-grey h-12 w-full px-4 text-main-black placeholder:text-main-black/40 border border-main-purple"
 //               value={eventData.eventLocation.city}
 //               onChange={handleEventLocation}
 //             />
@@ -635,7 +635,7 @@
 //               name="postalCode"
 //               type="tel"
 //               placeholder="Postal Code"
-//               className="rounded-md bg-sec-grey h-12 w-full px-4 text-main-black placeholder:text-[#1F1F1F66] border border-main-purple"
+//               className="rounded-md bg-sec-grey h-12 w-full px-4 text-main-black placeholder:text-main-black/40 border border-main-purple"
 //               value={eventData.eventLocation.postalCode}
 //               onChange={handleEventLocation}
 //             />
@@ -645,7 +645,7 @@
 //               name="address"
 //               type="text"
 //               placeholder="Fill in address"
-//               className="bg-transparent text-main-black placeholder:text-[#1f1f1f66]"
+//               className="bg-transparent text-main-black placeholder:text-main-black/40"
 //               value={eventData.eventLocation.address}
 //               onChange={handleEventLocation}
 //             />
@@ -689,7 +689,7 @@
 //                 name="twitter"
 //                 placeholder="Twitter URL"
 //                 type="text"
-//                 className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-[#1f1f1f66]"
+//                 className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-main-black/40"
 //                 value={eventData.socialMediaLinks.twitter}
 //                 onChange={handleSocialMediaLink}
 //               />
@@ -702,7 +702,7 @@
 //                 name="instagram"
 //                 type="text"
 //                 placeholder="Instagram URL"
-//                 className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-[#1f1f1f66]"
+//                 className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-main-black/40"
 //                 value={eventData.socialMediaLinks.instagram}
 //                 onChange={handleSocialMediaLink}
 //               />
@@ -715,7 +715,7 @@
 //                 name="youtube"
 //                 type="text"
 //                 placeholder="Youtube URL"
-//                 className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-[#1f1f1f66]"
+//                 className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-main-black/40"
 //                 value={eventData.socialMediaLinks.youtube}
 //                 onChange={handleSocialMediaLink}
 //               />
@@ -728,7 +728,7 @@
 //                 name="facebook"
 //                 type="text"
 //                 placeholder="Facebook URL"
-//                 className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-[#1f1f1f66]"
+//                 className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-main-black/40"
 //                 value={eventData.socialMediaLinks.facebook}
 //                 onChange={handleSocialMediaLink}
 //               />
@@ -741,7 +741,7 @@
 //                 name="others"
 //                 type="text"
 //                 placeholder="Website URL"
-//                 className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-[#1f1f1f66]"
+//                 className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-main-black/40"
 //                 value={eventData.socialMediaLinks.others}
 //                 onChange={handleSocialMediaLink}
 //               />
@@ -912,7 +912,7 @@
 //                         salesEndTime: null,
 //                       }));
 //                   }}
-//                   className="bg-transparent text-main-black placeholder:text-[#1f1f1f66]"
+//                   className="bg-transparent text-main-black placeholder:text-main-black/40"
 //                   minDate={minDate}
 //                   excludeDates={calculateExcludeDates(
 //                     minDate,
@@ -954,7 +954,7 @@
 //                   timeIntervals={15}
 //                   timeCaption="Time"
 //                   dateFormat="h:mm aa"
-//                   className="bg-transparent text-main-black placeholder:text-[#1f1f1f66]"
+//                   className="bg-transparent text-main-black placeholder:text-main-black/40"
 //                 />
 //               </label>
 //             </div>
@@ -1007,7 +1007,7 @@
 //                       salesEndDate: date,
 //                     }));
 //                 }}
-//                 className="bg-transparent text-main-black placeholder:text-[#1f1f1f66]"
+//                 className="bg-transparent text-main-black placeholder:text-main-black/40"
 //                 minDate={new Date(eventData.salesEndDate as Date) || minDate}
 //                 excludeDates={calculateExcludeDates(
 //                   new Date(eventData.startDate as Date),
@@ -1049,7 +1049,7 @@
 //                 timeIntervals={15}
 //                 timeCaption="Time"
 //                 dateFormat="h:mm aa"
-//                 className="bg-transparent text-main-black placeholder:text-[#1f1f1f66]"
+//                 className="bg-transparent text-main-black placeholder:text-main-black/40"
 //               />
 //             </label>
 //           </div>
@@ -1074,7 +1074,7 @@
 //             />
 //           ) : (
 //             <div className="flex-center flex-col gap-2 w-full h-full bg-transparent border border-dashed border-main-purple rounded-big overflow-hidden">
-//               <span className="text-3xl text-[#4141F9] font-normal">
+//               <span className="text-3xl text-main-purple font-normal">
 //                 <FaPlus />
 //               </span>
 //               <p className="text-base font-medium text-main-black capitalize">
@@ -1113,7 +1113,7 @@
 //                   />
 //                 ) : (
 //                   <div className="flex-center flex-col gap-2 w-full h-full bg-sec-grey border border-dashed border-main-purple rounded-big overflow-hidden">
-//                     <span className="text-xl text-[#4141F9] font-normal">
+//                     <span className="text-xl text-main-purple font-normal">
 //                       <FaPlus />
 //                     </span>
 //                   </div>
@@ -1850,7 +1850,7 @@ export default function EditEventForm({ event }: { event: eventData }) {
               name="city"
               type="text"
               placeholder="City"
-              className="rounded-md bg-sec-grey h-12 w-full px-4 text-main-black placeholder:text-[#1F1F1F66] border border-main-purple"
+              className="rounded-md bg-sec-grey h-12 w-full px-4 text-main-black placeholder:text-main-black/40 border border-main-purple"
               value={eventData.eventLocation.city}
               onChange={handleEventLocation}
             />
@@ -1858,7 +1858,7 @@ export default function EditEventForm({ event }: { event: eventData }) {
               name="postalCode"
               type="tel"
               placeholder="Postal Code"
-              className="rounded-md bg-sec-grey h-12 w-full px-4 text-main-black placeholder:text-[#1F1F1F66] border border-main-purple"
+              className="rounded-md bg-sec-grey h-12 w-full px-4 text-main-black placeholder:text-main-black/40 border border-main-purple"
               value={eventData.eventLocation.postalCode}
               onChange={handleEventLocation}
             />
@@ -1868,7 +1868,7 @@ export default function EditEventForm({ event }: { event: eventData }) {
               name="address"
               type="text"
               placeholder="Fill in address"
-              className="bg-transparent text-main-black placeholder:text-[#1f1f1f66]"
+              className="bg-transparent text-main-black placeholder:text-main-black/40"
               value={eventData.eventLocation.address}
               onChange={handleEventLocation}
             />
@@ -1912,7 +1912,7 @@ export default function EditEventForm({ event }: { event: eventData }) {
                 name="twitter"
                 placeholder="Twitter URL"
                 type="text"
-                className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-[#1f1f1f66]"
+                className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-main-black/40"
                 value={eventData.socialMediaLinks.twitter}
                 onChange={handleSocialMediaLink}
               />
@@ -1925,7 +1925,7 @@ export default function EditEventForm({ event }: { event: eventData }) {
                 name="instagram"
                 type="text"
                 placeholder="Instagram URL"
-                className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-[#1f1f1f66]"
+                className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-main-black/40"
                 value={eventData.socialMediaLinks.instagram}
                 onChange={handleSocialMediaLink}
               />
@@ -1938,7 +1938,7 @@ export default function EditEventForm({ event }: { event: eventData }) {
                 name="youtube"
                 type="text"
                 placeholder="Youtube URL"
-                className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-[#1f1f1f66]"
+                className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-main-black/40"
                 value={eventData.socialMediaLinks.youtube}
                 onChange={handleSocialMediaLink}
               />
@@ -1951,7 +1951,7 @@ export default function EditEventForm({ event }: { event: eventData }) {
                 name="facebook"
                 type="text"
                 placeholder="Facebook URL"
-                className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-[#1f1f1f66]"
+                className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-main-black/40"
                 value={eventData.socialMediaLinks.facebook}
                 onChange={handleSocialMediaLink}
               />
@@ -1964,7 +1964,7 @@ export default function EditEventForm({ event }: { event: eventData }) {
                 name="others"
                 type="text"
                 placeholder="Website URL"
-                className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-[#1f1f1f66]"
+                className="rounded-md bg-sec-grey pl-16 h-12 w-full px-4 text-main-black border border-main-purple placeholder:text-main-black/40"
                 value={eventData.socialMediaLinks.others}
                 onChange={handleSocialMediaLink}
               />
@@ -2135,7 +2135,7 @@ export default function EditEventForm({ event }: { event: eventData }) {
                         salesEndTime: null,
                       }));
                   }}
-                  className="bg-transparent text-main-black placeholder:text-[#1f1f1f66]"
+                  className="bg-transparent text-main-black placeholder:text-main-black/40"
                   minDate={minDate}
                   excludeDates={calculateExcludeDates(
                     minDate,
@@ -2177,7 +2177,7 @@ export default function EditEventForm({ event }: { event: eventData }) {
                   timeIntervals={15}
                   timeCaption="Time"
                   dateFormat="h:mm aa"
-                  className="bg-transparent text-main-black placeholder:text-[#1f1f1f66]"
+                  className="bg-transparent text-main-black placeholder:text-main-black/40"
                 />
               </label>
             </div>
@@ -2230,7 +2230,7 @@ export default function EditEventForm({ event }: { event: eventData }) {
                       salesEndDate: date,
                     }));
                 }}
-                className="bg-transparent text-main-black placeholder:text-[#1f1f1f66]"
+                className="bg-transparent text-main-black placeholder:text-main-black/40"
                 minDate={new Date(eventData.salesEndDate as Date) || minDate}
                 excludeDates={calculateExcludeDates(
                   new Date(eventData.startDate as Date),
@@ -2272,7 +2272,7 @@ export default function EditEventForm({ event }: { event: eventData }) {
                 timeIntervals={15}
                 timeCaption="Time"
                 dateFormat="h:mm aa"
-                className="bg-transparent text-main-black placeholder:text-[#1f1f1f66]"
+                className="bg-transparent text-main-black placeholder:text-main-black/40"
               />
             </label>
           </div>
@@ -2297,7 +2297,7 @@ export default function EditEventForm({ event }: { event: eventData }) {
             />
           ) : (
             <div className="flex-center flex-col gap-2 w-full h-full bg-transparent border border-dashed border-main-purple rounded-big overflow-hidden">
-              <span className="text-3xl text-[#4141F9] font-normal">
+              <span className="text-3xl text-main-purple font-normal">
                 <FaPlus />
               </span>
               <p className="text-base font-medium text-main-black capitalize">
@@ -2336,7 +2336,7 @@ export default function EditEventForm({ event }: { event: eventData }) {
                   />
                 ) : (
                   <div className="flex-center flex-col gap-2 w-full h-full bg-sec-grey border border-dashed border-main-purple rounded-big overflow-hidden">
-                    <span className="text-xl text-[#4141F9] font-normal">
+                    <span className="text-xl text-main-purple font-normal">
                       <FaPlus />
                     </span>
                   </div>

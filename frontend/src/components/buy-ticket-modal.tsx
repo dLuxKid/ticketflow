@@ -157,7 +157,7 @@ export default function BuyTicketModal({ closeModal, event }: Props) {
                 title="name"
                 type="text"
                 name="name"
-                className="bg-sec-grey border-2 border-[#d1d1d1] rounded-md h-12 w-full px-4 text-main-black"
+                className="bg-sec-grey border-2 border-main-light-grey rounded-md h-12 w-full px-4 text-main-black"
                 value={customer.name}
                 onChange={(e) =>
                   setCustomer((prev) => ({ ...prev, name: e.target.value }))
@@ -173,7 +173,7 @@ export default function BuyTicketModal({ closeModal, event }: Props) {
                 title="email"
                 type="text"
                 name="email"
-                className="bg-sec-grey border-2 border-[#d1d1d1] rounded-md h-12 w-full px-4 text-main-black"
+                className="bg-sec-grey border-2 border-main-light-grey rounded-md h-12 w-full px-4 text-main-black"
                 value={customer.email}
                 onChange={(e) =>
                   setCustomer((prev) => ({ ...prev, email: e.target.value }))
@@ -204,7 +204,7 @@ export default function BuyTicketModal({ closeModal, event }: Props) {
                     title="ticket name"
                     type="text"
                     name="ticketName"
-                    className="bg-sec-grey border-2 border-[#d1d1d1] rounded-md h-12 w-full px-4 text-main-black"
+                    className="bg-sec-grey border-2 border-main-light-grey rounded-md h-12 w-full px-4 text-main-black"
                     defaultValue={ticket.ticketName}
                   />
                 </label>
@@ -215,7 +215,7 @@ export default function BuyTicketModal({ closeModal, event }: Props) {
                     title="ticket price"
                     type="tel"
                     name="ticketPrice"
-                    className="bg-sec-grey border-2 border-[#d1d1d1] rounded-md h-12 w-full pl-16 pr-4 text-main-black"
+                    className="bg-sec-grey border-2 border-main-light-grey rounded-md h-12 w-full pl-16 pr-4 text-main-black"
                     defaultValue={ticket.ticketPrice}
                   />
                   <span className="left-0 top-0 bottom-0 w-14 absolute bg-main-purple rounded-l-md flex-center text-main-white body-text">
@@ -266,7 +266,7 @@ export default function BuyTicketModal({ closeModal, event }: Props) {
                             title="name"
                             type="text"
                             name="name"
-                            className="bg-sec-grey border-2 border-[#d1d1d1] rounded-md h-12 w-full px-4 text-main-black"
+                            className="bg-sec-grey border-2 border-main-light-grey rounded-md h-12 w-full px-4 text-main-black"
                             value={
                               allTickets[ticketIdx].buyers[buyerIdx].name || ""
                             }
@@ -296,7 +296,7 @@ export default function BuyTicketModal({ closeModal, event }: Props) {
                             title="email"
                             type="text"
                             name="email"
-                            className="bg-sec-grey border-2 border-[#d1d1d1] rounded-md h-12 w-full px-4 text-main-black"
+                            className="bg-sec-grey border-2 border-main-light-grey rounded-md h-12 w-full px-4 text-main-black"
                             value={
                               allTickets[ticketIdx].buyers[buyerIdx].email || ""
                             }

@@ -52,13 +52,13 @@ export function LoadingMyEvent({ text }: { text?: string }) {
 
 export function LoadingAllEvents() {
   return (
-    <div className="rounded-2xl border border-[#1f1f1f]/30 overflow-hidden cursor-pointer animate-pulse">
+    <div className="rounded-2xl border border-main-black/30 overflow-hidden cursor-pointer animate-pulse">
       <div className="h-60 w-full bg-gray-200"></div>
       <div className="p-4 bg-main-white flex-between gap-4">
         <div className="flex-start flex-col gap-0.5 w-full">
           <h2 className="text-base font-bold text-main-black bg-gray-200 h-6 w-3/4"></h2>
-          <div className="text-sm font-medium text-[#1f1f1f] flex-center gap-1 bg-gray-200 h-4 w-2/3"></div>
-          <p className="text-xs font-normal text-[#1f1f1f] flex-center truncate bg-gray-200 h-3 w-3/4"></p>
+          <div className="text-sm font-medium text-main-black flex-center gap-1 bg-gray-200 h-4 w-2/3"></div>
+          <p className="text-xs font-normal text-main-black flex-center truncate bg-gray-200 h-3 w-3/4"></p>
           <div className="relative flex [&>*:nth-child(1)]:-ml-0 [&>*]:-ml-5 mt-1">
             <span className="h-6 w-8 rounded-[50%] border border-black bg-gray-600 relative z-0"></span>
             <span className="h-6 w-8 rounded-[50%] border border-black bg-gray-600 relative z-10"></span>

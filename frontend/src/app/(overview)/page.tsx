@@ -12,9 +12,13 @@ import Link from "next/link";
 export default async function Home() {
   return (
     <>
-      <Navbar showNavItems />
+      {/* overlay: the bar floats transparently over the hero and only turns solid, with its
+          border line, once the page is scrolled. */}
+      <Navbar showNavItems overlay />
       <main>
-        <section className="flex-center relative bg-[url('/hero-section-bg.webp')] bg-center bg-contain">
+        {/* Opts into a full-viewport height. Sections no longer get this by default — see
+            the `section` rule in globals.css — so the hero asks for it explicitly. */}
+        <section className="flex-center relative min-h-[100svh] bg-[url('/hero-section-bg.webp')] bg-center bg-contain">
           <Container className="flex-center flex-col gap-8 md:gap-6 w-full">
             <div className="bg-black/80 absolute z-0 inset-x-0 inset-y-0" />
             <div className="inline-block w-full flex-center mt-4 md:mt-0 relative z-10">

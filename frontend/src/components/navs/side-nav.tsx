@@ -60,8 +60,8 @@ export default function SideNav() {
               <li
                 className={`w-full py-4 px-6 text-base font-medium cursor-pointer ${
                   pathname === "/my-profile"
-                    ? "text-main-black bg-[#6528F71A] border-l-4 border-l-main-purple"
-                    : "text-[#948C8C]"
+                    ? "text-main-black bg-main-purple/10 border-l-4 border-l-main-purple"
+                    : "text-sec-black/60"
                 }`}
               >
                 Profile
@@ -77,8 +77,8 @@ export default function SideNav() {
                 <li
                   className={`w-full py-4 px-6 text-base font-medium cursor-pointer ${
                     pathname.includes(navitem.href)
-                      ? "text-main-black bg-[#6528F71A] border-l-4 border-l-main-purple"
-                      : "text-[#948C8C]"
+                      ? "text-main-black bg-main-purple/10 border-l-4 border-l-main-purple"
+                      : "text-sec-black/60"
                   }`}
                 >
                   {navitem.name}
@@ -93,8 +93,8 @@ export default function SideNav() {
             <li
               className={`w-full py-4 px-6 text-base font-medium cursor-pointer ${
                 pathname === "/my-profile"
-                  ? "text-main-black bg-[#6528F71A] border-l-4 border-l-main-purple"
-                  : "text-[#948C8C]"
+                  ? "text-main-black bg-main-purple/10 border-l-4 border-l-main-purple"
+                  : "text-sec-black/60"
               }`}
             >
               Profile
@@ -105,8 +105,8 @@ export default function SideNav() {
               <li
                 className={`w-full py-4 px-6 text-base font-medium cursor-pointer ${
                   pathname.includes(navitem.href)
-                    ? "text-main-black bg-[#6528F71A] border-l-4 border-l-main-purple"
-                    : "text-[#948C8C]"
+                    ? "text-main-black bg-main-purple/10 border-l-4 border-l-main-purple"
+                    : "text-sec-black/60"
                 }`}
               >
                 {navitem.name}

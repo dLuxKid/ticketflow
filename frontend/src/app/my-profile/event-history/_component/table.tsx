@@ -87,7 +87,7 @@ export default function Table({ bookers }: Props) {
               />
             </svg>
           </span>
-          <p className="text-xs font-normal text-[#1F1F1F80]">Export</p>
+          <p className="text-xs font-normal text-main-black/50">Export</p>
         </div>
       </div>
       <div className="mt-8 w-full">

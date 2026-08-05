@@ -104,7 +104,7 @@ export default function MobileNav({ data }: NavProps) {
                     )}
                   </div>
                   {openSubLinks && (
-                    <div className="bg-main-white p-4 rounded-sm border-[.5px] border-[#6528F74D] w-full max-w-screen-nav duration-200 transition flex mt-4">
+                    <div className="bg-main-white p-4 rounded-sm border-[.5px] border-main-purple/30 w-full max-w-screen-nav duration-200 transition flex mt-4">
                       <ul className="flex-center flex-col gap-4 w-full">
                         {item.sublinks.map(({ name, href }, i) => (
                           <li key={i}>
@@ -170,7 +170,7 @@ export default function MobileNav({ data }: NavProps) {
                   </div>
                 </div>
                 {openProfile && (
-                  <div className="bg-main-white p-4 rounded-sm border-[.5px] border-[#6528F74D] w-full max-w-screen-nav duration-200 transition flex mt-4">
+                  <div className="bg-main-white p-4 rounded-sm border-[.5px] border-main-purple/30 w-full max-w-screen-nav duration-200 transition flex mt-4">
                     <ul className="flex-center flex-col gap-4 w-full">
                       <li>
                         <Link

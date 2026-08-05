@@ -14,7 +14,7 @@ export default function InfoIcon({ fill }: { fill?: string }) {
         cy="7.5"
         r="7.5"
         transform="rotate(-180 7.5 7.5)"
-        fill={fill || "#6528F7"}
+        fill={fill || "#6c5ce7"}
         fillOpacity="1"
       />
       <path

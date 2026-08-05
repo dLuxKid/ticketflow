@@ -311,7 +311,7 @@ export function TicketDetails({
                         salesEndTime: null,
                       }));
                   }}
-                  className="bg-transparent text-main-black placeholder:text-[#1f1f1f66]"
+                  className="bg-transparent text-main-black placeholder:text-main-black/40"
                   minDate={new Date()}
                   excludeDates={calculateExcludeDates(
                     new Date(),
@@ -353,7 +353,7 @@ export function TicketDetails({
                   timeIntervals={15}
                   timeCaption="Time"
                   dateFormat="h:mm aa"
-                  className="bg-transparent text-main-black placeholder:text-[#1f1f1f66]"
+                  className="bg-transparent text-main-black placeholder:text-main-black/40"
                 />
               </label>
             </div>
@@ -408,7 +408,7 @@ export function TicketDetails({
                       salesEndDate: date,
                     }));
                 }}
-                className="bg-transparent text-main-black placeholder:text-[#1f1f1f66]"
+                className="bg-transparent text-main-black placeholder:text-main-black/40"
                 minDate={eventData.salesEndDate || new Date()}
                 excludeDates={calculateExcludeDates(
                   eventData.startDate as Date,
@@ -450,7 +450,7 @@ export function TicketDetails({
                 timeIntervals={15}
                 timeCaption="Time"
                 dateFormat="h:mm aa"
-                className="bg-transparent text-main-black placeholder:text-[#1f1f1f66]"
+                className="bg-transparent text-main-black placeholder:text-main-black/40"
               />
             </label>
           </div>

@@ -38,7 +38,7 @@ export default function DigitalTicket({ ticketBodyDetails }: Props) {
           </button>
         </div>
         <div className="flex-between gap-4">
-          <h1 className="text-lg font-bold text-[#1f1f1f]">
+          <h1 className="text-lg font-bold text-main-black">
             {ticketBodyDetails.eventName}
           </h1>
           <span className="cursor-pointer">
@@ -51,15 +51,15 @@ export default function DigitalTicket({ ticketBodyDetails }: Props) {
             >
               <path
                 d="M8.5 0L4.5 4H7.5V13H9.5V4H12.5L8.5 0ZM14.5 22H2.5C1.96957 22 1.46086 21.7893 1.08579 21.4142C0.710714 21.0391 0.5 20.5304 0.5 20V8C0.5 7.46957 0.710714 6.96086 1.08579 6.58579C1.46086 6.21071 1.96957 6 2.5 6H5.5V8H2.5V20H14.5V8H11.5V6H14.5C15.0304 6 15.5391 6.21071 15.9142 6.58579C16.2893 6.96086 16.5 7.46957 16.5 8V20C16.5 20.5304 16.2893 21.0391 15.9142 21.4142C15.5391 21.7893 15.0304 22 14.5 22Z"
-                fill="#6528F7"
+                fill="#6c5ce7"
               />
             </svg>
           </span>
         </div>
 
         <div className="flex flex-col gap-1">
-          <p className="text-xs font-medium text-[#1f1f1f]/50">Location</p>
-          <h3 className="text-base font-bold text-[#1f1f1f]">
+          <p className="text-xs font-medium text-main-black/50">Location</p>
+          <h3 className="text-base font-bold text-main-black">
             {ticketBodyDetails.eventLocation.address}{" "}
             {ticketBodyDetails.eventLocation.city},{" "}
             {ticketBodyDetails.eventLocation.state},{" "}
@@ -68,11 +68,11 @@ export default function DigitalTicket({ ticketBodyDetails }: Props) {
         </div>
         <div className="flex flex-col gap-1">
           <div className="flex justify-between">
-            <p className="text-xs font-medium text-[#1f1f1f]/50">Date</p>
-            <p className="text-xs font-medium text-[#1f1f1f]/50">Time</p>
+            <p className="text-xs font-medium text-main-black/50">Date</p>
+            <p className="text-xs font-medium text-main-black/50">Time</p>
           </div>
           <div className="flex justify-between">
-            <p className="text-base font-bold text-[#1f1f1f]">
+            <p className="text-base font-bold text-main-black">
               {new Date(ticketBodyDetails.startDate).toLocaleDateString(
                 "en-GB",
                 {
@@ -82,7 +82,7 @@ export default function DigitalTicket({ ticketBodyDetails }: Props) {
                 }
               )}
             </p>
-            <p className="text-base font-bold text-[#1f1f1f]">
+            <p className="text-base font-bold text-main-black">
               {new Date(ticketBodyDetails.startTime).toLocaleTimeString(
                 "en-US",
                 {
@@ -101,22 +101,22 @@ export default function DigitalTicket({ ticketBodyDetails }: Props) {
         </div>
         <div className="flex flex-col gap-1">
           <div className="flex justify-between">
-            <p className="text-xs font-medium text-[#1f1f1f]/50">
+            <p className="text-xs font-medium text-main-black/50">
               Ticket Count
             </p>
-            <p className="text-xs font-medium text-[#1f1f1f]/50">Cost</p>
+            <p className="text-xs font-medium text-main-black/50">Cost</p>
           </div>
           <div className="flex justify-between">
-            <p className="text-base font-bold text-[#1f1f1f]">1</p>
-            <p className="text-base font-bold text-[#1f1f1f]">
+            <p className="text-base font-bold text-main-black">1</p>
+            <p className="text-base font-bold text-main-black">
               {ticketBodyDetails.currency} {ticketBodyDetails.price}
             </p>
           </div>
         </div>
 
         <div className="flex flex-col gap-1">
-          <p className="text-xs font-medium text-[#1f1f1f]/50">Organizer</p>
-          <p className="text-base font-bold text-[#1f1f1f]">
+          <p className="text-xs font-medium text-main-black/50">Organizer</p>
+          <p className="text-base font-bold text-main-black">
             {ticketBodyDetails.user.name}
           </p>
         </div>
@@ -135,7 +135,7 @@ export default function DigitalTicket({ ticketBodyDetails }: Props) {
                   padding: 16,
                   backgroundColor: "none",
                 }}
-                fgColor="#6528F7"
+                fgColor="#6c5ce7"
                 viewBox={`0 0 200 200`}
               />
             </div>
@@ -143,8 +143,8 @@ export default function DigitalTicket({ ticketBodyDetails }: Props) {
         </div>
 
         <div className="flex-center gap-2">
-          <p className="text-base font-medium text-[#1f1f1f]/50">Ticket ID</p>
-          <p className="text-lg font-bold text-[#1f1f1f]">
+          <p className="text-base font-medium text-main-black/50">Ticket ID</p>
+          <p className="text-lg font-bold text-main-black">
             {ticketBodyDetails.ticketId}
           </p>
         </div>

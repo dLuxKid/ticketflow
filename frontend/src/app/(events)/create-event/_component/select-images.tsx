@@ -98,7 +98,7 @@ export default function SelectImages({
             />
           ) : (
             <div className="flex-center flex-col gap-2 w-full h-full bg-transparent border border-dashed border-main-purple rounded-big overflow-hidden">
-              <span className="text-3xl text-[#4141F9] font-normal">
+              <span className="text-3xl text-main-purple font-normal">
                 <FaPlus />
               </span>
               <p className="text-base font-medium text-main-black capitalize">
@@ -137,7 +137,7 @@ export default function SelectImages({
                   />
                 ) : (
                   <div className="flex-center flex-col gap-2 w-full h-full bg-sec-grey border border-dashed border-main-purple rounded-big overflow-hidden">
-                    <span className="text-xl text-[#4141F9] font-normal">
+                    <span className="text-xl text-main-purple font-normal">
                       <FaPlus />
                     </span>
                   </div>

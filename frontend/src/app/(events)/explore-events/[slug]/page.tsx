@@ -54,7 +54,7 @@ export default async function Event({ params }: Props) {
               <Image
                 src={event.coverImage}
                 alt={`Image for ${event.eventName}`}
-                className="w-full h-full object-fill object-center rounded-[1.25rem]"
+                className="w-full h-full object-cover object-center rounded-[1.25rem]"
                 height={400}
                 width={100}
                 loading="lazy"
@@ -71,13 +71,13 @@ export default async function Event({ params }: Props) {
                     <DateIcon />
                   </span>
                   <div>
-                    <p className="text-sm font-medium text-[#1f1f1f]">
+                    <p className="text-sm font-medium text-main-black">
                       {formatDateRange(
                         new Date(event.startDate),
                         new Date(event.endDate),
                       )}
                     </p>
-                    <p className="text-sm font-medium text-[#1f1f1f]/80">
+                    <p className="text-sm font-medium text-main-black/80">
                       {formatTimeRange(
                         new Date(event.startTime),
                         new Date(event.endTime),
@@ -91,7 +91,7 @@ export default async function Event({ params }: Props) {
                     <LocationIcon />
                   </span>
                   <div>
-                    <p className="text-sm font-medium text-[#1f1f1f]">
+                    <p className="text-sm font-medium text-main-black">
                       {event.eventLocation.address} {event.eventLocation.city},{" "}
                       {event.eventLocation.state}, {event.eventLocation.country}
                     </p>
@@ -148,7 +148,7 @@ export default async function Event({ params }: Props) {
             <Image
               src={event.user.photo || avatar}
               alt={"Profile photo"}
-              className="w-full h-full object-fill object-center rounded-full"
+              className="w-full h-full object-cover object-center rounded-full"
               height={80}
               width={80}
               loading="lazy"

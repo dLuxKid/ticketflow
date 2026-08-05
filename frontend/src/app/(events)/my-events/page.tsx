@@ -6,15 +6,26 @@ import { useEffect, useState, Suspense } from "react";
 
 import ErrorPage from "@/components/error-page";
 import { LoadingMyEvent } from "@/components/skeletons";
-import Button from "@/components/ui/cta-btn";
 import NoEvents from "@/components/ui/no-events-card";
 import Search from "@/components/ui/searchbar";
 import EventCard from "./_component/event-card";
 
 import { useMyEvents } from "@/store/useMyEvents";
 
+/**
+ * Organiser's event list.
+ *
+ * The header band was `bg-main-black` with a `bg-red-900` wrapper around the filter tabs —
+ * the red was leftover debug styling that shipped, and the black clashed with the cotton
+ * palette every other page uses. It is now a white band consistent with the rest of the app.
+ *
+ * Filters are real <button>s with `aria-pressed`. They were <li onClick>, so the whole
+ * filter control was unreachable by keyboard and announced as a plain list item.
+ */
+
+const EVENT_CATEGORIES: category[] = ["all", "live", "upcoming", "past"];
+
 function MyEventContent() {
-  const eventCategories: category[] = ["all", "live", "upcoming", "past"];
   const [eventCategory, setEventCategory] = useState<category>("all");
   const [myEvents, setMyEvents] = useState<MyEvent[]>([]);
 
@@ -40,57 +51,94 @@ function MyEventContent() {
 
   if (error) return <ErrorPage error={error} />;
 
+  const total: number = events?.data?.events?.length ?? 0;
+
   return (
     <>
-      <div className="px-[5%] bg-main-black">
-        <div className="flex-between h-20 sm:h-32">
-          <h1 className="sub-title-text text-sec-grey">Events</h1>
-          <Link href={"/create-event"}>
-            <Button>Create Event</Button>
-          </Link>
-        </div>
-        <div className="w-full bg-red-900">
-          <ul className="flex-start gap-4">
-            {eventCategories.map((category) => (
-              <li
-                key={category}
-                className="text-sec-grey body-text flex-center flex-col gap-0.5 capitalize cursor-pointer"
-                onClick={() => setEventCategory(category)}
+      <div className="border-b border-main-light-grey/60 bg-main-white px-[5%] py-8 md:py-10">
+        <div className="mx-auto max-w-screen-2xl">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-main-black md:text-3xl">
+                Your events
+              </h1>
+              <p className="mt-1 text-sm text-sec-black/65">
+                {isLoading
+                  ? "Loading your events…"
+                  : `${total} ${total === 1 ? "event" : "events"} created`}
+              </p>
+            </div>
+
+            <Link
+              href="/create-event"
+              className="inline-flex items-center gap-2 rounded-full bg-main-purple px-5 py-2.5 text-sm font-semibold text-main-white shadow-lg shadow-main-purple/25 transition-all hover:-translate-y-0.5 hover:bg-main-purple/90 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-main-purple/40 focus-visible:ring-offset-2"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+                className="h-4 w-4"
               >
-                {category}
-                <span
-                  className={`h-1 w-full duration-200 transition-all transform ${
-                    category === eventCategory
-                      ? "bg-main-light-grey"
-                      : "bg-transparent"
-                  }`}
-                />
-              </li>
-            ))}
-          </ul>
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              Create event
+            </Link>
+          </div>
+
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+            <div
+              role="group"
+              aria-label="Filter events by status"
+              className="flex flex-wrap gap-1.5 rounded-full bg-main-grey-bg p-1"
+            >
+              {EVENT_CATEGORIES.map((cat) => {
+                const active = cat === eventCategory;
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => setEventCategory(cat)}
+                    className={`rounded-full px-4 py-1.5 text-sm font-semibold capitalize transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-main-purple/40 ${
+                      active
+                        ? "bg-main-white text-main-purple shadow-sm"
+                        : "text-sec-black/70 hover:text-main-black"
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex w-full max-w-sm">
+              <Search
+                placeholder="Search your events"
+                className="h-11 w-full rounded-full border border-main-light-grey bg-main-grey-bg pl-10 pr-4 text-sm text-main-black transition-colors placeholder:text-sec-black/50 focus:border-main-purple/50 focus:bg-main-white"
+              />
+            </div>
+          </div>
         </div>
       </div>
-      <div className="px-[5%] pb-16">
-        <div className="py-14">
-          <div className="flex-center w-full max-w-lg mx-auto">
-            <Search
-              placeholder="Search for event"
-              className="w-full bg-sec-grey border border-main-purple text-main-black placeholder:font-normal placeholder:text-main-black h-12 rounded-sm pl-8 pr-3"
-            />
-          </div>
-        </div>
 
-        {isLoading ? (
-          <LoadingMyEvent />
-        ) : myEvents.length === 0 ? (
-          <NoEvents category={eventCategory} />
-        ) : (
-          <div className="flex flex-col gap-8">
-            {myEvents.map((event: MyEvent, i: number) => (
-              <EventCard event={event} key={i} />
-            ))}
-          </div>
-        )}
+      <div className="px-[5%] py-10 md:py-12">
+        <div className="mx-auto max-w-screen-2xl">
+          {isLoading ? (
+            <LoadingMyEvent />
+          ) : myEvents.length === 0 ? (
+            <NoEvents category={eventCategory} />
+          ) : (
+            <div className="flex flex-col gap-5">
+              {myEvents.map((event: MyEvent, i: number) => (
+                <EventCard event={event} key={i} />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </>
   );

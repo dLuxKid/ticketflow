@@ -170,7 +170,7 @@ export default function ReviewEvent({
               Event Start
             </p>
             <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <label className="bg-[#f4f2f4] rounded-md h-12 w-full px-4 text-main-black flex items-center border-none">
+              <label className="bg-main-grey-bg rounded-md h-12 w-full px-4 text-main-black flex items-center border-none">
                 <ReactDatePicker
                   selected={eventData.startDate}
                   placeholderText="Date"
@@ -187,7 +187,7 @@ export default function ReviewEvent({
                   readOnly
                 />
               </label>
-              <label className="bg-[#f4f2f4] rounded-md h-12 w-full px-4 text-main-black flex items-center border-none">
+              <label className="bg-main-grey-bg rounded-md h-12 w-full px-4 text-main-black flex items-center border-none">
                 <ReactDatePicker
                   selected={eventData.startTime}
                   placeholderText="Time"
@@ -217,7 +217,7 @@ export default function ReviewEvent({
               Event End
             </p>
             <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <label className="bg-[#f4f2f4] rounded-md h-12 w-full px-4 text-main-black flex items-center border-none">
+              <label className="bg-main-grey-bg rounded-md h-12 w-full px-4 text-main-black flex items-center border-none">
                 <ReactDatePicker
                   selected={eventData.endDate}
                   placeholderText="Date"
@@ -233,7 +233,7 @@ export default function ReviewEvent({
                   readOnly
                 />
               </label>
-              <label className="bg-[#f4f2f4] rounded-md h-12 w-full px-4 text-main-black flex items-center border-none">
+              <label className="bg-main-grey-bg rounded-md h-12 w-full px-4 text-main-black flex items-center border-none">
                 <ReactDatePicker
                   selected={eventData.endTime}
                   placeholderText="Time"
@@ -284,7 +284,7 @@ export default function ReviewEvent({
                 title="description"
                 name="eventDescription"
                 value={eventData.eventDescription}
-                className="h-40 w-full bg-[#f4f2f4] rounded-md text-main-black p-4 border-none"
+                className="h-40 w-full bg-main-grey-bg rounded-md text-main-black p-4 border-none"
                 readOnly
               />
             </label>
@@ -323,7 +323,7 @@ export default function ReviewEvent({
                 name="city"
                 type="text"
                 placeholder="City"
-                className="rounded-md bg-[#f4f2f4] h-12 w-full px-4 text-main-black placeholder:text-[#1F1F1F66] border-none"
+                className="rounded-md bg-main-grey-bg h-12 w-full px-4 text-main-black placeholder:text-main-black/40 border-none"
                 value={eventData.eventLocation.city}
                 readOnly
               />
@@ -331,17 +331,17 @@ export default function ReviewEvent({
                 name="postalCode"
                 type="tel"
                 placeholder="Postal Code"
-                className="rounded-md bg-[#f4f2f4] h-12 w-full px-4 text-main-black placeholder:text-[#1F1F1F66] border-none"
+                className="rounded-md bg-main-grey-bg h-12 w-full px-4 text-main-black placeholder:text-main-black/40 border-none"
                 value={eventData.eventLocation.postalCode}
                 readOnly
               />
             </div>
-            <label className="bg-[#f4f2f4] rounded-md h-12 w-full px-4 text-main-black flex items-center border-none mt-4">
+            <label className="bg-main-grey-bg rounded-md h-12 w-full px-4 text-main-black flex items-center border-none mt-4">
               <input
                 name="address"
                 type="text"
                 placeholder="Fill in address"
-                className="bg-transparent text-main-black placeholder:text-[#1f1f1f66]"
+                className="bg-transparent text-main-black placeholder:text-main-black/40"
                 value={eventData.eventLocation.address}
                 readOnly
               />
@@ -376,7 +376,7 @@ export default function ReviewEvent({
                   name="twitter"
                   readOnly
                   type="text"
-                  className="rounded-md bg-[#f4f2f4] pl-16 h-12 w-full px-4 text-main-black placeholder:text-[#1f1f1f66]"
+                  className="rounded-md bg-main-grey-bg pl-16 h-12 w-full px-4 text-main-black placeholder:text-main-black/40"
                   value={eventData.socialMediaLinks.twitter}
                 />
                 <span className="left-0 top-0 bottom-0 w-14 absolute bg-main-purple rounded-l-md flex-center text-main-white body-text">
@@ -388,7 +388,7 @@ export default function ReviewEvent({
                   name="instagram"
                   type="text"
                   readOnly
-                  className="rounded-md bg-[#f4f2f4] pl-16 h-12 w-full px-4 text-main-black placeholder:text-[#1f1f1f66]"
+                  className="rounded-md bg-main-grey-bg pl-16 h-12 w-full px-4 text-main-black placeholder:text-main-black/40"
                   value={eventData.socialMediaLinks.instagram}
                 />
                 <span className="left-0 top-0 bottom-0 w-14 absolute bg-main-purple rounded-l-md flex-center text-main-white body-text">
@@ -400,7 +400,7 @@ export default function ReviewEvent({
                   name="youtube"
                   type="text"
                   readOnly
-                  className="rounded-md bg-[#f4f2f4] pl-16 h-12 w-full px-4 text-main-black placeholder:text-[#1f1f1f66]"
+                  className="rounded-md bg-main-grey-bg pl-16 h-12 w-full px-4 text-main-black placeholder:text-main-black/40"
                   value={eventData.socialMediaLinks.youtube}
                 />
                 <span className="left-0 top-0 bottom-0 w-14 absolute bg-main-purple rounded-l-md flex-center text-main-white body-text">
@@ -412,7 +412,7 @@ export default function ReviewEvent({
                   name="facebook"
                   type="text"
                   readOnly
-                  className="rounded-md bg-[#f4f2f4] pl-16 h-12 w-full px-4 text-main-black placeholder:text-[#1f1f1f66]"
+                  className="rounded-md bg-main-grey-bg pl-16 h-12 w-full px-4 text-main-black placeholder:text-main-black/40"
                   value={eventData.socialMediaLinks.facebook}
                 />
                 <span className="left-0 top-0 bottom-0 w-14 absolute bg-main-purple rounded-l-md flex-center text-main-white body-text">
@@ -424,7 +424,7 @@ export default function ReviewEvent({
                   name="others"
                   type="text"
                   readOnly
-                  className="rounded-md bg-[#f4f2f4] pl-16 h-12 w-full px-4 text-main-black placeholder:text-[#1f1f1f66]"
+                  className="rounded-md bg-main-grey-bg pl-16 h-12 w-full px-4 text-main-black placeholder:text-main-black/40"
                   value={eventData.socialMediaLinks.others}
                 />
                 <span className="left-0 top-0 bottom-0 w-14 absolute bg-main-purple rounded-l-md flex-center text-main-white body-text">
@@ -460,7 +460,7 @@ export default function ReviewEvent({
                       title="ticket name"
                       type="text"
                       name="ticketName"
-                      className="bg-[#f4f2f4] border-none rounded-md h-12 w-full px-4 text-main-black"
+                      className="bg-main-grey-bg border-none rounded-md h-12 w-full px-4 text-main-black"
                       value={ticket.ticketName}
                       readOnly
                     />
@@ -475,7 +475,7 @@ export default function ReviewEvent({
                       title="ticket quantity"
                       type="text"
                       name="ticketQuantity"
-                      className="bg-[#f4f2f4] border-none rounded-md h-12 w-full px-4 text-main-black"
+                      className="bg-main-grey-bg border-none rounded-md h-12 w-full px-4 text-main-black"
                       value={ticket.ticketQuantity}
                       readOnly
                     />
@@ -489,7 +489,7 @@ export default function ReviewEvent({
                         title="ticket price"
                         type="tel"
                         name="ticketPrice"
-                        className="bg-[#f4f2f4] border-none rounded-md h-12 w-full pl-16 pr-4 text-main-black"
+                        className="bg-main-grey-bg border-none rounded-md h-12 w-full pl-16 pr-4 text-main-black"
                         value={ticket.ticketPrice}
                         readOnly
                       />
@@ -508,7 +508,7 @@ export default function ReviewEvent({
                       title="minimum buying limit"
                       type="text"
                       name="minimumBuyingLimit"
-                      className="bg-[#f4f2f4] border-none rounded-md h-12 w-full px-4 text-main-black"
+                      className="bg-main-grey-bg border-none rounded-md h-12 w-full px-4 text-main-black"
                       value={ticket.minimumBuyingLimit}
                       readOnly
                     />
@@ -521,7 +521,7 @@ export default function ReviewEvent({
                       title="maximum buying limit"
                       type="text"
                       name="maximumBuyingLimit"
-                      className="bg-[#f4f2f4] border-none rounded-md h-12 w-full px-4 text-main-black"
+                      className="bg-main-grey-bg border-none rounded-md h-12 w-full px-4 text-main-black"
                       value={ticket.maximumBuyingLimit}
                       readOnly
                     />
@@ -531,7 +531,7 @@ export default function ReviewEvent({
             ))}
           </div>
 
-          <hr className="h-0.5 rounded-sm w-full bg-[#f4f2f4]" />
+          <hr className="h-0.5 rounded-sm w-full bg-main-grey-bg" />
 
           <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
@@ -539,7 +539,7 @@ export default function ReviewEvent({
                 Ticket sale start date
               </p>
 
-              <label className="bg-[#f4f2f4] rounded-md h-12 w-full px-4 text-main-black flex items-center">
+              <label className="bg-main-grey-bg rounded-md h-12 w-full px-4 text-main-black flex items-center">
                 <ReactDatePicker
                   selected={eventData.salesStartDate}
                   placeholderText="Date"
@@ -560,7 +560,7 @@ export default function ReviewEvent({
               <p className="text-sm font-semibold text-main-black mb-1 capitalize flex items-center gap-1">
                 Ticket sale start time
               </p>
-              <label className="bg-[#f4f2f4] rounded-md h-12 w-full px-4 text-main-black flex items-center">
+              <label className="bg-main-grey-bg rounded-md h-12 w-full px-4 text-main-black flex items-center">
                 <ReactDatePicker
                   selected={eventData.salesStartTime}
                   placeholderText="Time"
@@ -591,7 +591,7 @@ export default function ReviewEvent({
                 Ticket sale end date
               </p>
 
-              <label className="bg-[#f4f2f4] rounded-md h-12 w-full px-4 text-main-black flex items-center">
+              <label className="bg-main-grey-bg rounded-md h-12 w-full px-4 text-main-black flex items-center">
                 <ReactDatePicker
                   selected={eventData.salesEndDate}
                   placeholderText="Date"
@@ -612,7 +612,7 @@ export default function ReviewEvent({
               <p className="text-sm font-semibold text-main-black mb-1 capitalize flex items-center gap-1">
                 Ticket sale end time
               </p>
-              <label className="bg-[#f4f2f4] rounded-md h-12 w-full px-4 text-main-black flex items-center">
+              <label className="bg-main-grey-bg rounded-md h-12 w-full px-4 text-main-black flex items-center">
                 <ReactDatePicker
                   selected={eventData.salesEndTime}
                   placeholderText="Time"
@@ -630,7 +630,7 @@ export default function ReviewEvent({
                   timeIntervals={15}
                   timeCaption="Time"
                   dateFormat="h:mm aa"
-                  className="bg-transparent text-main-black placeholder:text-[#1f1f1f66]"
+                  className="bg-transparent text-main-black placeholder:text-main-black/40"
                 />
               </label>
             </div>
@@ -657,8 +657,8 @@ export default function ReviewEvent({
                 className="w-full h-full object-center"
               />
             ) : (
-              <div className="flex-center flex-col gap-2 w-full h-full bg-[#f4f2f4] border border-dashed-none rounded-big overflow-hidden">
-                <span className="text-3xl text-[#4141F9] font-normal">
+              <div className="flex-center flex-col gap-2 w-full h-full bg-main-grey-bg border border-dashed-none rounded-big overflow-hidden">
+                <span className="text-3xl text-main-purple font-normal">
                   <FaPlus />
                 </span>
                 <p className="text-base font-medium text-main-black capitalize">
@@ -696,8 +696,8 @@ export default function ReviewEvent({
                       height={100}
                     />
                   ) : (
-                    <div className="flex-center flex-col gap-2 w-full h-full bg-[#f4f2f4] border border-dashed-none rounded-big overflow-hidden">
-                      <span className="text-xl text-[#4141F9] font-normal">
+                    <div className="flex-center flex-col gap-2 w-full h-full bg-main-grey-bg border border-dashed-none rounded-big overflow-hidden">
+                      <span className="text-xl text-main-purple font-normal">
                         <FaPlus />
                       </span>
                     </div>
