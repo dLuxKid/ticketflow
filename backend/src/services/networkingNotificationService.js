@@ -3,35 +3,40 @@ import * as bookingRepository from '../repositories/bookingRepository.js';
 import { sendNetworkingLive } from '../shared/utils/sendNetworkingLive.js';
 
 /**
- * "Event just went live" notification (Phase 7) — every attendee gets an email the moment
- * their event starts, with the link to join the networking space.
+ * "Event is live" notification (Phase 7) — every attendee gets an email with the link to
+ * join the networking space.
  *
- * Structured like the GDPR sweep (retentionService.sweepExpiredEvents): a pure predicate for
- * unit testing, a repository query implementing the same boundary for the real query
- * (eventRepository.findStartedNotNotified), and an idempotent sweep meant to be run
- * on a schedule (scripts/send-event-live-emails.js).
+ * By explicit choice, this fires on **every trigger**, not once ever per event: a manual
+ * `npm run notify:event-live` always re-sends to every currently-live event, and so would
+ * the scheduled cron in scheduled-jobs.yml if it were enabled. There is deliberately no
+ * "already notified" gate. `Event.networkingEmailSentAt` is kept only as a "last sent at"
+ * timestamp for diagnostics — it is never read as a filter.
+ *
+ * Known consequence: the cron currently runs every 15 minutes. Left as-is, turning it on
+ * would re-email every attendee of every live event every 15 minutes for the event's whole
+ * duration — acceptable for now because the cron isn't wired to real secrets yet, but worth
+ * revisiting (either a much longer interval, or a real rate-limited reminder feature) before
+ * it is.
  */
 
-/** Pure: has `event` just gone live and not yet been notified? Exported for unit testing. */
-export const isNewlyLive = (event, now = new Date()) => {
+/** Pure: is `event` currently inside its live window? Exported for unit testing. */
+export const isCurrentlyLive = (event, now = new Date()) => {
   if (!event?.startDate || !event?.endDate) return false;
-  if (event.networkingEmailSentAt) return false;
   return now >= new Date(event.startDate) && now <= new Date(event.endDate);
 };
 
 /**
- * Scheduled sweep: emails every admittable attendee of any event currently inside its live
- * window that hasn't been notified yet, then marks it sent. Idempotent — safe to run on a
- * repeating schedule; already-notified events are excluded by the repository query itself.
+ * Emails every admittable attendee of every currently-live event, then records when it was
+ * last sent (informational only, not idempotency).
  *
- * A per-recipient send failure does not stop the sweep or leave the event unmarked (matching
- * sendInvite.js's "delivery is non-fatal" rule) — the networking space is reachable by URL
- * regardless of whether any one email landed.
+ * A per-recipient send failure does not stop the sweep (matching sendInvite.js's "delivery
+ * is non-fatal" rule) — the networking space is reachable by URL regardless of whether any
+ * one email landed.
  *
  * @returns {Promise<{eventsNotified: number, emailsSent: number}>}
  */
-export const sweepNewlyLiveEvents = async (frontendUrl) => {
-  const events = await eventRepository.findStartedNotNotified();
+export const sweepLiveEvents = async (frontendUrl) => {
+  const events = await eventRepository.findLiveEvents();
   let emailsSent = 0;
 
   for (const event of events) {

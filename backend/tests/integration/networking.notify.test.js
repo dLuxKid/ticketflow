@@ -8,9 +8,10 @@ import { connect, disconnect, buildEvent, skipReason } from '../helpers/db.js';
 
 /**
  * Phase 7 — the event-live notification sweep only fires for events inside their live
- * window, exactly once per event (idempotent). No SMTP is configured under test, so
- * individual sends fail — that must not stop the event from being marked notified, same
- * non-fatal-delivery rule sendInvite.js already established for guest invites.
+ * window, and — by explicit design — on every run, not once ever per event (see
+ * networkingNotificationService.js for why). No SMTP is configured under test, so
+ * individual sends fail — that must not stop the event's "last sent at" timestamp from
+ * updating, same non-fatal-delivery rule sendInvite.js already established for invites.
  */
 
 if (skipReason) {
@@ -64,7 +65,7 @@ if (skipReason) {
   });
 
   test('sweeping notifies only the event inside its live window', async () => {
-    const result = await networkingNotificationService.sweepNewlyLiveEvents(
+    const result = await networkingNotificationService.sweepLiveEvents(
       'http://localhost:3000',
     );
     assert.ok(result.eventsNotified >= 1);
@@ -72,7 +73,7 @@ if (skipReason) {
     const refreshedLive = await Event.findById(liveEvent._id);
     assert.ok(
       refreshedLive.networkingEmailSentAt,
-      'live event is marked notified',
+      'live event has a last-sent timestamp',
     );
 
     const refreshedUpcoming = await Event.findById(upcomingEvent._id);
@@ -83,18 +84,25 @@ if (skipReason) {
     );
   });
 
-  test('sweeping twice is idempotent (no re-notification)', async () => {
+  test('sweeping twice re-sends for the same still-live event (no gate)', async () => {
     const first = await Event.findById(liveEvent._id);
     const firstSentAt = first.networkingEmailSentAt;
 
-    await networkingNotificationService.sweepNewlyLiveEvents(
+    // Distinguishable from the first sweep's timestamp even on a fast test run.
+    await new Promise((resolve) => setTimeout(resolve, 5));
+
+    const result = await networkingNotificationService.sweepLiveEvents(
       'http://localhost:3000',
+    );
+    assert.ok(
+      result.eventsNotified >= 1,
+      'the still-live event is notified again, not skipped',
     );
 
     const second = await Event.findById(liveEvent._id);
-    assert.equal(
-      second.networkingEmailSentAt?.getTime(),
-      firstSentAt?.getTime(),
+    assert.ok(
+      second.networkingEmailSentAt.getTime() > firstSentAt.getTime(),
+      'the last-sent timestamp advances on every run, confirming no "already notified" gate',
     );
   });
 }

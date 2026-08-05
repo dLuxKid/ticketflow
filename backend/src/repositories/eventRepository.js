@@ -171,21 +171,19 @@ export const findUpcoming = () =>
     );
 
 /**
- * Events currently inside the same startDate<=now<=endDate window Event.isLive calls
- * 'live', that haven't had their networking-is-live email sent yet. Mirrors
- * findEndedBefore's own note: the boundary here is deliberately the same one the virtual
- * (and therefore the networking access gate) uses, so the email and the app never disagree
- * about whether an event is live.
+ * Every event currently inside the same startDate<=now<=endDate window Event.isLive calls
+ * 'live' — deliberately the same boundary the virtual (and therefore the networking access
+ * gate) uses, so the notification and the app never disagree about whether an event is
+ * live. No "already notified" filter: by design, this fires on every trigger (a manual run
+ * or the scheduled cron), not once ever per event — see networkingNotificationService for
+ * why, and the spam implication that has if the cron's interval is ever shortened.
  */
-export const findStartedNotNotified = () => {
+export const findLiveEvents = () => {
   const now = new Date();
-  return Event.find({
-    startDate: { $lte: now },
-    endDate: { $gte: now },
-    networkingEmailSentAt: { $exists: false },
-  });
+  return Event.find({ startDate: { $lte: now }, endDate: { $gte: now } });
 };
 
+/** Records when an event's live-notification was last sent — informational, not a gate. */
 export const markNetworkingEmailSent = (eventId) =>
   Event.findByIdAndUpdate(eventId, {
     $set: { networkingEmailSentAt: new Date() },
