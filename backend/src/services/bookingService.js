@@ -4,7 +4,6 @@ import * as eventRepository from '../repositories/eventRepository.js';
 import * as auditLogRepository from '../repositories/auditLogRepository.js';
 import { authorizeScan } from './admissionService.js';
 import { sendPdf } from '../shared/utils/generatePdf.js';
-import generateQRCode from '../shared/utils/generateQrCode.js';
 import generateTicketId from '../shared/utils/ticketIdGenerator.js';
 import AppError from '../shared/errors/AppError.js';
 
@@ -164,12 +163,12 @@ export const confirmReservation = async (reference, details = {}) => {
   await Promise.all(
     bookings.map(async (booking) => {
       try {
-        const qr = await generateQRCode(booking.ticketId);
+        // sendPdf generates and attaches the QR itself (inline cid: attachment — a data
+        // URL here would be stripped by Gmail and arrive as a blank square).
         await sendPdf({
           ...event._doc,
           organizer: event.user?.name,
           ...booking.toObject(),
-          qr,
         });
         ticketsSent += 1;
       } catch (err) {
