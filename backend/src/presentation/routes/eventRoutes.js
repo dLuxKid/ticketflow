@@ -4,6 +4,7 @@ import * as dashboardController from '../controllers/dashboardController.js';
 import * as guestController from '../controllers/guestController.js';
 import * as nlQueryController from '../controllers/nlQueryController.js';
 import * as usherController from '../controllers/usherController.js';
+import * as networkingController from '../controllers/networkingController.js';
 import * as authController from '../controllers/authController.js';
 import handleImg from '../../shared/middleware/uploadImage.js';
 
@@ -56,5 +57,20 @@ router
   .get(usherController.listUshers)
   .post(usherController.assignUsher);
 router.delete('/:eventId/ushers/:userId', usherController.unassignUsher);
+
+// ─── Guest networking (attendees of a live event) ───────────────────────────────
+// Eligibility (a non-revoked/rejected booking for this event, or the organiser/admin) is
+// enforced in networkingService; posting is additionally gated on the event being live.
+router.get('/:eventId/network/stream', networkingController.streamNetwork);
+router.get('/:eventId/network/directory', networkingController.getDirectory);
+router.patch('/:eventId/network/opt-in', networkingController.setOptIn);
+router.post(
+  '/:eventId/network/messages',
+  networkingController.postGroupMessage,
+);
+router
+  .route('/:eventId/network/dms/:userId')
+  .get(networkingController.getDmThread)
+  .post(networkingController.postDm);
 
 export default router;

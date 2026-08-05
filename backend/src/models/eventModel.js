@@ -173,6 +173,13 @@ const eventSchema = new mongoose.Schema(
       type: mongoose.Schema.ObjectId,
       ref: 'User',
     },
+    // Guest networking (Phase 7): set once the "this event just went live, here's your
+    // networking link" email has gone out. Checked by the same startDate<=now<=endDate
+    // window Event.isLive already calls 'live', so the email and the in-app networking gate
+    // can never disagree about whether an event is live.
+    networkingEmailSentAt: {
+      type: Date,
+    },
   },
   {
     toJSON: { virtuals: true },

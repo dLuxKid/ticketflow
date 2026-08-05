@@ -32,6 +32,16 @@ export const API_URLS = {
     ushers: (eventId: string) => `${baseUrl}/api/v1/events/${eventId}/ushers`,
     unassignUsher: (eventId: string, userId: string) =>
       `${baseUrl}/api/v1/events/${eventId}/ushers/${userId}`,
+    networkStream: (eventId: string) =>
+      `${baseUrl}/api/v1/events/${eventId}/network/stream`,
+    networkDirectory: (eventId: string) =>
+      `${baseUrl}/api/v1/events/${eventId}/network/directory`,
+    networkOptIn: (eventId: string) =>
+      `${baseUrl}/api/v1/events/${eventId}/network/opt-in`,
+    networkMessages: (eventId: string) =>
+      `${baseUrl}/api/v1/events/${eventId}/network/messages`,
+    networkDm: (eventId: string, userId: string) =>
+      `${baseUrl}/api/v1/events/${eventId}/network/dms/${userId}`,
   },
   bookings: {
     checkIn: (id: string) => `${baseUrl}/api/v1/bookings/check-in/${id}`,

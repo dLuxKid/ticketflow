@@ -18,6 +18,7 @@
     "migrate:ticket-ids": "node scripts/migrate-ticket-ids.js",
     "gdpr:sweep": "node scripts/gdpr-retention-sweep.js",
     "reservations:release": "node scripts/release-expired-reservations.js",
+    "notify:event-live": "node scripts/send-event-live-emails.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write ."

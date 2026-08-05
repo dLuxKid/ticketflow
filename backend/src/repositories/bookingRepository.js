@@ -146,3 +146,59 @@ export const findByEvent = (eventId) =>
     // from it and included in the JSON response via toJSON virtuals.
     fields: 'name email ticketType ticketId price status',
   }).limitFields().query;
+
+// ─── Guest networking (Phase 7) ─────────────────────────────────────────────────
+
+const NOT_ADMITTABLE = ['revoked', 'rejected'];
+
+/**
+ * Resolves an attendee's booking by event + email. Email, not `user`, is the identifier
+ * guaranteed present on every booking regardless of source — a guest-checkout purchase or
+ * an organiser-issued invite may both exist with no `user` set yet (see claimBooking).
+ */
+export const findByEventAndEmail = (eventId, email) =>
+  Booking.findOne({ event: eventId, email, status: { $nin: NOT_ADMITTABLE } });
+
+/** Resolves an attendee's booking by event + linked user id (set once they've claimed it). */
+export const findByEventAndUser = (eventId, userId) =>
+  Booking.findOne({
+    event: eventId,
+    user: userId,
+    status: { $nin: NOT_ADMITTABLE },
+  });
+
+/**
+ * Links a booking to the account that just authenticated as its owner. Bookings created
+ * before the attendee had (or used) an account — an invite, or a guest checkout — only
+ * carry an email; this is what makes them DM-addressable by user id afterward.
+ */
+export const claimBooking = (bookingId, userId) =>
+  Booking.findByIdAndUpdate(
+    bookingId,
+    { $set: { user: userId } },
+    { new: true },
+  );
+
+/** Opted-in attendees for an event's networking directory. */
+export const findOptedInByEvent = (eventId) =>
+  Booking.find({
+    event: eventId,
+    networkingOptIn: true,
+    status: { $nin: NOT_ADMITTABLE },
+  }).select('name networkingBio user vip');
+
+export const setNetworkingProfile = (
+  bookingId,
+  { networkingOptIn, networkingBio },
+) =>
+  Booking.findByIdAndUpdate(
+    bookingId,
+    { $set: { networkingOptIn: Boolean(networkingOptIn), networkingBio } },
+    { new: true },
+  );
+
+/** Every admittable attendee of an event — the recipient list for the "event is live" email. */
+export const findNotifiableByEvent = (eventId) =>
+  Booking.find({ event: eventId, status: { $nin: NOT_ADMITTABLE } }).select(
+    'name email',
+  );

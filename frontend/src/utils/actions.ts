@@ -319,6 +319,97 @@ export const unassignUsher = async (eventId: string, userId: string) => {
   }
 };
 
+export const getNetworkDirectory = async (eventId: string) => {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("jwt")?.value;
+
+  try {
+    const res = await axios({
+      method: "GET",
+      url: API_URLS.events.networkDirectory(eventId),
+      headers: { Authorization: "Bearer " + token },
+    });
+    return res.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) return error.response?.data ?? error;
+    return error;
+  }
+};
+
+export const setNetworkOptIn = async (
+  eventId: string,
+  data: { networkingOptIn: boolean; networkingBio?: string },
+) => {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("jwt")?.value;
+
+  try {
+    const res = await axios({
+      method: "PATCH",
+      url: API_URLS.events.networkOptIn(eventId),
+      data,
+      headers: { Authorization: "Bearer " + token },
+    });
+    return res.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) return error.response?.data ?? error;
+    return error;
+  }
+};
+
+export const postGroupMessage = async (eventId: string, body: string) => {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("jwt")?.value;
+
+  try {
+    const res = await axios({
+      method: "POST",
+      url: API_URLS.events.networkMessages(eventId),
+      data: { body },
+      headers: { Authorization: "Bearer " + token },
+    });
+    return res.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) return error.response?.data ?? error;
+    return error;
+  }
+};
+
+export const getDmThread = async (eventId: string, userId: string) => {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("jwt")?.value;
+
+  try {
+    const res = await axios({
+      method: "GET",
+      url: API_URLS.events.networkDm(eventId, userId),
+      headers: { Authorization: "Bearer " + token },
+    });
+    return res.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) return error.response?.data ?? error;
+    return error;
+  }
+};
+
+export const postDm = async (eventId: string, userId: string, body: string) => {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("jwt")?.value;
+
+  try {
+    const res = await axios({
+      method: "POST",
+      url: API_URLS.events.networkDm(eventId, userId),
+      data: { body },
+      headers: { Authorization: "Bearer " + token },
+    });
+    return res.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) return error.response?.data ?? error;
+    return error;
+  }
+};
+
 /**
  * @param overrideCapacity - admit even though the venue is at its safe occupancy. Sent only
  *   after the door has been refused with `code: "at_capacity"` and a supervisor has

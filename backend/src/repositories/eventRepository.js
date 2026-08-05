@@ -169,3 +169,24 @@ export const findUpcoming = () =>
     .select(
       '_id slug eventName startDate startTime endDate endTime eventLocation coverImage numberOfAttendees timezone salesStartDate salesEndDate',
     );
+
+/**
+ * Events currently inside the same startDate<=now<=endDate window Event.isLive calls
+ * 'live', that haven't had their networking-is-live email sent yet. Mirrors
+ * findEndedBefore's own note: the boundary here is deliberately the same one the virtual
+ * (and therefore the networking access gate) uses, so the email and the app never disagree
+ * about whether an event is live.
+ */
+export const findStartedNotNotified = () => {
+  const now = new Date();
+  return Event.find({
+    startDate: { $lte: now },
+    endDate: { $gte: now },
+    networkingEmailSentAt: { $exists: false },
+  });
+};
+
+export const markNetworkingEmailSent = (eventId) =>
+  Event.findByIdAndUpdate(eventId, {
+    $set: { networkingEmailSentAt: new Date() },
+  });

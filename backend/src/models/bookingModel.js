@@ -118,6 +118,19 @@ const bookingSchema = new mongoose.Schema(
     piiErasedAt: {
       type: Date,
     },
+    // Guest networking (Phase 7): must opt in to appear in the event's attendee directory —
+    // privacy-by-default, not privacy-by-exception. Lives on Booking, not User, because
+    // visibility is scoped to *this* event; the same account attending a different event
+    // should not inherit it.
+    networkingOptIn: {
+      type: Boolean,
+      default: false,
+    },
+    networkingBio: {
+      type: String,
+      trim: true,
+      maxlength: [280, 'Bio is too long'],
+    },
   },
   {
     toJSON: { virtuals: true },
