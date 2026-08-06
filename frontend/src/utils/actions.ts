@@ -436,3 +436,20 @@ export const scanTicket = async (
     return error;
   }
 };
+
+type ChatMessage = { role: "user" | "assistant"; content: string };
+
+// Public/unauthenticated on purpose — no cookie/token needed, unlike everything above.
+export const sendChatMessage = async (message: string, history: ChatMessage[]) => {
+  try {
+    const res = await axios({
+      method: "POST",
+      url: API_URLS.chat,
+      data: { message, history },
+    });
+    return res.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) return error.response?.data ?? error;
+    return error;
+  }
+};
