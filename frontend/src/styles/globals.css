@@ -218,3 +218,74 @@ main {
 .text-transition {
   animation: slideInFromBottom 0.3s cubic-bezier(0, 0.9, 0.3, 1.2);
 }
+
+/* ── Chat launcher attention animations ──────────────────────────────────────
+   The launcher "pops" periodically to draw the eye before it has ever been
+   opened. A long pause between pops is deliberate: a continuously bouncing
+   control reads as broken rather than inviting, and steady motion in the corner
+   of the eye is genuinely hostile to some users.
+
+   Every animation here is disabled under prefers-reduced-motion (WCAG 2.2 SC
+   2.3.3 Animation from Interactions) — the launcher then simply sits still, and
+   nothing about its function depends on the movement. */
+
+@keyframes chat-pop {
+  /* Still for most of the cycle, then a quick squash-and-stretch. */
+  0%,
+  62%,
+  100% {
+    transform: scale(1) translateY(0);
+  }
+  70% {
+    transform: scale(1.1) translateY(-5px);
+  }
+  78% {
+    transform: scale(0.95) translateY(0);
+  }
+  86% {
+    transform: scale(1.04) translateY(-2px);
+  }
+}
+
+@keyframes chat-halo {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  70%,
+  100% {
+    transform: scale(1.75);
+    opacity: 0;
+  }
+}
+
+@keyframes chat-teaser-in {
+  from {
+    opacity: 0;
+    transform: translateX(8px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.animate-chat-pop {
+  animation: chat-pop 3.2s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+}
+
+.animate-chat-halo {
+  animation: chat-halo 3.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.animate-chat-teaser {
+  animation: chat-teaser-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-chat-pop,
+  .animate-chat-halo,
+  .animate-chat-teaser {
+    animation: none !important;
+  }
+}

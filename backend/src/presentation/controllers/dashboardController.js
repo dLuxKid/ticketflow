@@ -57,8 +57,10 @@ export const streamEvent = catchAsync(async (req, res) => {
   send('snapshot', await dashboardService.getSnapshot(eventId));
 
   // Forward only this event's decisions.
-  const onAdmitted = (p) => p.eventId === eventId && send(ADMISSION_ADMITTED, p);
-  const onRejected = (p) => p.eventId === eventId && send(ADMISSION_REJECTED, p);
+  const onAdmitted = (p) =>
+    p.eventId === eventId && send(ADMISSION_ADMITTED, p);
+  const onRejected = (p) =>
+    p.eventId === eventId && send(ADMISSION_REJECTED, p);
   admissionBus.on(ADMISSION_ADMITTED, onAdmitted);
   admissionBus.on(ADMISSION_REJECTED, onRejected);
 

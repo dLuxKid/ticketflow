@@ -79,7 +79,11 @@ const Caret = ({ className = "" }: { className?: string }) => (
   />
 );
 
-type UserData = { photo?: string } | null;
+type UserData = {
+  photo?: string;
+  /** Present because verifyAndGetUser selects `+role`; drives the admin-only nav entry. */
+  role?: "user" | "creator" | "admin" | "usher";
+} | null;
 type NavProps = { data: { data: { user: UserData } } | null };
 
 export default function DeskopNav({ data }: NavProps) {
@@ -234,6 +238,36 @@ export default function DeskopNav({ data }: NavProps) {
                         My Account
                       </Link>
                     </li>
+
+                    {/* Rendered only for admins. The endpoint behind it is admin-gated
+                        server-side, so hiding it is tidiness, not the security boundary. */}
+                    {data.data.user.role === "admin" && (
+                      <li>
+                        <Link
+                          href="/admin/users"
+                          className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-main-purple/40 ${
+                            pathname.includes("/admin")
+                              ? "bg-main-purple/[0.07] text-main-purple"
+                              : "text-main-black hover:bg-main-grey-bg"
+                          }`}
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-hidden="true"
+                            className="h-4 w-4"
+                          >
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+                          </svg>
+                          Manage users
+                        </Link>
+                      </li>
+                    )}
+
                     <li className="my-1 h-px bg-main-light-grey/70" aria-hidden="true" />
                     <li>
                       <button

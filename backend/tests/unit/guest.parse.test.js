@@ -32,9 +32,7 @@ test('parses a headerless CSV as name,email,vip,plusOnes', () => {
 });
 
 test('honours quoted fields containing commas', () => {
-  const { guests } = parseGuestCsv(
-    'name,email\n"Doe, John",john@example.com',
-  );
+  const { guests } = parseGuestCsv('name,email\n"Doe, John",john@example.com');
   assert.equal(guests[0].name, 'Doe, John');
 });
 

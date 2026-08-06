@@ -17,6 +17,20 @@ router.get('/trending', eventController.getTrendingEvents);
 router.get('/upcoming', eventController.getUpcomingEvents);
 router.get('/:slug', eventController.getEvent);
 
+// ─── Guest networking access (public by necessity) ──────────────────────────────
+// Most attendees never create an account — a guest checkout or an emailed invite captures
+// only a name and an email — so these two sit ahead of `protect`. Authorisation is proof of
+// control over the email address on the booking: request a code, then submit it. Registered
+// before the router mounts `protect`, and multi-segment so '/:slug' above cannot swallow it.
+router.post(
+  '/:eventId/network/guest/request',
+  networkingController.requestGuestAccess,
+);
+router.post(
+  '/:eventId/network/guest/verify',
+  networkingController.verifyGuestAccess,
+);
+
 // ─── Protected routes ──────────────────────────────────────────────────────────
 router.use(authController.protect);
 

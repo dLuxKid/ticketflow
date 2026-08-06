@@ -15,15 +15,27 @@ import AppError from '../shared/errors/AppError.js';
 const isOrganizerOrAdmin = (event, user) =>
   user?.role === 'admin' || Boolean(event.user?.equals?.(user?._id));
 
+/**
+ * Pure: has the organiser switched networking on for this event? Exported for unit testing.
+ *
+ * Only an explicit `false` disables it. Events created before the field existed store
+ * `undefined`, and those already had networking — treating absence as "off" would silently
+ * remove a feature from every event already in the database.
+ */
+export const isNetworkingEnabled = (event) =>
+  event?.networkingEnabled !== false;
+
 /** Pure: may `user` view this event's networking space? Exported for unit testing. */
 export const canAccessNetworking = (user, event, booking) => {
   if (!user || !event) return false;
+  if (!isNetworkingEnabled(event)) return false;
   if (booking) return true;
   return isOrganizerOrAdmin(event, user);
 };
 
 /** Pure: is this event currently accepting new networking messages? Exported for unit testing. */
-export const canPostToNetworking = (event) => event?.isLive === 'live';
+export const canPostToNetworking = (event) =>
+  isNetworkingEnabled(event) && event?.isLive === 'live';
 
 /**
  * Loads the event and the viewer's booking (if any), authorizes access, and — the first

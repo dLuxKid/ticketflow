@@ -13,6 +13,7 @@ import AssignedEventCard from "./_component/assigned-event-card";
 
 import { useMyEvents } from "@/store/useMyEvents";
 import { useAssignedEvents } from "@/store/useAssignedEvents";
+import { useUser } from "@/store/useUser";
 
 /**
  * Organiser's event list.
@@ -36,8 +37,12 @@ function MyEventContent() {
 
   const { data: events, isLoading, error } = useMyEvents(query);
   const { data: assigned } = useAssignedEvents();
+  const { data: me } = useUser();
 
   const assignedEvents: MyEvent[] = assigned?.data?.events ?? [];
+  // An admin's list is every event on the platform, not just their own — so the heading and
+  // empty state need to say so, otherwise "Events you created" would be plainly wrong.
+  const isAdmin = me?.data?.user?.role === "admin";
 
   useEffect(() => {
     if (events) {
@@ -65,12 +70,14 @@ function MyEventContent() {
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-main-black md:text-3xl">
-                Your events
+                {isAdmin ? "All events" : "Your events"}
               </h1>
               <p className="mt-1 text-sm text-sec-black/65">
                 {isLoading
                   ? "Loading your events…"
-                  : `${total} ${total === 1 ? "event" : "events"} created`}
+                  : isAdmin
+                    ? `${total} ${total === 1 ? "event" : "events"} across the platform`
+                    : `${total} ${total === 1 ? "event" : "events"} created`}
               </p>
             </div>
 
@@ -156,7 +163,7 @@ function MyEventContent() {
 
           {assignedEvents.length > 0 && (
             <h2 className="mb-4 text-lg font-bold text-main-black">
-              Events you created
+              {isAdmin ? "All events" : "Events you created"}
             </h2>
           )}
 

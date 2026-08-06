@@ -33,10 +33,37 @@ test('the trained model file loads and has the expected shape', () => {
 
 test('parity: JS scorer matches scikit-learn predict_proba on reference points', () => {
   const cases = [
-    { features: { rsvpLeadDays: 0, isPurchase: true, isVip: false, plusOnes: 0 }, expected: 0.10312 },
-    { features: { rsvpLeadDays: 30, isPurchase: false, isVip: false, plusOnes: 2 }, expected: 0.648666 },
-    { features: { rsvpLeadDays: 5, isPurchase: true, isVip: true, plusOnes: 0 }, expected: 0.066587 },
-    { features: { rsvpLeadDays: 45, isPurchase: false, isVip: false, plusOnes: 3 }, expected: 0.798612 },
+    {
+      features: {
+        rsvpLeadDays: 0,
+        isPurchase: true,
+        isVip: false,
+        plusOnes: 0,
+      },
+      expected: 0.10312,
+    },
+    {
+      features: {
+        rsvpLeadDays: 30,
+        isPurchase: false,
+        isVip: false,
+        plusOnes: 2,
+      },
+      expected: 0.648666,
+    },
+    {
+      features: { rsvpLeadDays: 5, isPurchase: true, isVip: true, plusOnes: 0 },
+      expected: 0.066587,
+    },
+    {
+      features: {
+        rsvpLeadDays: 45,
+        isPurchase: false,
+        isVip: false,
+        plusOnes: 3,
+      },
+      expected: 0.798612,
+    },
   ];
 
   for (const { features, expected } of cases) {

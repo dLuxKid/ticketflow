@@ -56,7 +56,9 @@ const errorHandler = (err, req, res, next) => {
   err.status = err.status || 'error';
 
   // Always log errors to the backend console for debugging
-  console.error(`[Error] ${req.method} ${req.originalUrl} >> StatusCode: ${err.statusCode}, Message: ${err.message}`);
+  console.error(
+    `[Error] ${req.method} ${req.originalUrl} >> StatusCode: ${err.statusCode}, Message: ${err.message}`,
+  );
   if (err.stack) {
     console.error(err.stack);
   }

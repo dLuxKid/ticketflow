@@ -36,6 +36,15 @@ const userSchema = new mongoose.Schema(
       default: 'user',
       select: false,
     },
+    // The bootstrap administrator, created by scripts/seed-admin.js. Marked so the role
+    // endpoint can refuse to demote them: an ordinary admin demoting the last remaining
+    // admin would leave nobody able to grant the role back, locking the platform out of its
+    // own administration permanently. Never settable through the API.
+    isRootAdmin: {
+      type: Boolean,
+      default: false,
+      select: false,
+    },
     // Events an usher is authorised to scan/admit for. Only meaningful when role === 'usher';
     // door check-in is scoped to these events (enforced in Phase 2).
     assignedEvents: {

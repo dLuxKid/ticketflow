@@ -17,6 +17,7 @@
     "migrate:phase1-backfill": "node scripts/migrate-phase1-backfill.js",
     "migrate:ticket-ids": "node scripts/migrate-ticket-ids.js",
     "gdpr:sweep": "node scripts/gdpr-retention-sweep.js",
+    "seed:admin": "node scripts/seed-admin.js",
     "reservations:release": "node scripts/release-expired-reservations.js",
     "notify:event-live": "node scripts/send-event-live-emails.js",
     "eval:chatbot": "node scripts/eval-chatbot.js",

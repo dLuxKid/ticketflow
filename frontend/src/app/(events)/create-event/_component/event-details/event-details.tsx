@@ -161,6 +161,45 @@ export function EventDetails({
         </div>
       </div>
 
+      {/* Guest networking opt-out. A real checkbox rather than a styled div so it is
+          keyboard-operable and announced with its checked state; the label wraps the input
+          so the whole card is a hit target. */}
+      <div className="w-full">
+        <p className="text-sm font-semibold text-main-black mb-1 capitalize">
+          Guest networking
+        </p>
+        <label
+          className={`flex cursor-pointer items-start gap-3 rounded-md border p-4 transition-colors ${
+            eventData.networkingEnabled
+              ? "border-main-purple bg-main-purple/5"
+              : "border-main-light-grey bg-sec-grey"
+          }`}
+        >
+          <input
+            type="checkbox"
+            name="networkingEnabled"
+            checked={eventData.networkingEnabled}
+            onChange={(e) =>
+              setEventData((prev) => ({
+                ...prev,
+                networkingEnabled: e.target.checked,
+              }))
+            }
+            className="mt-0.5 size-4 shrink-0 accent-main-purple"
+          />
+          <span>
+            <span className="block text-sm font-semibold text-main-black">
+              Let attendees network with each other
+            </span>
+            <span className="mt-1 block text-xs text-main-black/70">
+              Opens a group chat and attendee directory while the event is live,
+              and emails everyone the link. Turn this off for private events
+              where guests shouldn&apos;t see or message each other.
+            </span>
+          </span>
+        </label>
+      </div>
+
       <div className="w-full">
         <p className="text-sm font-semibold text-main-black mb-1 capitalize">
           Event Start

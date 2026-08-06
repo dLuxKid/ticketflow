@@ -58,10 +58,10 @@ export const detectAnomalies = (rows, thresholds = {}) => {
     .map((r) => ({ ...r, fp: r.deviceId || r.ip }))
     .filter((r) => r.fp);
   if (withFingerprint.length > 0) {
-    const windowStart =
-      new Date(withFingerprint[0].createdAt).getTime();
+    const windowStart = new Date(withFingerprint[0].createdAt).getTime();
     const inWindow = withFingerprint.filter(
-      (r) => new Date(r.createdAt).getTime() - windowStart <= t.multiDeviceWindowMs,
+      (r) =>
+        new Date(r.createdAt).getTime() - windowStart <= t.multiDeviceWindowMs,
     );
     const distinct = new Set(inWindow.map((r) => r.fp));
     if (distinct.size >= t.multiDeviceDistinctCount) flags.push('multi_device');

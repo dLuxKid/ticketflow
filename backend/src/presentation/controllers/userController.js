@@ -42,6 +42,24 @@ export const updateMe = catchAsync(async (req, res, next) => {
   });
 });
 
+/**
+ * Changes another user's role. Admin-only; the guards live in userService.canChangeRole.
+ * Body: { role }.
+ */
+export const updateUserRole = catchAsync(async (req, res) => {
+  const user = await userService.changeUserRole(
+    req.user,
+    req.params.id,
+    req.body.role,
+  );
+
+  res.status(200).json({
+    status: 'success',
+    message: `Role updated to ${user.role}`,
+    data: { user },
+  });
+});
+
 export const deleteMe = catchAsync(async (req, res) => {
   await userService.deleteMe(req.user.id);
 

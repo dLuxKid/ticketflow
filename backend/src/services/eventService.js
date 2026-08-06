@@ -30,8 +30,19 @@ export const getAllEventsCount = async () => {
   return events.length;
 };
 
-export const getMyEvents = (userId, queryParams) =>
-  eventRepository.findByUserWithFeatures(userId, queryParams);
+/**
+ * The caller's events — or every event on the platform, for an admin.
+ *
+ * An admin can already act on any event; scoping their list to what they personally created
+ * meant a freshly-seeded admin logged in to an empty page and could not reach a single one.
+ *
+ * @param {object} user - req.user (role decides the scope)
+ */
+export const getMyEvents = (user, queryParams) =>
+  eventRepository.findByUserWithFeatures(
+    user?.role === 'admin' ? null : (user?.id ?? user?._id),
+    queryParams,
+  );
 
 /**
  * Events the caller works as door staff.

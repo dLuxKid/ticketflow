@@ -85,7 +85,9 @@ test('executeQuery treats a missing booking as not admitted', () => {
 test('regression guard: full held-out set stays at reported accuracy', () => {
   const sameIntent = (a, b) => {
     if (a === null || b === null) return a === b;
-    return a.action === b.action && a.status === b.status && a.vipOnly === b.vipOnly;
+    return (
+      a.action === b.action && a.status === b.status && a.vipOnly === b.vipOnly
+    );
   };
 
   const correct = NL_QUERY_EVAL_SET.filter(({ q, expected }) =>

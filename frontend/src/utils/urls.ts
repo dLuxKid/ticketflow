@@ -9,6 +9,8 @@ export const API_URLS = {
     updateDetails: `${baseUrl}/api/v1/users/update-my-details`,
     forgotPassword: `${baseUrl}/api/v1/users/forgot-password`,
     getMyAccount: `${baseUrl}/api/v1/users/get-my-account`,
+    all: `${baseUrl}/api/v1/users`,
+    role: (id: string) => `${baseUrl}/api/v1/users/${id}/role`,
   },
   events: {
     base: `${baseUrl}/api/v1/events`,

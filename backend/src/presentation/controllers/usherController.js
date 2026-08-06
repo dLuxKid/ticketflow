@@ -25,6 +25,12 @@ export const assignUsher = catchAsync(async (req, res) => {
 });
 
 export const unassignUsher = catchAsync(async (req, res) => {
-  await usherService.unassignUsher(req.params.eventId, req.params.userId, req.user);
-  res.status(200).json({ status: 'success', message: 'Usher removed from this event' });
+  await usherService.unassignUsher(
+    req.params.eventId,
+    req.params.userId,
+    req.user,
+  );
+  res
+    .status(200)
+    .json({ status: 'success', message: 'Usher removed from this event' });
 });

@@ -45,9 +45,12 @@ export const predictNoShowProbability = (features, model = loadModel()) => {
     features.plusOnes,
   ];
 
-  const standardized = raw.map((value, i) => (value - model.mean[i]) / model.std[i]);
+  const standardized = raw.map(
+    (value, i) => (value - model.mean[i]) / model.std[i],
+  );
   const logit =
-    standardized.reduce((sum, x, i) => sum + x * model.coef[i], 0) + model.intercept;
+    standardized.reduce((sum, x, i) => sum + x * model.coef[i], 0) +
+    model.intercept;
 
   return sigmoid(logit);
 };

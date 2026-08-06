@@ -1,6 +1,7 @@
 import * as eventRepository from '../repositories/eventRepository.js';
 import * as bookingRepository from '../repositories/bookingRepository.js';
 import { sendNetworkingLive } from '../shared/utils/sendNetworkingLive.js';
+import { isNetworkingEnabled } from './networkingService.js';
 
 /**
  * "Event is live" notification (Phase 7) — every attendee gets an email with the link to
@@ -40,6 +41,10 @@ export const sweepLiveEvents = async (frontendUrl) => {
   let emailsSent = 0;
 
   for (const event of events) {
+    // Skip events whose organiser turned networking off — inviting attendees into a space
+    // they will then be refused entry to would be worse than sending nothing.
+    if (!isNetworkingEnabled(event)) continue;
+
     const attendees = await bookingRepository.findNotifiableByEvent(event._id);
     const link = `${frontendUrl}/network/${event._id}`;
 

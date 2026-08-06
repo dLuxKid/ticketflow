@@ -137,6 +137,15 @@ const eventSchema = new mongoose.Schema(
       type: Number,
       min: [1, 'Venue capacity must be at least 1'],
     },
+    // Guest networking (Phase 7) is opt-out per event, chosen at creation. Defaults to true
+    // so existing events — which predate the field and read as `undefined` — keep the
+    // behaviour they already had; the service treats only an explicit `false` as disabled.
+    // Some events genuinely should not have one (a private ceremony, a corporate briefing),
+    // and the organiser is the only one who can know that.
+    networkingEnabled: {
+      type: Boolean,
+      default: true,
+    },
     refundPolicy: { type: String, default: 'No refunds' },
     additionalComments: { type: String },
     // Sales dates only apply to events that actually sell tickets. An invite_only event
@@ -188,11 +197,36 @@ const eventSchema = new mongoose.Schema(
   },
 );
 
+/**
+ * The end of the calendar day `date` falls in.
+ *
+ * The live window runs to the end of the final day rather than to the exact `endDate`
+ * instant. Two reasons:
+ *
+ * 1. Events are routinely stored with an identical `startDate` and `endDate` (a single-day
+ *    event picked from one date field), which made the window zero-length — such an event
+ *    was *never* live, so its networking channel could never open. That is the bug this
+ *    fixes.
+ * 2. `startTime`/`endTime` are deliberately not folded in. They are stored in a different
+ *    frame from the dates in existing records — one event here has startDate at 23:00 UTC
+ *    (local midnight) but startTime at 17:00 — so combining them would produce a confidently
+ *    wrong window rather than a roughly right one.
+ *
+ * The bias is intentional: for a chat channel, opening slightly early or closing slightly
+ * late is far less harmful than locking attendees out of their own live event.
+ */
+const endOfDay = (date) => {
+  const end = new Date(date);
+  end.setUTCHours(23, 59, 59, 999);
+  return end;
+};
+
 eventSchema.virtual('isLive').get(function () {
-  const currentDate = new Date();
-  if (this.startDate > currentDate) return 'upcoming';
-  if (this.startDate <= currentDate && this.endDate >= currentDate)
-    return 'live';
+  if (!this.startDate || !this.endDate) return 'upcoming';
+
+  const now = new Date();
+  if (new Date(this.startDate) > now) return 'upcoming';
+  if (now <= endOfDay(this.endDate)) return 'live';
   return 'past';
 });
 

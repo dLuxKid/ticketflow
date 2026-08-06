@@ -1265,6 +1265,9 @@ export default function EditEventForm({ event }: { event: eventData }) {
   const [eventData, setEventData] = useState<eventData>({
     ...event,
     accessMode: event.accessMode ?? "public",
+    // Events predating the field report undefined; they had networking, so default
+    // to on rather than silently switching it off on the next save.
+    networkingEnabled: event.networkingEnabled ?? true,
     ticketDetails: event.ticketDetails ?? [],
     socialMediaLinks: event.socialMediaLinks ?? {
       twitter: "",
@@ -1562,6 +1565,7 @@ export default function EditEventForm({ event }: { event: eventData }) {
       currency: eventData.currency,
       otherImages: eventData.otherImages,
       accessMode: eventData.accessMode,
+      networkingEnabled: eventData.networkingEnabled,
     };
 
     try {

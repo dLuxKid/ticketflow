@@ -60,13 +60,19 @@ export const importGuests = async (eventId, guests, user) => {
     const email = raw?.email?.trim().toLowerCase();
 
     if (!name || !email) {
-      result.failed.push({ email: email ?? '(missing)', error: 'name and email are required' });
+      result.failed.push({
+        email: email ?? '(missing)',
+        error: 'name and email are required',
+      });
       continue;
     }
 
     try {
       // Skip anyone already on the list (also guarded by the unique event+email index).
-      const existing = await guestRepository.findOneByEventAndEmail(eventId, email);
+      const existing = await guestRepository.findOneByEventAndEmail(
+        eventId,
+        email,
+      );
       if (existing) {
         result.skipped.push(email);
         continue;

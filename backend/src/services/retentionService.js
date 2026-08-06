@@ -18,7 +18,11 @@ import AppError from '../shared/errors/AppError.js';
 export const DEFAULT_RETENTION_DAYS = 30;
 
 /** Pure: is `event` past its retention window as of `now`? Exported for unit testing. */
-export const isPastRetentionWindow = (event, retentionDays, now = new Date()) => {
+export const isPastRetentionWindow = (
+  event,
+  retentionDays,
+  now = new Date(),
+) => {
   if (!event?.endDate) return false;
   const cutoff = new Date(event.endDate);
   cutoff.setDate(cutoff.getDate() + retentionDays);
@@ -47,10 +51,7 @@ export const requestErasure = async (eventId, guestId, user) => {
   const event = await eventRepository.findById(eventId);
   if (!event) throw new AppError('No event found with that ID', 404);
   if (!canViewDashboard(user, event)) {
-    throw new AppError(
-      'You do not have permission to manage this event',
-      403,
-    );
+    throw new AppError('You do not have permission to manage this event', 403);
   }
   await eraseGuest(guestId);
 };
@@ -63,7 +64,9 @@ export const requestErasure = async (eventId, guestId, user) => {
  *
  * @returns {Promise<{expiredEvents:number, guestsErased:number, bookingsErased:number}>}
  */
-export const sweepExpiredEvents = async (retentionDays = DEFAULT_RETENTION_DAYS) => {
+export const sweepExpiredEvents = async (
+  retentionDays = DEFAULT_RETENTION_DAYS,
+) => {
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - retentionDays);
 

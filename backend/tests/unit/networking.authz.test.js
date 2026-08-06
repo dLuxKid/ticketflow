@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import {
   canAccessNetworking,
   canPostToNetworking,
+  isNetworkingEnabled,
 } from '../../src/services/networkingService.js';
 
 /**
@@ -62,4 +63,35 @@ test('posting is allowed only while the event is live', () => {
   assert.equal(canPostToNetworking({ isLive: 'upcoming' }), false);
   assert.equal(canPostToNetworking({ isLive: 'past' }), false);
   assert.equal(canPostToNetworking(null), false);
+});
+
+/**
+ * Per-event networking opt-out. `networkingEnabled` is chosen at event creation; only an
+ * explicit `false` disables it, so the thousands of events created before the field existed
+ * (which store `undefined`) keep the networking they already had.
+ */
+
+test('networking is enabled unless explicitly turned off', () => {
+  assert.equal(isNetworkingEnabled({ networkingEnabled: true }), true);
+  // Pre-existing events predate the field — absence must not read as "off".
+  assert.equal(isNetworkingEnabled({}), true);
+  assert.equal(isNetworkingEnabled({ networkingEnabled: undefined }), true);
+  assert.equal(isNetworkingEnabled({ networkingEnabled: false }), false);
+});
+
+test('a disabled event refuses access even to its own organiser', () => {
+  const organiser = { _id: { equals: () => true }, role: 'creator' };
+  const event = { user: { equals: () => true }, networkingEnabled: false };
+  assert.equal(canAccessNetworking(organiser, event, null), false);
+});
+
+test('a disabled event accepts no posts even while live', () => {
+  assert.equal(
+    canPostToNetworking({ isLive: 'live', networkingEnabled: false }),
+    false,
+  );
+  assert.equal(
+    canPostToNetworking({ isLive: 'live', networkingEnabled: true }),
+    true,
+  );
 });

@@ -1,5 +1,6 @@
 import CategoryCarousel from "@/app/_components/category-carousel";
 import FAQ from "@/app/_components/faq";
+import HeroHeadline from "@/app/_components/hero-headline";
 import TrendingEvents from "@/app/_components/trending-events";
 import UpcomingEvents from "@/app/_components/upcoming-events";
 import Container from "@/components/container";
@@ -22,17 +23,11 @@ export default async function Home() {
           <Container className="flex-center flex-col gap-8 md:gap-6 w-full">
             <div className="bg-black/80 absolute z-0 inset-x-0 inset-y-0" />
             <div className="inline-block w-full flex-center mt-4 md:mt-0 relative z-10">
-              <h1 className="text-main-white text-center text-3xl sm:text-4xl md:text-6xl xl:text-7xl font-semibold">
-                We are <span className="text-[#ff006e]">reinventing</span>{" "}
-                <br /> the ticketing experience
-              </h1>
+              <HeroHeadline />
             </div>
-            <div className="inline-block w-full text-center my-2 md:my-6 relative z-10">
-              <p className=" text-main-white/70 text-sm sm:text-lg md:text-xl font-normal">
-                Get in on the excitement, Get started now.
-              </p>
-            </div>
-            <div className="flex-center relative z-10">
+            {/* The subheading now lives inside HeroHeadline so it can change with the
+                phrase being typed — a static one here would contradict it. */}
+            <div className="flex-center relative z-10 mt-2 md:mt-4">
               <Link href={"/explore-events"}>
                 <Button title="events">Explore Events</Button>
               </Link>

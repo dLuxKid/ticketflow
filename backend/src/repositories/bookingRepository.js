@@ -159,6 +159,25 @@ const NOT_ADMITTABLE = ['revoked', 'rejected'];
 export const findByEventAndEmail = (eventId, email) =>
   Booking.findOne({ event: eventId, email, status: { $nin: NOT_ADMITTABLE } });
 
+/** Same lookup, with the one-time networking code fields (both `select: false`). */
+export const findByEventAndEmailWithOtp = (eventId, email) =>
+  Booking.findOne({
+    event: eventId,
+    email,
+    status: { $nin: NOT_ADMITTABLE },
+  }).select('+networkingOtpHash +networkingOtpExpires');
+
+export const setNetworkingOtp = (bookingId, { hash, expiresAt }) =>
+  Booking.findByIdAndUpdate(bookingId, {
+    $set: { networkingOtpHash: hash, networkingOtpExpires: expiresAt },
+  });
+
+/** Burns the code. `$unset` rather than null so a stale value can never linger. */
+export const clearNetworkingOtp = (bookingId) =>
+  Booking.findByIdAndUpdate(bookingId, {
+    $unset: { networkingOtpHash: '', networkingOtpExpires: '' },
+  });
+
 /** Resolves an attendee's booking by event + linked user id (set once they've claimed it). */
 export const findByEventAndUser = (eventId, userId) =>
   Booking.findOne({

@@ -42,6 +42,7 @@ const initialState: eventData = {
   otherImages: [],
   currency: "",
   accessMode: "public",
+  networkingEnabled: true,
 };
 
 export default function CreateEvent() {

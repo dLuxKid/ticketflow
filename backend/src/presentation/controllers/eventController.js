@@ -35,7 +35,9 @@ export const getAllEventsLength = catchAsync(async (req, res) => {
 });
 
 export const getMyEvents = catchAsync(async (req, res) => {
-  const events = await eventService.getMyEvents(req.user.id, req.query);
+  // The whole user is passed, not just the id: the service widens the scope to every event
+  // when the caller is an admin.
+  const events = await eventService.getMyEvents(req.user, req.query);
 
   res.status(200).json({
     status: 'success',

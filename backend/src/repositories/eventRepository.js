@@ -131,13 +131,21 @@ export const findByIds = (ids) =>
 
 /**
  * Returns events belonging to a specific user.
+ *
+ * Pass `userId = null` for the whole platform. An admin already has owner-level authority
+ * over every event (eventService.updateEvent, dashboardService.canViewDashboard and friends
+ * all read `role === 'admin' || isOwner`) but had no way to reach one they did not create —
+ * this list was the only entry point, and it filtered by ownership. The power existed; the
+ * door to it did not.
  */
 export const findByUserWithFeatures = (userId, queryParams) => {
   const query = Event.find({});
   return new APIFeatures(query, {
-    user: userId,
+    // Spreading queryParams last would let `?user=` from the query string override the
+    // caller's scope, so ownership is pinned after it.
     sort: '-startDate',
     ...queryParams,
+    ...(userId ? { user: userId } : {}),
   })
     .filter()
     .sort()

@@ -13,7 +13,10 @@ const oid = () => new mongoose.Types.ObjectId();
 test('owner can view their own event dashboard', () => {
   const ownerId = oid();
   const event = { _id: oid(), user: ownerId };
-  assert.equal(canViewDashboard({ _id: ownerId, role: 'creator' }, event), true);
+  assert.equal(
+    canViewDashboard({ _id: ownerId, role: 'creator' }, event),
+    true,
+  );
 });
 
 test('a different user cannot view the dashboard', () => {

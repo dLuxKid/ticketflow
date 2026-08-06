@@ -125,8 +125,15 @@ export default function NetworkHub({ eventId }: { eventId: string }) {
     const recompute = () => {
       const now = Date.now();
       const start = new Date(eventWindow.startDate).getTime();
-      const end = new Date(eventWindow.endDate).getTime();
-      setLiveStatus(now < start ? "upcoming" : now <= end ? "live" : "past");
+      // Must mirror Event.isLive on the server exactly: the window runs to the END of the
+      // final day. Single-day events are commonly stored with startDate === endDate, which
+      // under an exact-instant comparison is a zero-length window — the channel would say
+      // "not live" for the entire event while the server happily accepted messages.
+      const end = new Date(eventWindow.endDate);
+      end.setUTCHours(23, 59, 59, 999);
+      setLiveStatus(
+        now < start ? "upcoming" : now <= end.getTime() ? "live" : "past",
+      );
     };
 
     recompute();

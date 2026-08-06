@@ -1,4 +1,5 @@
 import * as networkingService from '../../services/networkingService.js';
+import * as networkingGuestService from '../../services/networkingGuestService.js';
 import catchAsync from '../../shared/middleware/catchAsync.js';
 import {
   networkingBus,
@@ -11,6 +12,41 @@ import {
  * Uses Server-Sent Events, same as the live dashboard (Phase 3): server->client push only,
  * no extra dependency. Sending is a normal REST POST, since SSE is receive-only.
  */
+
+/**
+ * Emails a one-time code to a guest holding a booking for this event. Public: the caller has
+ * no account yet, which is the entire point.
+ *
+ * Responds identically whether or not the address matches a booking — a distinguishable
+ * response would reveal who is on a private event's guest list.
+ */
+export const requestGuestAccess = catchAsync(async (req, res) => {
+  await networkingGuestService.requestAccessCode(
+    req.params.eventId,
+    req.body.email,
+  );
+
+  res.status(200).json({
+    status: 'success',
+    message:
+      'If that email is on the guest list for this event, a code is on its way.',
+  });
+});
+
+/** Exchanges a valid code for a session token. Public, for the same reason. */
+export const verifyGuestAccess = catchAsync(async (req, res) => {
+  const { token, user } = await networkingGuestService.verifyAccessCode(
+    req.params.eventId,
+    req.body.email,
+    req.body.code,
+  );
+
+  res.status(200).json({
+    status: 'success',
+    token,
+    data: { user: { _id: user._id, name: user.name, email: user.email } },
+  });
+});
 
 export const getDirectory = catchAsync(async (req, res) => {
   const directory = await networkingService.getDirectory(

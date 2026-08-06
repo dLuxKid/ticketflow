@@ -127,6 +127,7 @@ export default function ReviewEvent({
       currency: eventData.currency,
       otherImages: eventData.otherImages,
       accessMode: eventData.accessMode,
+      networkingEnabled: eventData.networkingEnabled,
     };
 
     try {

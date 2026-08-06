@@ -26,7 +26,12 @@ const authorizeTeamManagement = async (eventId, user) => {
 export const listUshers = async (eventId, user) => {
   await authorizeTeamManagement(eventId, user);
   const ushers = await userRepository.findAssignedToEvent(eventId);
-  return ushers.map((u) => ({ _id: u._id, name: u.name, email: u.email, role: u.role }));
+  return ushers.map((u) => ({
+    _id: u._id,
+    name: u.name,
+    email: u.email,
+    role: u.role,
+  }));
 };
 
 export const assignUsher = async (eventId, email, user) => {
@@ -34,11 +39,19 @@ export const assignUsher = async (eventId, email, user) => {
 
   const target = await userRepository.findByEmailWithRole(email);
   if (!target) {
-    throw new AppError('No user found with that email. They must sign up first.', 404);
+    throw new AppError(
+      'No user found with that email. They must sign up first.',
+      404,
+    );
   }
 
   const updated = await userRepository.assignToEvent(target._id, eventId);
-  return { _id: updated._id, name: updated.name, email: updated.email, role: updated.role };
+  return {
+    _id: updated._id,
+    name: updated.name,
+    email: updated.email,
+    role: updated.role,
+  };
 };
 
 export const unassignUsher = async (eventId, userId, user) => {

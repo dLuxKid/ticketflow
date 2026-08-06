@@ -118,6 +118,18 @@ const bookingSchema = new mongoose.Schema(
     piiErasedAt: {
       type: Date,
     },
+    // One-time code letting a guest who never made an account into this event's networking
+    // channel. Only the SHA-256 hash is stored, so a database leak cannot be replayed —
+    // the same treatment as passwordResetToken on the user model. `select: false` keeps it
+    // out of every ordinary booking read.
+    networkingOtpHash: {
+      type: String,
+      select: false,
+    },
+    networkingOtpExpires: {
+      type: Date,
+      select: false,
+    },
     // Guest networking (Phase 7): must opt in to appear in the event's attendee directory —
     // privacy-by-default, not privacy-by-exception. Lives on Booking, not User, because
     // visibility is scoped to *this* event; the same account attending a different event

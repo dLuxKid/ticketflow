@@ -17,7 +17,23 @@ const signToken = (id) =>
 export const generateToken = (userId) => signToken(userId);
 
 /**
+ * Roles a visitor may choose for themselves at signup.
+ *
+ * `admin` and `usher` are deliberately absent. `role` is read from the request body, and the
+ * schema enum accepts 'admin' — so before this whitelist existed, an unauthenticated POST to
+ * /users/signup carrying `"role": "admin"` minted a platform administrator with the power to
+ * read every user and act as owner of every event (OWASP A01, privilege escalation via mass
+ * assignment). Admin is now only reachable through scripts/seed-admin.js or promotion by an
+ * existing admin; usher only through being assigned to a door.
+ */
+export const SIGNUP_ROLES = Object.freeze(['user', 'creator']);
+
+/**
  * Creates a new user account and returns the created document.
+ *
+ * An unrecognised or privileged `role` silently falls back to 'user' rather than erroring:
+ * the caller has no legitimate reason to send one, and a 400 would only tell an attacker
+ * which values the whitelist rejects.
  */
 export const signup = async ({
   name,
@@ -31,7 +47,7 @@ export const signup = async ({
     email,
     password,
     passwordConfirm,
-    role,
+    role: SIGNUP_ROLES.includes(role) ? role : 'user',
   });
   return newUser;
 };
