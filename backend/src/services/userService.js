@@ -106,6 +106,61 @@ export const canChangeRole = (actor, target, role) => {
 };
 
 /**
+ * Pure: may `actor` delete `target`? Exported for unit testing.
+ *
+ * The same two guards as canChangeRole, for the same reasons: an admin deleting themselves
+ * could remove the last administrator, and the root account is the recovery path if every
+ * other admin is lost.
+ *
+ * @returns {{ok: true} | {ok: false, status: number, message: string}}
+ */
+export const canDeleteUser = (actor, target) => {
+  if (actor?.role !== 'admin') {
+    return {
+      ok: false,
+      status: 403,
+      message: 'Only an administrator can delete a user',
+    };
+  }
+  if (!target) {
+    return { ok: false, status: 404, message: 'No user found with that ID' };
+  }
+  if (String(target._id) === String(actor._id)) {
+    return {
+      ok: false,
+      status: 403,
+      message: 'You cannot delete your own account from here',
+    };
+  }
+  if (target.isRootAdmin) {
+    return {
+      ok: false,
+      status: 403,
+      message: 'The root administrator cannot be deleted',
+    };
+  }
+  return { ok: true };
+};
+
+/**
+ * Deactivates a user on an admin's authority.
+ *
+ * Soft delete, reusing the same `isActive` flag as self-deletion. The account stops being
+ * able to sign in and disappears from every query, but its events, bookings and audit-log
+ * entries stay intact — hard-deleting the document would orphan the record of who admitted
+ * whom, which is exactly the evidence an audit log exists to preserve.
+ */
+export const deleteUser = async (actor, targetId) => {
+  const target = await userRepository.findByIdWithRole(targetId);
+
+  const decision = canDeleteUser(actor, target);
+  if (!decision.ok) throw new AppError(decision.message, decision.status);
+
+  await userRepository.deactivate(targetId);
+  return { name: target.name, email: target.email };
+};
+
+/**
  * Changes a user's role on an admin's authority.
  *
  * Moving someone off `usher` also clears their door assignments: admissionService.

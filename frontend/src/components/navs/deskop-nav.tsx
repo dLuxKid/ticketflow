@@ -214,6 +214,49 @@ export default function DeskopNav({ data }: NavProps) {
                 <div className={`relative ${panelSurface}`}>
                   <Caret className="right-5" />
                   <ul className="relative flex flex-col">
+                    {/* Personal inventory sits with the account, not in the public nav:
+                        these require a session, and showing them to logged-out visitors
+                        produced links that middleware bounced straight to /login. */}
+                    {(
+                      [
+                        [
+                          "/my-events",
+                          "My events",
+                          "M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z",
+                        ],
+                        [
+                          "/my-profile/tickets",
+                          "My tickets",
+                          "M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 6v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-6zM13 5v14",
+                        ],
+                      ] as [string, string, string][]
+                    ).map(([href, label, path]) => (
+                      <li key={href}>
+                        <Link
+                          href={href}
+                          className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-main-purple/40 ${
+                            pathname === href
+                              ? "bg-main-purple/[0.07] text-main-purple"
+                              : "text-main-black hover:bg-main-grey-bg"
+                          }`}
+                        >
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-hidden="true"
+                            className="h-4 w-4"
+                          >
+                            <path d={path} />
+                          </svg>
+                          {label}
+                        </Link>
+                      </li>
+                    ))}
+
                     <li>
                       <Link
                         href="/my-profile"
@@ -296,10 +339,10 @@ export default function DeskopNav({ data }: NavProps) {
             </>
           ) : (
             <Link
-              href="/login"
+              href="/signup"
               className="inline-flex items-center rounded-full bg-main-purple px-5 py-2.5 text-sm font-semibold text-main-white shadow-lg shadow-main-purple/25 transition-all hover:-translate-y-0.5 hover:bg-main-purple/90 hover:shadow-xl hover:shadow-main-purple/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-main-purple/40 focus-visible:ring-offset-2 active:translate-y-0"
             >
-              Get Started
+              Become an Organiser
             </Link>
           )}
         </li>

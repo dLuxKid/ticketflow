@@ -1,8 +1,17 @@
 # TicketFlow — Technical Documentation
 
-**Document version:** 3.0 · **Repository state:** branch `dev`, working tree ahead of commit `5673881` · **Last verified:** 5 August 2026
+**Document version:** 4.0 · **Repository state:** branch `dev`, working tree ahead of commit `c6f5943` · **Last verified:** 6 August 2026
 
-> **Changes since v2.0.** The checkout flow was restructured from *create-then-pay* to **reserve → pay → confirm** (§5.2); ticket IDs are now **server-issued and unique** rather than minted in the browser (§5.3); QR codes are now generated for purchased tickets, not only invites (§5.4). Limitation 1 from the previous revision (client-generated ticket IDs) is closed and removed from §12; the remaining items still stand.
+> **Changes since v3.0.** Six areas changed materially:
+>
+> 1. **Administration** — signup can no longer grant `admin` (a privilege-escalation hole, OWASP A01, now closed by a role whitelist); a **root admin** is seeded from the CLI and is the only account that can promote or demote other admins; admins can change roles and **archive events and deactivate users** (soft delete, §5.7).
+> 2. **Meet and Greet** (formerly "networking") — the attendee network is now reachable by **guests without accounts**, authorised by an emailed one-time code proving control of the booking email (§5.8). The public channel is now labelled **Event Chat (Public)**.
+> 3. **AI concierge** — the chatbot gained a weather/dress-code/safety tool backed by **Open-Meteo** (§5.9) and can answer questions about a named event from local data.
+> 4. **Richer events** — `venueName`, `dressCode`, `parkingInfo`, `accessibilityInfo`, `ageRestriction`, `venueCapacity`, `networkingEnabled`, plus soft-delete fields (§4).
+> 5. **Quality engineering** — coverage is now measured (§8.7), a load-test harness exists with recorded figures, backend lint is enforced in CI, and the rate limit became configurable.
+> 6. **Liveness fix** — an event whose `startDate` equals its `endDate` was never `live`; the window now runs to end-of-day.
+>
+> Limitations 1 and 6 of v3.0 are closed; the remaining items still stand (§12).
 
 > **Purpose.** This document is supporting technical evidence for **7003SCN Advanced Software Development, Task 1.2** (design, implementation and testing evidence). Every claim below was verified by reading the source at the cited path — file paths are given so that screenshots for the Word submission can be taken directly from the repository and annotated.
 >
@@ -38,18 +47,21 @@
 | Invite-only event | `invite_only` | Organiser uploads a guest list; each guest receives a single-use QR invite; purchase is refused |
 | Hybrid event | `hybrid` | Both paid tickets and a curated guest list coexist on one event |
 
-Beyond the core sell-and-admit loop, the system adds a door scanner with an atomicity guarantee, a real-time arrivals dashboard, and three lightweight AI/ML features (scan-anomaly detection, natural-language guest queries, no-show prediction).
+Beyond the core sell-and-admit loop, the system adds a door scanner with an atomicity guarantee, a real-time arrivals dashboard, a **Meet and Greet** attendee network, and four AI features: an LLM-backed concierge chatbot, scan-anomaly detection, natural-language guest queries, and no-show prediction.
 
 ### 1.1 User roles
 
-Defined by the `role` enum in `backend/src/models/userModel.js` and enforced by `authController.restrictTo`:
+Defined by the `role` enum in `backend/src/models/userModel.js` and enforced by `authController.restrictTo` plus the pure decision functions in `userService.js`:
 
 | Role | Persona | Key capabilities |
 |---|---|---|
-| `user` *(default)* | Attendee | Browse events, purchase tickets, view "My Tickets" |
+| `user` *(default)* | Attendee | Browse events, purchase tickets, view "My Tickets", join Meet and Greet for events they hold a booking for |
 | `creator` | Event organiser | Create/edit own events, manage guest list, assign ushers, view live dashboard |
 | `usher` | Door staff | Scan and admit — **scoped to events listed in `User.assignedEvents` only** |
-| `admin` | Platform administrator | Unrestricted access to all events and users |
+| `admin` | Platform administrator | All events and users; change roles; archive events; deactivate users |
+| *root admin* | Bootstrap administrator | An `admin` additionally flagged `isRootAdmin`; the only account that may promote or demote other admins, and it cannot be demoted or deleted through the API |
+
+**Role acquisition is deliberately constrained.** `userService.SIGNUP_ROLES` whitelists signup to `user` and `creator` only, so a crafted `role: "admin"` in a signup body is discarded rather than honoured. `admin` and `usher` are therefore only ever *granted*: `admin` by the root admin (or by `scripts/seed-admin.js` for the first one), `usher` implicitly by being assigned to an event's door staff.
 
 ---
 
@@ -177,7 +189,7 @@ Ticket reservation (`eventRepository.reserveTicketInventory`) and door admission
 
 ## 4. Data model
 
-Five collections. The central modelling decision is to unify ticketed and invite-only events under **one** `Event` type discriminated by `accessMode`, rather than maintaining two parallel event systems.
+Six collections. The central modelling decision is to unify ticketed and invite-only events under **one** `Event` type discriminated by `accessMode`, rather than maintaining two parallel event systems.
 
 ```mermaid
 erDiagram
@@ -186,14 +198,17 @@ erDiagram
     EVENT ||--o{ BOOKING : "has"
     EVENT ||--o{ GUEST : "guest list"
     EVENT ||--o{ AUDITLOG : "scan history"
+    EVENT ||--o{ MESSAGE : "Meet and Greet chat"
     GUEST |o--o| BOOKING : "invite issues"
     USER |o--o{ BOOKING : "purchases (optional)"
+    USER ||--o{ MESSAGE : "sends"
     BOOKING ||--o{ AUDITLOG : "scan attempts"
 
     USER {
         string   name
         string   email UK
         string   role "user|creator|admin|usher"
+        boolean  isRootAdmin "select:false, bootstrap admin"
         ObjectId assignedEvents "array, usher scope"
         string   password "bcrypt, select:false"
         boolean  isActive "soft delete"
@@ -204,9 +219,26 @@ erDiagram
         string   accessMode "public|invite_only|hybrid"
         object   ticketDetails "embedded ticket subdocs"
         number   totalQuantity "derived pre-save"
+        number   venueCapacity "capacity guardrail"
         object   eventLocation "nested address"
+        string   venueName
+        string   dressCode
+        string   parkingInfo
+        string   accessibilityInfo
+        string   ageRestriction
+        boolean  networkingEnabled "Meet and Greet on/off"
         date     startDate
+        date     endDate
+        boolean  isActive "soft delete (archive)"
+        date     deletedAt
         ObjectId user FK "organiser"
+    }
+    MESSAGE {
+        ObjectId event FK
+        ObjectId sender FK
+        ObjectId recipient FK "null = public channel"
+        string   body
+        date     createdAt
     }
     BOOKING {
         ObjectId event FK "stamped server-side"
@@ -279,6 +311,16 @@ erDiagram
 | Natural-language guest queries | `services/nlQuery/intentParser.js`, `services/nlQuery/executeQuery.js` |
 | No-show prediction | `ml/no_show/train.py` (offline), `services/noShowService.js` (runtime) |
 | GDPR erasure & retention sweep | `services/retentionService.js`, `scripts/gdpr-retention-sweep.js` |
+| **AI concierge chatbot (LLM)** | `services/chatbot/chatbotService.js`, `services/chatbot/llmProvider.js`, `chatRoutes.js` |
+| **Weather / dress-code / safety advice** | `services/weatherService.js` (Open-Meteo geocoding + forecast) |
+| **Meet and Greet** — public channel & DMs | `services/networkingService.js`, `networkingController.js`, `models/messageModel.js` |
+| **Guest access to Meet and Greet by email OTP** | `services/networkingGuestService.js`, `shared/utils/networkingOtp.js`, `shared/utils/sendNetworkingOtp.js` |
+| **Signup role whitelist** | `services/authService.js` — `SIGNUP_ROLES` (`['user', 'creator']`, frozen) |
+| **Role management (root-admin guarded)** | `services/userService.js` — `canChangeRole`, `changeUserRole` |
+| **Admin soft delete (users / events)** | `userService.canDeleteUser`/`deleteUser`, `eventService.deleteEvent` |
+| **Admin bootstrap** | `scripts/seed-admin.js` (sets `role: 'admin'` + `isRootAdmin`) |
+| Venue capacity guardrail | `services/admissionService.js` — `capacityDecision` |
+| Reservation expiry sweeper (in-process) | `shared/reservationSweeper.js` |
 
 ### 5.2 Checkout lifecycle — reserve, pay, confirm
 
@@ -371,11 +413,44 @@ The design point worth citing: this is a **stop-and-confirm, not a hard block**.
 
 `shared/utils/generatePdf.js` and its `pdfTemplate` helper are **misnomers**: they render an HTML email body, not a PDF. No PDF is produced server-side. PDF export is a client-side concern handled by `react-to-pdf` in the browser.
 
+### 5.7 Administration — bootstrap, role change and soft delete
+
+Administration is built around one constraint: **an administrator can never be self-granted.** Three mechanisms enforce it.
+
+**Signup whitelist.** `authService` filters the submitted role through `SIGNUP_ROLES` (`['user', 'creator']`, frozen), so `role: "admin"` in a signup body is discarded. Previously the value was written straight to the document — a textbook mass-assignment privilege escalation (OWASP A01), verified as blocked after the fix by attempting it against a running server.
+
+**Root admin.** `scripts/seed-admin.js` promotes a named, already-existing account and flags it `isRootAdmin`. The flag is `select: false`, so it is only loaded where a decision depends on it — which is itself a defect class worth noting: `userRepository.findByIdWithRole` had to explicitly `select('+isRootAdmin')`, because without it the root-demotion guard read `undefined` and would have silently never fired.
+
+**Pure decision functions.** `canChangeRole(actor, target, role)` and `canDeleteUser(actor, target)` in `userService.js` are total functions over plain objects, so they are unit-testable without a database (`tests/unit/role.authz.test.js`). Between them they refuse: changing your own role, deleting yourself, a non-root admin granting or revoking `admin`, and demoting or deleting the root admin.
+
+**Deletion is archival, never destructive.** Both `User` and `Event` carry `isActive` with a `pre(/^find/)` hook excluding inactive documents, so an "archived" event disappears from every listing without a single referencing row being removed. This mattered concretely: an audit of the live database before implementing it found 3 events with **paid** bookings, and 17 bookings, 13 guests, 4 audit rows, 20 chat messages and 24 usher assignments referencing events. A hard delete would have voided paid tickets and destroyed the admission audit trail — which is precisely the record a door dispute needs. Archiving an event does unassign its door staff, since a scan scope on a hidden event is meaningless.
+
+### 5.8 Guest access to Meet and Greet, by emailed one-time code
+
+Most attendees never create an account: a guest checkout or an emailed invite captures only a name and an email. Gating the attendee network on a login would therefore have excluded the majority of the people it exists to connect.
+
+The authorisation question is *"do you control the email address on a booking for this event?"*, and the answer is proved by a one-time code rather than a password:
+
+1. `POST /events/:eventId/network/guest/request` — if the address matches a valid booking, a 6-digit code is emailed. The response is deliberately identical either way, so the endpoint cannot be used to enumerate who holds tickets.
+2. Only the **SHA-256 hash** of the code is stored, with a **10-minute** TTL.
+3. `POST /events/:eventId/network/guest/verify` compares with `crypto.timingSafeEqual`, and on success mints an ordinary session — from that point the guest travels the same authorisation paths as any other attendee, so no parallel permission model exists to drift out of sync.
+
+Both routes are registered ahead of `router.use(protect)`, and use two path segments so the public `/:slug` event route cannot swallow them.
+
+### 5.9 Weather, dress-code and safety advice (Open-Meteo)
+
+`services/weatherService.js` geocodes the event location and fetches a daily forecast from **Open-Meteo** (no API key, no account). `buildAdvice` turns the forecast plus the event's own `dressCode`, `venueName` and indoor/outdoor context into practical guidance, and the chatbot reaches it through the `get_event_conditions` tool.
+
+Two design points are worth defending in the report:
+
+- **Forecast horizon is honest.** `FORECAST_HORIZON_DAYS = 16` matches what the provider actually supports; beyond it the service says it cannot forecast rather than extrapolating. Confidently wrong weather advice for an event three months out is worse than none.
+- **It does not pretend to assess crime risk.** The safety advice is general venue/arrival guidance and carries an explicit disclaimer that it is **not** a crime-risk assessment. An LLM inferring danger from a place name would produce exactly the sort of unevidenced, and likely discriminatory, claim about neighbourhoods that a system like this has no business making.
+
 ---
 
 ## 6. API reference
 
-All routes are mounted under `/api/v1` (`backend/app.js:85–87`). "Protected" means `authController.protect` (valid JWT required).
+All routes are mounted under `/api/v1` (`backend/app.js:95–98`): `/events`, `/users`, `/bookings` and `/chat`. "Protected" means `authController.protect` (valid JWT required).
 
 ### 6.1 `/users` — `userRoutes.js`
 
@@ -393,6 +468,10 @@ All routes are mounted under `/api/v1` (`backend/app.js:85–87`). "Protected" m
 | `DELETE` | `/delete-me` | Protected | Soft-delete (`isActive: false`) |
 | `GET` | `/` | **Admin** | List all users |
 | `GET` | `/:id` | **Admin** | Fetch any user |
+| `PATCH` | `/:id/role` | **Admin** | Change a user's role — `canChangeRole` blocks self-changes, blocks non-root admins from granting or revoking `admin`, and blocks demoting the root admin |
+| `DELETE` | `/:id` | **Admin** | Deactivate a user (`isActive: false`) — `canDeleteUser` blocks self-deletion and deletion of the root admin |
+
+`POST /signup` accepts a `role`, but `authService` passes it through the `SIGNUP_ROLES` whitelist, so anything other than `user` or `creator` silently becomes `user`. Before this change the value was written straight to the document, which let anyone self-register as an administrator (OWASP A01: Broken Access Control).
 
 ### 6.2 `/events` — `eventRoutes.js`
 
@@ -404,8 +483,12 @@ All routes are mounted under `/api/v1` (`backend/app.js:85–87`). "Protected" m
 | `GET` | `/upcoming` | Public | Upcoming events |
 | `GET` | `/:slug` | Public | Single event detail |
 | `POST` | `/create` | Protected | Create event (multipart cover image) |
-| `GET` | `/my/events` | Protected | Events owned by caller |
+| `POST` | `/:eventId/network/guest/request` | **Public** | Email a one-time code to a guest holding a booking on this event |
+| `POST` | `/:eventId/network/guest/verify` | **Public** | Exchange that code for an ordinary session |
+| `GET` | `/my/events` | Protected | Events owned by caller (**all** events when the caller is an admin) |
+| `GET` | `/my/assigned-events` | Protected | Events the caller works as door staff (empty list for everyone else) |
 | `PATCH` | `/update/:eventId` | Protected † | Edit event |
+| `DELETE` | `/:eventId` | **Admin** | Archive an event (`isActive: false`); bookings, guests, chat and audit rows are kept, assigned ushers are unassigned |
 | `GET` | `/:eventId/dashboard` | Protected † | Live dashboard snapshot |
 | `GET` | `/:eventId/stream` | Protected † | SSE admission stream |
 | `GET` | `/:eventId/anomalies` | Protected † | Scan-anomaly report |
@@ -416,8 +499,21 @@ All routes are mounted under `/api/v1` (`backend/app.js:85–87`). "Protected" m
 | `GET` | `/:eventId/ushers` | Protected † | List assigned door staff |
 | `POST` | `/:eventId/ushers` | Protected † | Assign an usher |
 | `DELETE` | `/:eventId/ushers/:userId` | Protected † | Unassign an usher |
+| `GET` | `/:eventId/network/stream` | Protected ‡ | SSE stream — Meet and Greet messages and presence |
+| `GET` | `/:eventId/network/directory` | Protected ‡ | Opted-in attendees for this event |
+| `PATCH` | `/:eventId/network/opt-in` | Protected ‡ | Join or leave the attendee directory |
+| `POST` | `/:eventId/network/messages` | Protected ‡ | Post to **Event Chat (Public)** |
+| `GET`/`POST` | `/:eventId/network/dms/:userId` | Protected ‡ | Read / send a direct message |
 
 † No role gate at the router; **ownership is enforced in the service layer** (event creator or admin). This is a deliberate pattern — see §7.2.
+
+‡ Eligibility is enforced in `networkingService`: the caller must hold a non-revoked, non-rejected booking for the event (or be its organiser/admin). Posting is additionally gated on the event being live. The two `network/guest/*` routes are registered **before** `router.use(protect)` and use two path segments so the public `/:slug` route cannot swallow them.
+
+### 6.4 `/chat` — `chatRoutes.js`
+
+| Method | Path | Access | Purpose |
+|---|---|---|---|
+| `POST` | `/` | Optional auth, separate rate limiter | AI concierge turn — event search, event Q&A, FAQ, weather/dress-code advice |
 
 ### 6.3 `/bookings` — `bookingRoutes.js`
 
@@ -463,8 +559,14 @@ The Paystack webhook is verified with **HMAC-SHA512 over the raw request body**,
 | `express-mongo-sanitize` | Strips `$`/`.` operators — NoSQL injection |
 | `express-xss-sanitizer` | Sanitises reflected input |
 | `hpp` | Parameter pollution, whitelisting `eventName`, `eventCategory`, `eventLocation`, `startDate` |
-| `express-rate-limit` | **100 requests per hour per IP** on `/api` (`app.js:42–44`) |
+| `express-rate-limit` | **100 requests per hour per IP** on `/api` by default, now configurable via `RATE_LIMIT_MAX` / `RATE_LIMIT_WINDOW_MS`; the AI chat endpoint carries its own tighter limiter |
 | `cors` | Credentialed, origin restricted to `DEV_FRONTEND_URL` |
+
+### 7.4.1 Fixed vulnerability: privilege escalation at signup (OWASP A01)
+
+`POST /users/signup` spread the request body into the new user document, so `role` was attacker-controlled and **any visitor could register themselves as `admin`** — full read/write access to every event, every user and every guest list. It is now filtered through the frozen `SIGNUP_ROLES` whitelist (§5.7), and the fix was verified by attempting the escalation against a running server and confirming the resulting account came back as `user`.
+
+This is the highest-severity defect found in the codebase and is worth citing directly as evidence: it is an instance of the general rule that **anything the server treats as authority must be stamped server-side**, the same rule that governs `ticketId`, `reference` and `event` on a booking (§4.1).
 
 ### 7.5 Data protection (GDPR)
 
@@ -483,7 +585,7 @@ The Paystack webhook is verified with **HMAC-SHA512 over the raw request body**,
 
 Testing is deliberately split by **what a mock can and cannot prove**. Pure decision logic is unit-tested in isolation; anything whose correctness depends on database concurrency semantics is tested against a **real MongoDB replica set**, because a mocked transaction would falsely validate exactly the code that is hardest to get right.
 
-### 8.2 Backend unit tests — `backend/tests/unit/` (11 files, no database)
+### 8.2 Backend unit tests — `backend/tests/unit/` (21 files, 154 tests, no database)
 
 | File | What it proves |
 |---|---|
@@ -498,8 +600,18 @@ Testing is deliberately split by **what a mock can and cannot prove**. Pure deci
 | `guest.parse.test.js` | CSV/XLSX guest parsing and malformed input |
 | `retention.test.js` | GDPR erasure logic |
 | `models.test.js` | Schema validation rules, including conditional `requiredForPurchase` |
+| `role.authz.test.js` | `SIGNUP_ROLES` whitelist, `canChangeRole` and `canDeleteUser` — self-change, non-root admin grant, root-admin demotion and root-admin deletion are all refused |
+| `capacity.test.js` | `capacityDecision` at, under and over capacity, and with an explicit override |
+| `eventLiveness.test.js` | `isLive`, including the single-day event that the previous zero-length window never marked live |
+| `networking.authz.test.js` | Who may read, post and appear in the directory for an event |
+| `networkingOtp.test.js` | Code generation, SHA-256 storage, constant-time comparison, expiry and single use |
+| `networking-notification.test.js` | Event-live notification triggering |
+| `weather.test.js` | Open-Meteo response mapping and `buildAdvice` dress-code/safety branches |
+| `chatbot.service.test.js` | Turn handling, tool dispatch and the no-API-key degradation path |
+| `chatbot.llmProvider.test.js` | OpenAI-primary / Gemini-fallback selection and error handling |
+| `ticketEmail.test.js` | Ticket email renders an inline `cid:` QR rather than a `data:` URI (Gmail strips those) |
 
-### 8.3 Backend integration tests — `backend/tests/integration/` (9 files, replica set required)
+### 8.3 Backend integration tests — `backend/tests/integration/` (12 files, replica set required)
 
 | File | What it proves |
 |---|---|
@@ -512,6 +624,9 @@ Testing is deliberately split by **what a mock can and cannot prove**. Pure deci
 | `nlquery.answer.test.js` | NL query answering against seeded data |
 | `usher.assignment.test.js` | Assignment/unassignment and resulting scan scope |
 | `retention.sweep.test.js` | GDPR sweep behaviour |
+| `networking.chat.test.js` | Public-channel and DM persistence and eligibility end to end |
+| `networking.notify.test.js` | Event-live notification delivery |
+| `chatbot.tools.test.js` | Concierge tool calls resolve against real seeded events |
 
 Both concurrency-sensitive money paths — overselling inventory and double-admitting a ticket — are covered by tests that issue genuinely simultaneous operations, which is the specific class of defect a mocked database cannot detect.
 
@@ -519,7 +634,7 @@ Tests skip cleanly rather than fail when no replica set is available (`tests/hel
 
 ### 8.4 Frontend component tests — Vitest + React Testing Library
 
-`frontend/src/components/ui/digital-ticket.test.tsx` (4 assertions) pins the ticket QR: that a QR element renders at all, and that the buyer's *name* is not what it encodes. Both defects described in §5.4 shipped undetected precisely because no test existed at this level. Configured in `vitest.config.mts` with the automatic JSX runtime, and run in CI via `npm test`.
+Two files, **9 tests**. `digital-ticket.test.tsx` pins the ticket QR: that a QR element renders at all, and that the buyer's *name* is not what it encodes — both defects described in §5.4 shipped undetected precisely because no test existed at this level. `scan/[eventId]/_component/scanner.test.tsx` covers the scanner UI, including the capacity-override confirmation prompt. Configured in `vitest.config.mts` with the automatic JSX runtime, and run in CI via `npm run test:coverage`.
 
 ### 8.5 Frontend end-to-end — Playwright
 
@@ -549,18 +664,41 @@ cd backend && npm run test:unit  # unit tests only, no database required
 cd frontend && npm run test:e2e  # Playwright end-to-end
 ```
 
+### 8.8 Coverage — measured, deliberately not gated
+
+Coverage is produced by Node's built-in `--experimental-test-coverage` on the backend and by `@vitest/coverage-v8` on the frontend. Both emit **lcov** so CI can archive a machine-readable report; neither declares a failing threshold.
+
+That omission is a decision, not an oversight. A minimum set before the baseline is known either sits low enough to assert nothing or fails the build on day one, and in both cases it measures the threshold rather than the code. The number is published first; a floor can be set just under it once it is trusted.
+
+| Suite | Lines | Branches | Functions |
+|---|---|---|---|
+| Backend (`npm run test:coverage`, unit only) | **73.04%** | **84.83%** | **35.39%** |
+| Frontend (`npm run test:coverage`) | **2.22%** | **16.00%** | **7.31%** |
+
+The asymmetry is expected and worth stating plainly rather than hiding: the logic that decides money, admission and authorisation is on the backend and is covered by pure-function unit tests, which is why line and branch coverage there are high. Function coverage is lower because the unit run never touches controllers, repositories or the mail/Cloudinary adapters — those are exercised by the integration suite, whose execution is not counted in this figure. The frontend number is low for a structural reason: only two components have Vitest tests, and the rest of the UI is covered by Playwright end-to-end runs, which likewise contribute nothing to a V8 unit-coverage report. The honest reading is that **this table measures unit-level coverage only, and understates total tested behaviour**.
+
 ---
 
 ## 9. Build, CI and deployment
 
 ### 9.1 Continuous integration — `.github/workflows/ci.yml`
 
-Triggers on **push to `main` and pull requests targeting `main`**, on Node 22, as two independent jobs:
+Triggers on **push and pull request to both `main` and `dev`**, on Node 22, as two independent jobs. Gating only `main` meant every change was unverified until merge — the moment feedback is least useful — so `dev`, where the work actually happens, was added.
 
 | Job | Steps |
 |---|---|
-| **Backend tests** | `npm ci` → start `mongo:7` with `--replSet rs0` via `docker run` → poll until `rs.status().myState == 1` → `node --test --test-concurrency=1` |
-| **Frontend typecheck & lint** | `npm ci` → `npx tsc --noEmit` → `npm run lint` |
+| **Backend tests** | `npm ci` → **`npm run lint`** → start `mongo:7` with `--replSet rs0` via `docker run` → poll until `rs.status().myState == 1` → `node --test --test-concurrency=1` over the full suite → coverage (`continue-on-error`) → upload `lcov.info` → tear down Mongo |
+| **Frontend typecheck & lint** | `npm ci` → `npx tsc --noEmit` → `npm run lint` → `npm run test:coverage` → upload `lcov.info` |
+
+Two ordering decisions are deliberate. Lint runs **before** the database is provisioned, since it needs nothing but `node_modules` and a lint failure should not cost the time of spinning up a replica set. And the backend was previously **never linted in CI at all**, which is how 76 errors accumulated unnoticed; adding the step immediately caught a real defect — a route registered against a controller export that did not exist, which would have crashed the server on boot.
+
+**What blocks a merge:** lint, typecheck and tests. **What does not:** coverage, which is measurement only (§8.8) and is marked `continue-on-error` with its report uploaded as a build artifact.
+
+### 9.1.1 Load testing
+
+`backend/scripts/load-test.sh` (`npm run load:test`) drives the two hottest read paths. Measured on the development machine: **88.4 req/s** on the event list and **51.3 req/s** on event detail, with no errors.
+
+Running it surfaced a real finding: the global rate limit was a hard-coded 100 requests/hour, so every load run flatlined at HTTP 429 within seconds. The limit is now configurable via `RATE_LIMIT_MAX` and `RATE_LIMIT_WINDOW_MS` (defaults unchanged at 100/1 h), which both makes the system measurable and makes the production limit a deployment decision rather than a source-code constant. Full figures and their ISO 25010 mapping are in `docs/quality-model-iso25010.md` §2.
 
 Two decisions are documented inline in the workflow and are worth citing:
 
@@ -598,6 +736,11 @@ Required backend environment variables (`backend/config.env`): `DB`, `JWT_SECRET
 | `npm run migrate:ticket-ids` | One-off: re-issue missing/duplicate ticket IDs before the unique index is built |
 | `npm run migrate:phase1-backfill` | One-off: backfill `accessMode`, `source`, `status` on pre-Phase-1 documents |
 | `npm run migrate:numeric-tickets` | One-off: coerce legacy string ticket fields to numbers |
+| `npm run seed:admin -- --email <addr>` | Promote an existing account to `admin` **and** root admin. The only way to create the first administrator, since signup cannot grant the role. `--force` re-points root admin at a different account |
+| `npm run notify:event-live` | Send the "your event is live" notification |
+| `npm run load:test` | Throughput measurement against the hot read paths (§9.1.1) |
+| `npm run test:coverage` / `:lcov` | Coverage table / lcov report (§8.8) |
+| `npm run lint` / `lint:fix` / `format` | ESLint 9 flat config (with `globals.node`) and Prettier |
 
 **Index note.** Mongoose builds schema indexes on application start (`autoIndex`), so a schema change adding an index does not take effect on an already-running deployment until it restarts. After deploying the `ticketId` index, confirm it exists rather than assuming — a missing unique index fails silently, accepting duplicates that the code assumes cannot occur.
 
@@ -625,7 +768,10 @@ The `dev` branch history shows phased, vertically-sliced delivery — each phase
 | 4 | Guest-list management, invites, access-mode enforcement |
 | 5 | AI features — (1/3) anomaly detection, (2/3) NL queries, (3/3) no-show prediction |
 | 6 | GDPR + accessibility, Playwright E2E, GitHub Actions CI, Docker Compose |
-| — | UI/theme refinement pass after functional completion |
+| 7 | Meet and Greet — attendee directory, public channel, DMs, live presence over SSE |
+| 8 | AI concierge chatbot — event search, event Q&A, FAQ, then weather/dress-code/safety advice via Open-Meteo |
+| 9 | Administration — root-admin bootstrap, role management, soft delete of events and users; guest access to Meet and Greet by emailed OTP |
+| — | UI/theme refinement pass after functional completion, and a quality-engineering pass (coverage, load testing, backend lint in CI) |
 
 Two patterns in the history are worth drawing attention to in the report:
 
@@ -642,14 +788,14 @@ Identifying weaknesses with proposed remedies is explicitly rewarded by the mark
 
 | # | Limitation | Evidence | Recommended improvement |
 |---|---|---|---|
-| 1 | **No automated coverage of the ticket-delivery path** — the missing-QR defect (§5.4) reached the repository undetected, and nothing asserts email content today | No test in `tests/` references `generateQrCode`, `sendPdf` or `qr` | Add an integration test asserting the rendered ticket email contains an `<img src="data:image/png;base64,…">` whose payload matches the booking's `ticketId` |
+| 1 | **Email delivery itself is still unverified end to end** — `ticketEmail.test.js` now asserts the rendered body carries an inline `cid:` QR, but nothing exercises the SMTP path, so a credential or transport failure is still only visible in production | `tests/unit/ticketEmail.test.js` covers rendering only | Add an integration test using a capture transport (e.g. `nodemailer` stream transport or MailHog) asserting an invite/ticket send produces a message with the QR attachment present |
 | 2 | **Legacy ticket IDs remain in circulation** — bookings created before §5.3 keep their 7-character browser-generated IDs (~2²⁸ entropy vs 2⁶⁰), deliberately, so already-emailed tickets still scan | Live data sampled during migration, e.g. `#6F557BD` | Acceptable while those events run; expire them with their events, or re-issue and re-send if any is long-lived |
 | 3 | **Invite tokens are unguessable but unsigned** (`crypto.randomBytes(24)`), so validity is a database lookup rather than cryptographic verification | `shared/utils/inviteToken.js` | Acceptable for the threat model given the unique index; if offline scanning were ever required, switch to an HMAC-signed token |
 | 4 | **Silent invite-email failure** — `guestService.issueInvite` swallows send errors with an empty `catch` and no logging, so a misconfigured mailer is invisible | `guestService.js:130` | Log the failure and surface a "resend invite" affordance on the guest-list UI, mirroring the logging `confirmReservation` already does |
 | 5 | **Misleading module names** — `generatePdf.js` / `pdfTemplate` send HTML email and generate no PDF | §5.6 | Rename to `sendTicketEmail.js` / `ticketEmailTemplate` |
-| 6 | **CI does not run on the `dev` branch** — it triggers only on `main` pushes and PRs into `main`, so day-to-day work is unverified until merge | `.github/workflows/ci.yml` | Add `dev` to the `push` branch filter |
-| 7 | **Frontend component coverage is thin** — Vitest is now configured but only the digital ticket is covered | `src/components/ui/digital-ticket.test.tsx` is the only spec | Extend to checkout form validation and the reservation state handling in `usePaystack` |
-| 8 | **No performance measurement** — the design reasoning (SSE over polling, targeted indexes) is sound but no load or latency figure exists | No load-test artefact in the repository | One `k6`/`autocannon` run against `/bookings/create` and `/bookings/scan` reporting p50/p95 and throughput. See `quality-model-iso25010.md` §2 |
+| 6 | **Frontend unit coverage is very thin — 2.22% of lines** — only two components have Vitest specs, so the coverage report understates real assurance but also reflects a genuine gap in cheap regression cover | §8.8; `digital-ticket.test.tsx` and `scanner.test.tsx` are the only specs | Extend to checkout form validation and the reservation state handling in `usePaystack`, then set a threshold just under the resulting figure |
+| 7 | **Backend function coverage is 35.39%** — high line and branch coverage sits on pure decision functions; controllers, repositories and adapters are only reached by the integration suite, which the figure does not include | §8.8 | Merge integration-run coverage into the same lcov report so the published number reflects the suite that actually exercises those layers |
+| 8 | **Load testing covers reads only** — the recorded figures are for the event list and detail endpoints; the concurrency-critical write paths were never measured under load | `scripts/load-test.sh` §9.1.1 | Extend the harness to `/bookings/create` and `/bookings/scan` reporting p50/p95, which is where contention would actually show |
 | 9 | **No dependency vulnerability scanning** — `npm audit` is not in CI | `.github/workflows/ci.yml` | Add `npm audit --audit-level=high` and enable Dependabot |
 | 10 | **Paystack public key is hard-coded** in `usePaystack.tsx` rather than read from the environment | `frontend/src/hooks/usePaystack.tsx` | Move to `NEXT_PUBLIC_PAYSTACK_KEY`; the current value will not survive a production build |
 | 11 | **No deployment pipeline** — CI validates but never deploys | No CD job or hosting config | Add a deploy job (e.g. Render/Railway for the API, Vercel for the frontend) gated on a green build |
@@ -658,10 +804,21 @@ Identifying weaknesses with proposed remedies is explicitly rewarded by the mark
 
 | Former item | Resolution |
 |---|---|
+| CI does not run on the `dev` branch | Both `push` and `pull_request` now filter on `[main, dev]` — §9.1 |
+| No performance measurement | `npm run load:test` with recorded figures (88.4 / 51.3 req/s) — §9.1.1; the rate limit became configurable as a direct result |
+| No ticket-email rendering test | `tests/unit/ticketEmail.test.js` asserts the inline `cid:` QR |
+| No coverage measurement | Backend and frontend both emit lcov; figures published in §8.8 |
+| Backend never linted in CI | `npm run lint` is a blocking step, and caught a boot-time crash on its first run — §9.1 |
+
+### Closed since v2.0 (carried forward)
+
+| Former item | Resolution |
+|---|---|
 | Client-generated ticket IDs | Server-issued, crypto-random, unique-indexed — §5.3 |
-| No frontend unit/component tests | Vitest + React Testing Library configured and running in CI; `digital-ticket.test.tsx` pins the QR regression |
+| No frontend unit/component tests | Vitest + React Testing Library configured and running in CI |
 | Reservation release not scheduled | `src/shared/reservationSweeper.js` runs in-process on a 5-minute interval, started after the DB connection resolves and cancelled on `SIGTERM` |
-| No venue-capacity enforcement (safety) | `admissionService.capacityDecision` enforces occupancy at the door with an auditable override — §5.6 |
+| No venue-capacity enforcement (safety) | `admissionService.capacityDecision` enforces occupancy at the door with an auditable override — §5.5 |
+| Signup accepted an arbitrary `role` | `SIGNUP_ROLES` whitelist; administrators are only ever granted — §1.1, §6.1 |
 
 ---
 
@@ -682,4 +839,4 @@ Identifying weaknesses with proposed remedies is explicitly rewarded by the mark
 
 ---
 
-*Verified against branch `dev` on 5 August 2026, including uncommitted working-tree changes (the reserve/confirm checkout flow, server-issued ticket IDs and the QR fixes are not yet committed). Where this document and the source disagree, the source is authoritative — re-verify before submission if the code changes.*
+*Verified against branch `dev` on 6 August 2026, including uncommitted working-tree changes (the administration, guest-OTP, weather and quality-engineering work is not yet committed). Test counts and coverage figures in §8 were produced by running the suites, not estimated. Where this document and the source disagree, the source is authoritative — re-verify before submission if the code changes.*

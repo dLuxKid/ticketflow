@@ -3,8 +3,9 @@
 > **Diagram set:** [Architecture](architecture-diagram.md) · [Use cases](use-case-diagram.md) · [Data flow](data-flow-diagram.md)
 
 Actors are the four roles in `backend/src/models/userModel.js` (`user`, `creator`, `admin`,
-`usher`), plus unauthenticated visitors and three external systems. Dashed arrows are
-`<<include>>` / `<<extend>>` relationships; solid lines are actor associations.
+`usher`) — with **root admin** as a specialisation of `admin` — plus unauthenticated visitors
+and five external systems. Dashed arrows are `<<include>>` / `<<extend>>` relationships;
+solid lines are actor associations.
 
 ---
 
@@ -17,9 +18,14 @@ graph LR
     ORG(("Organiser<br/>role: creator"))
     USHER(("Door staff<br/>role: usher"))
     ADMIN(("Admin<br/>role: admin"))
+    ROOT(("Root admin<br/>isRootAdmin"))
     PAY[["Paystack"]]
     MAIL[["Email service"]]
     SCHED[["Retention scheduler"]]
+    LLM[["LLM provider<br/>OpenAI / Gemini"]]
+    METEO[["Open-Meteo"]]
+
+    ROOT -.->|is a| ADMIN
 
     subgraph SYS["TicketFlow"]
         direction TB
@@ -30,6 +36,8 @@ graph LR
             UC9(["Manage my profile"])
             UC10(["Delete my account"])
             UC26(["Administer users"])
+            UC29(["Change a user's role"])
+            UC30(["Deactivate a user"])
         end
 
         subgraph B["Discovery & ticketing"]
@@ -49,6 +57,22 @@ graph LR
             UC15(["Issue single-use QR invite"])
             UC16(["View guest list"])
             UC21(["Assign / unassign door staff"])
+            UC31(["Archive an event"])
+        end
+
+        subgraph G["Meet and Greet"]
+            UC32(["Join Meet and Greet"])
+            UC33(["Request access code by email"])
+            UC34(["Opt in to the attendee directory"])
+            UC35(["Post to Event Chat (Public)"])
+            UC36(["Send a direct message"])
+        end
+
+        subgraph H["AI concierge"]
+            UC37(["Ask the chatbot"])
+            UC38(["Search events by description"])
+            UC39(["Ask about a named event"])
+            UC40(["Get weather / dress-code advice"])
         end
 
         subgraph D["Door operations"]
@@ -76,12 +100,19 @@ graph LR
     VISITOR --- UC3
     VISITOR --- UC4
     VISITOR --- UC5
+    VISITOR --- UC33
+    VISITOR --- UC37
 
     ATTENDEE --- UC2
     ATTENDEE --- UC5
     ATTENDEE --- UC8
     ATTENDEE --- UC9
     ATTENDEE --- UC10
+    ATTENDEE --- UC32
+    ATTENDEE --- UC34
+    ATTENDEE --- UC35
+    ATTENDEE --- UC36
+    ATTENDEE --- UC37
 
     ORG --- UC11
     ORG --- UC12
@@ -106,6 +137,9 @@ graph LR
     ADMIN --- UC21
     ADMIN --- UC22
     ADMIN --- UC23
+    ADMIN --- UC30
+    ADMIN --- UC31
+    ROOT --- UC29
 
     UC5 -.->|include| UC6
     UC6 -.->|include| UC7
@@ -121,9 +155,28 @@ graph LR
     UC22 -.->|extend| UC16
     UC28 -.->|extend| UC22
 
+    UC33 -.->|include| MAIL
+    UC32 -.->|extend| UC33
+    UC35 -.->|include| UC32
+    UC36 -.->|include| UC32
+    UC34 -.->|include| UC32
+    UC38 -.->|extend| UC37
+    UC39 -.->|extend| UC37
+    UC40 -.->|extend| UC37
+    UC37 -.->|include| LLM
+    UC40 -.->|include| METEO
+    UC29 -.->|extend| UC26
+    UC30 -.->|extend| UC26
+
     UC6 --- PAY
     SCHED --- UC28
 ```
+
+**Two relationships in this diagram carry a design argument rather than just structure.**
+
+`UC32 Join Meet and Greet` *extends* `UC33 Request access code`, not the reverse: a registered attendee reaches the network directly, and the emailed code is the **alternative** path for the majority of attendees who hold a booking but no account. Modelling it the other way round would imply every participant must pass through an OTP, which is not what the system does.
+
+`UC29 Change a user's role` is associated with **Root admin only**, while `UC30 Deactivate a user` is available to any admin. That asymmetry is the whole point of the root-admin specialisation: administrator status is the one privilege the system refuses to let administrators hand out among themselves.
 
 ## 2. Use case ↔ implementation trace
 
@@ -141,7 +194,7 @@ graph LR
 | 10 | Delete account | Attendee | `DELETE /api/users/delete-me` | `userService` |
 | 11 | Create event | Organiser | `POST /api/events/create` | `eventService` + Cloudinary |
 | 12 | Update event | Owner, Admin | `PATCH /api/events/update/:eventId` | `eventService` |
-| 13 | View my events | Organiser | `GET /api/events/my/events` | `eventService` |
+| 13 | View my events | Organiser | `GET /api/events/my/events` (returns **all** events for an admin) | `eventService.getMyEvents` |
 | 14 | Import guest list | Organiser, Admin | `POST /api/events/:eventId/guests` | `guestService.importGuests` |
 | 15 | Issue single-use QR invite | (system, within 14) | — | `guestService` + `generateQrCode` |
 | 16 | View guest list | Organiser, Admin | `GET /api/events/:eventId/guests` | `guestService.getGuests` |
@@ -157,6 +210,19 @@ graph LR
 | 26 | Administer users | Admin | `GET /api/users`, `GET /api/users/:id` | `userService` |
 | 27 | Record audit entry | (system, within 24) | — | `auditLogRepository.record` |
 | 28 | Run retention sweep | Scheduler | `npm run gdpr:sweep` | `retentionService.sweepExpiredEvents` |
+| 29 | Change a user's role | **Root admin** | `PATCH /api/users/:id/role` | `userService.canChangeRole` → `changeUserRole` |
+| 30 | Deactivate a user | Admin | `DELETE /api/users/:id` | `userService.canDeleteUser` → `deleteUser` |
+| 31 | Archive an event | Admin | `DELETE /api/events/:eventId` | `eventService.deleteEvent` |
+| 32 | Join Meet and Greet | Attendee, Guest | `GET /:eventId/network/stream` | `networkingService` |
+| 33 | Request access code by email | Guest (no account) | `POST /:eventId/network/guest/request`, `/verify` | `networkingGuestService` + `networkingOtp` |
+| 34 | Opt in to the attendee directory | Attendee | `PATCH /:eventId/network/opt-in`, `GET /network/directory` | `networkingService` |
+| 35 | Post to Event Chat (Public) | Attendee | `POST /:eventId/network/messages` | `networkingService` |
+| 36 | Send a direct message | Attendee | `GET/POST /:eventId/network/dms/:userId` | `networkingService` |
+| 37 | Ask the chatbot | Visitor, Attendee | `POST /api/v1/chat` | `chatbotService` → `llmProvider` |
+| 38 | Search events by description | Visitor | — (chatbot tool within 37) | `chatbotService` tool `search_events` |
+| 39 | Ask about a named event | Visitor | — (chatbot tool within 37) | `chatbotService.resolveEvent` |
+| 40 | Get weather / dress-code advice | Visitor, Attendee | — (chatbot tool within 37) | `weatherService` (Open-Meteo) |
+| 41 | Work an assigned door | Usher | `GET /api/events/my/assigned-events` | `eventService.getAssignedEvents` |
 
 ## 3. Preconditions and business rules worth stating
 
@@ -181,3 +247,22 @@ graph LR
   to the detector would only manufacture flags.
 - **Use cases 16–22 share one authorisation rule.** All call `canViewDashboard` (event owner
   or admin), enforced in the service layer so it holds regardless of the route.
+- **No actor can promote itself.** Use case 3 filters the submitted role through
+  `SIGNUP_ROLES`, so only `user` and `creator` are self-assignable. `usher` is acquired
+  implicitly by use case 21, and `admin` only through use case 29 — which is restricted to
+  the root admin, cannot be applied to oneself, and cannot demote the root admin. The first
+  administrator therefore has no in-application origin at all: it is seeded from the CLI.
+- **Use cases 30 and 31 archive rather than destroy.** Both set `isActive: false`; bookings
+  (including paid ones), guests, chat history and audit rows survive, because the audit trail
+  is precisely the record a door dispute needs. Archiving an event does unassign its door
+  staff, since a scan scope on a hidden event is meaningless.
+- **Meet and Greet eligibility is a booking, not a role.** Use cases 32–36 require a
+  non-revoked, non-rejected booking for that event (or being its organiser/admin); posting
+  additionally requires the event to be live. Use case 33 exists because most attendees never
+  create an account, and it deliberately returns an identical response whether or not the
+  address holds a ticket — otherwise it would be an attendee-enumeration oracle.
+- **The chatbot is the only external-LLM path in the system.** Use cases 37–40 call OpenAI
+  (Gemini on failure); everything else described as "AI" here — anomaly detection (19),
+  NL guest queries (17) and no-show prediction (20) — is local rule or model code with no
+  third-party inference. Use case 17 in particular is a **regex intent parser, not an LLM**,
+  a distinction worth being precise about in the report.

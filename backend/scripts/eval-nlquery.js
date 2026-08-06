@@ -11,7 +11,9 @@ import { NL_QUERY_EVAL_SET } from '../tests/fixtures/nlQueryEvalSet.js';
 
 const sameIntent = (a, b) => {
   if (a === null || b === null) return a === b;
-  return a.action === b.action && a.status === b.status && a.vipOnly === b.vipOnly;
+  return (
+    a.action === b.action && a.status === b.status && a.vipOnly === b.vipOnly
+  );
 };
 
 let correct = 0;
@@ -29,7 +31,9 @@ console.log('Natural-language guest-query evaluation');
 console.log('========================================');
 console.log(`Questions: ${NL_QUERY_EVAL_SET.length}`);
 console.log(`Correct:   ${correct}`);
-console.log(`Accuracy:  ${accuracy.toFixed(3)} (exact-match on {action, status, vipOnly})`);
+console.log(
+  `Accuracy:  ${accuracy.toFixed(3)} (exact-match on {action, status, vipOnly})`,
+);
 console.log();
 
 if (misses.length > 0) {

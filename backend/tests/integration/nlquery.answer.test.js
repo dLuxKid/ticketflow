@@ -25,7 +25,11 @@ if (skipReason) {
     owner = { _id: new mongoose.Types.ObjectId(), role: 'creator' };
     stranger = { _id: new mongoose.Types.ObjectId(), role: 'user' };
     event = await Event.create(
-      buildEvent({ user: owner._id, accessMode: 'invite_only', ticketDetails: [] }),
+      buildEvent({
+        user: owner._id,
+        accessMode: 'invite_only',
+        ticketDetails: [],
+      }),
     );
     await guestService.importGuests(
       event._id,
@@ -36,7 +40,10 @@ if (skipReason) {
       owner,
     );
     // Admit Ada so the question set has a real mix of arrived/not-arrived.
-    const adaGuest = await Guest.findOne({ event: event._id, email: 'ada@example.com' });
+    const adaGuest = await Guest.findOne({
+      event: event._id,
+      email: 'ada@example.com',
+    });
     await Booking.findByIdAndUpdate(adaGuest.booking, { status: 'admitted' });
   });
 
@@ -70,7 +77,12 @@ if (skipReason) {
 
   test('a non-owner cannot query the guest list (403)', async () => {
     await assert.rejects(
-      () => nlGuestQueryService.answerQuestion(event._id, 'who has arrived', stranger),
+      () =>
+        nlGuestQueryService.answerQuestion(
+          event._id,
+          'who has arrived',
+          stranger,
+        ),
       (err) => err.statusCode === 403,
     );
   });

@@ -20,6 +20,11 @@ type eventData = {
   currency: string;
   accessMode: "public" | "invite_only" | "hybrid";
   networkingEnabled: boolean;
+  venueName: string;
+  dressCode: string;
+  parkingInfo: string;
+  accessibilityInfo: string;
+  ageRestriction: string;
 };
 
 type ticketType = {

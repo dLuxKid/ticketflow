@@ -129,6 +129,9 @@ export const streamNetwork = catchAsync(async (req, res) => {
   // closed (or opened), silently disagreeing with what a send attempt gets rejected for.
   send('snapshot', {
     eventId,
+    // Carried so the channel can name the event it belongs to. Guests arriving by emailed
+    // link have no other context for which room they have just walked into.
+    eventName: event.eventName,
     isLive: event.isLive,
     startDate: event.startDate,
     endDate: event.endDate,

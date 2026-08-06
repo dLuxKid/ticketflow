@@ -1,4 +1,5 @@
 import * as eventRepository from '../repositories/eventRepository.js';
+import * as userRepository from '../repositories/userRepository.js';
 import AppError from '../shared/errors/AppError.js';
 
 /**
@@ -105,4 +106,38 @@ export const searchEvents = ({ category, city, name } = {}) => {
   if (city) queryParams.eventLocation = city;
   if (name) queryParams.eventName = name;
   return eventRepository.findActiveWithFeatures(queryParams);
+};
+
+/**
+ * Archives an event on an admin's authority.
+ *
+ * Soft delete by design. An event is referenced by bookings (some paid), guests, audit logs
+ * and chat messages; removing the document would invalidate tickets people bought and
+ * destroy the admission record that GDPR retention and any payment dispute rely on. This
+ * hides it everywhere instead, and is reversible by clearing `isActive`.
+ *
+ * Usher assignments pointing at it are cleared in the same operation: those grant nothing
+ * once the event is gone, and leaving them would silently re-arm every one of them if the
+ * event were ever restored.
+ *
+ * @param {string} eventId
+ * @param {object} user - req.user; must be an admin
+ * @returns {Promise<{event: object, affected: {bookings:number, paidBookings:number, guests:number}}>}
+ */
+export const deleteEvent = async (eventId, user) => {
+  if (user?.role !== 'admin') {
+    throw new AppError('Only an administrator can delete an event', 403);
+  }
+
+  const event = await eventRepository.findById(eventId);
+  if (!event) throw new AppError('No event found with that ID', 404);
+
+  // Reported back so the caller can tell an admin what they just affected — archiving an
+  // event with paid attendees is legitimate (a cancellation) but should never be silent.
+  const affected = await eventRepository.countReferences(eventId);
+
+  const archived = await eventRepository.archive(eventId);
+  await userRepository.unassignAllFromEvent(eventId);
+
+  return { event: archived, affected };
 };

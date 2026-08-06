@@ -11,9 +11,10 @@ import Search from "@/components/ui/searchbar";
 import EventCard from "./_component/event-card";
 import AssignedEventCard from "./_component/assigned-event-card";
 
-import { useMyEvents } from "@/store/useMyEvents";
+import { useMyEvents, useDeleteEvent } from "@/store/useMyEvents";
 import { useAssignedEvents } from "@/store/useAssignedEvents";
 import { useUser } from "@/store/useUser";
+import { toast } from "sonner";
 
 /**
  * Organiser's event list.
@@ -43,6 +44,34 @@ function MyEventContent() {
   // An admin's list is every event on the platform, not just their own — so the heading and
   // empty state need to say so, otherwise "Events you created" would be plainly wrong.
   const isAdmin = me?.data?.user?.role === "admin";
+
+  const deleteEvent = useDeleteEvent();
+
+  const onArchive = (event: MyEvent) => {
+    // Names the event and states plainly what survives — an admin archiving an event with
+    // paying attendees needs to know it is reversible and that their tickets are not voided.
+    const ok = window.confirm(
+      `Archive "${event.eventName}"?\n\n` +
+        "It will be hidden from listings and from its organiser. Bookings, guests, chat " +
+        "history and the admission audit log are all kept, and it can be restored.",
+    );
+    if (!ok) return;
+
+    deleteEvent.mutate(event._id, {
+      onSuccess: (res: any) => {
+        const a = res?.data?.affected;
+        toast.success(
+          a?.bookings
+            ? `"${event.eventName}" archived — ${a.bookings} booking(s) kept${a.paidBookings ? `, ${a.paidBookings} of them paid` : ""}`
+            : `"${event.eventName}" archived`,
+        );
+      },
+      onError: (err: any) =>
+        toast.error(
+          err?.response?.data?.message ?? "Could not archive that event",
+        ),
+    });
+  };
 
   useEffect(() => {
     if (events) {
@@ -174,7 +203,12 @@ function MyEventContent() {
           ) : (
             <div className="flex flex-col gap-5">
               {myEvents.map((event: MyEvent, i: number) => (
-                <EventCard event={event} key={i} />
+                <EventCard
+                  event={event}
+                  key={i}
+                  canDelete={isAdmin}
+                  onDelete={onArchive}
+                />
               ))}
             </div>
           )}

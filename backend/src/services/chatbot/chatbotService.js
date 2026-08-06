@@ -1,4 +1,5 @@
 import * as llmProvider from './llmProvider.js';
+import { getEventConditions } from '../weatherService.js';
 import * as eventService from '../eventService.js';
 import { faqs } from '../../assets/faqs.js';
 
@@ -17,10 +18,22 @@ import { faqs } from '../../assets/faqs.js';
 // production uses — an eval against a slightly different config wouldn't mean anything.
 export const SYSTEM_PROMPT = `You are the TicketFlow concierge, a helpful assistant for an event
 ticketing platform. You can search for public events, look up details on one specific
-event by its slug, and answer frequently asked questions about how TicketFlow works
-(payment, refunds, missing tickets, etc). Use a tool when the user's question needs real
-data; answer directly for greetings or chit-chat. Never invent event details, prices, or
-dates that a tool didn't return. Keep replies short and conversational.`;
+event by its slug, check the weather and practical advice for an event, and answer
+frequently asked questions about how TicketFlow works (payment, refunds, missing tickets,
+etc).
+
+If the user names an event, search for it first, then use its slug with the detail tools.
+
+For anything about weather, temperature, what to wear, dress code, parking, accessibility,
+age limits, or whether an event is safe to attend, you MUST call get_event_conditions and
+answer only from what it returns. Never guess a forecast, a dress code, or parking
+arrangements — if the tool says no forecast is available, say exactly that. When you pass on
+safety notes, present them as practical attendance advice; never imply they are a crime or
+neighbourhood-safety rating, because TicketFlow has no such data.
+
+Use a tool when the user's question needs real data; answer directly for greetings or
+chit-chat. Never invent event details, prices, or dates that a tool didn't return. Keep
+replies short and conversational.`;
 
 export const TOOLS = [
   {
@@ -42,11 +55,33 @@ export const TOOLS = [
   {
     name: 'get_event_details',
     description:
-      'Get venue, dates, ticket tiers/prices, and refund policy for one specific event by its slug (from a prior search_events result).',
+      'Get venue, dates, ticket tiers/prices, dress code, parking, accessibility and refund policy for one specific event. Give its name directly — you do not need to search first.',
     parameters: {
       type: 'object',
-      properties: { slug: { type: 'string', description: 'The event slug' } },
-      required: ['slug'],
+      properties: {
+        slug: { type: 'string', description: 'The event slug, if known' },
+        name: {
+          type: 'string',
+          description:
+            'The event name as the user said it, if the slug is unknown',
+        },
+      },
+    },
+  },
+  {
+    name: 'get_event_conditions',
+    description:
+      "Weather forecast for an event's location and date, plus what to wear and practical safety notes. Use when asked about weather, temperature, what to wear, dress code, parking, accessibility, or whether an event is safe to attend. Give the event name directly — you do not need to search first.",
+    parameters: {
+      type: 'object',
+      properties: {
+        slug: { type: 'string', description: 'The event slug, if known' },
+        name: {
+          type: 'string',
+          description:
+            'The event name as the user said it, if the slug is unknown',
+        },
+      },
     },
   },
   {
@@ -65,6 +100,23 @@ const summarizeEvent = (event) => ({
   startDate: event.startDate,
 });
 
+/**
+ * Resolves whichever identifier the model supplied to a single event.
+ *
+ * Both detail tools accept a name as well as a slug. Requiring a slug meant the model had to
+ * call search_events first and use the result in a second call — but the loop runs one
+ * function-calling round, so those questions stalled at "let me check…" and never produced
+ * an answer. Resolving the name here keeps it to one round.
+ */
+const resolveEvent = async ({ slug, name }) => {
+  if (slug) return eventService.getEventBySlug(slug);
+  if (!name?.trim()) throw new Error('No event slug or name supplied');
+
+  const [match] = await eventService.searchEvents({ name: name.trim() });
+  if (!match) throw new Error(`No event found matching "${name}"`);
+  return match;
+};
+
 const executeTool = async (name, args = {}) => {
   switch (name) {
     case 'search_events': {
@@ -72,7 +124,7 @@ const executeTool = async (name, args = {}) => {
       return { events: events.map(summarizeEvent) };
     }
     case 'get_event_details': {
-      const event = await eventService.getEventBySlug(args.slug);
+      const event = await resolveEvent(args);
       return {
         name: event.eventName,
         description: event.eventDescription,
@@ -81,12 +133,21 @@ const executeTool = async (name, args = {}) => {
         endDate: event.endDate,
         accessMode: event.accessMode,
         refundPolicy: event.refundPolicy,
+        venueName: event.venueName,
+        dressCode: event.dressCode,
+        parkingInfo: event.parkingInfo,
+        accessibilityInfo: event.accessibilityInfo,
+        ageRestriction: event.ageRestriction,
         ticketTiers: (event.ticketDetails ?? []).map((t) => ({
           name: t.ticketName,
           price: t.ticketPrice,
           available: t.ticketQuantity,
         })),
       };
+    }
+    case 'get_event_conditions': {
+      const event = await resolveEvent(args);
+      return getEventConditions(event);
     }
     case 'answer_faq':
       return { faqs };

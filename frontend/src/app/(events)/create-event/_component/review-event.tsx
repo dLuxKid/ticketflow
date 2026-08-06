@@ -128,6 +128,11 @@ export default function ReviewEvent({
       otherImages: eventData.otherImages,
       accessMode: eventData.accessMode,
       networkingEnabled: eventData.networkingEnabled,
+      venueName: eventData.venueName,
+      dressCode: eventData.dressCode,
+      parkingInfo: eventData.parkingInfo,
+      accessibilityInfo: eventData.accessibilityInfo,
+      ageRestriction: eventData.ageRestriction,
     };
 
     try {

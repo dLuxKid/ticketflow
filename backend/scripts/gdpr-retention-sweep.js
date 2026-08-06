@@ -28,10 +28,13 @@ const run = async () => {
   const DB = process.env.DB;
   if (!DB) throw new Error('DB connection string missing from config.env');
 
-  const retentionDays = Number.parseInt(process.argv[2], 10) || DEFAULT_RETENTION_DAYS;
+  const retentionDays =
+    Number.parseInt(process.argv[2], 10) || DEFAULT_RETENTION_DAYS;
 
   await mongoose.connect(DB);
-  console.warn(`Connected. Sweeping events ended more than ${retentionDays} days ago...`);
+  console.warn(
+    `Connected. Sweeping events ended more than ${retentionDays} days ago...`,
+  );
 
   const result = await sweepExpiredEvents(retentionDays);
 

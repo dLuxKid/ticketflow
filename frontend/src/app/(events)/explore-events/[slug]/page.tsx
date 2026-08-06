@@ -42,6 +42,20 @@ export default async function Event({ params }: Props) {
   if (!data.status) redirect("/explore-events");
   const event: EventDetails = data.data.event;
 
+  // One source of truth for the "Before you go" rows: built once, filtered once, so the
+  // presence check and the render can never disagree about what is shown.
+  const beforeYouGo = (
+    [
+      ["Venue", event.venueName, "M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"],
+      ["Dress code", event.dressCode, "M16 3l-4 3-4-3-5 4 3 3v11h12V10l3-3z"],
+      ["Parking", event.parkingInfo, "M9 17V7h4a3 3 0 0 1 0 6H9M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z"],
+      ["Accessibility", event.accessibilityInfo, "M12 4a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM6 8l6 1 6-1M12 9v5l4 7M12 14l-4 7"],
+      ["Age restriction", event.ageRestriction, "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM9 9h.01M15 9h.01M8 15s1.5 2 4 2 4-2 4-2"],
+    ] as [string, string | undefined, string][]
+  )
+    .filter(([, value]) => value?.trim())
+    .map(([label, value, path]) => ({ label, value, path }));
+
   return (
     <main>
       <Container>
@@ -109,6 +123,48 @@ export default async function Event({ params }: Props) {
                 {event.eventDescription}
               </p>
             </div>
+
+            {/* Rendered only for the fields the organiser actually filled in — an empty
+                "Dress code: —" row tells an attendee nothing and implies the organiser
+                forgot rather than that it simply does not apply. */}
+            {beforeYouGo.length > 0 && (
+              <div className="flex w-full flex-col gap-3">
+                <h4 className="text-lg font-semibold md:text-xl">
+                  Before you go
+                </h4>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {beforeYouGo.map(({ label, value, path }) => (
+                    <div
+                      key={label}
+                      className="flex items-start gap-3 rounded-2xl border border-main-light-grey/70 bg-main-white p-4"
+                    >
+                      <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-main-purple/10 text-main-purple">
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                          className="h-4 w-4"
+                        >
+                          <path d={path} />
+                        </svg>
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block text-sm font-bold text-main-black">
+                          {label}
+                        </span>
+                        <span className="block text-sm leading-relaxed text-sec-black/75">
+                          {value}
+                        </span>
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="flex flex-col gap-2">
               <div className="flex-between gap-4">
                 <p className="text-lg md:text-xl font-semibold">Ticket Type</p>

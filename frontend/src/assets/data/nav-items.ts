@@ -15,11 +15,9 @@ export const nav_items = [
         href: "/create-event",
         description: "Publish an event and sell tickets",
       },
-      {
-        name: "My Events",
-        href: "/my-events",
-        description: "Manage the events you're running",
-      },
+      // "My Events" deliberately lives in the profile menu, not here. It is personal
+      // inventory rather than navigation, and rendering it in the public nav showed
+      // logged-out visitors a link that middleware immediately bounced to /login.
     ],
   },
   {

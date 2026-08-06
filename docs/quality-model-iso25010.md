@@ -1,6 +1,8 @@
 # TicketFlow — Product Quality Evaluation (ISO/IEC 25010)
 
-**Document version:** 1.0 · **Verified against:** branch `dev`, 5 August 2026
+**Document version:** 1.1 · **Verified against:** branch `dev`, 6 August 2026
+
+> **Changes since 1.0.** Test coverage is now measured and quoted in §7 (backend 73.04% lines, frontend 2.22%), with the absence of a failing threshold defended as a decision. §9 Safety is rewritten: venue-capacity enforcement at the door now exists, so the characteristic moves from Weak to Moderate and the remaining gap is occupancy *reporting* rather than enforcement. §6 Security gains the fixed signup privilege-escalation defect.
 
 > **Purpose.** Evaluates TicketFlow against the ISO/IEC 25010 software product quality model, the international standard within the SQuaRE (Systems and software Quality Requirements and Evaluation) series. It supplies the "quality assurance and testing methods **according to international standards**" evidence required by Learning Outcome 3, and the strengths/weaknesses/recommendations depth the Outstanding band expects.
 >
@@ -31,14 +33,14 @@ ISO/IEC 25010 was revised in 2023, superseding the 2011 edition. The characteris
 | # | Characteristic | Evidence strength | Principal gap |
 |---|---|---|---|
 | 1 | Functional Suitability | **Strong** | No formal requirements-to-test traceability matrix |
-| 2 | Performance Efficiency | **Weak** | Design is sound but **nothing is measured** — no load or latency testing |
+| 2 | Performance Efficiency | Moderate | Read paths now measured; write paths and a latency budget still outstanding |
 | 3 | Compatibility | Moderate | No API versioning policy beyond the `/v1` prefix |
 | 4 | Interaction Capability | **Weak → improving** | Accessibility audit covers 2 components; usability testing not yet run |
 | 5 | Reliability | **Strong** | No uptime/error monitoring in production |
 | 6 | Security | **Strong** | No dependency-vulnerability scanning in CI |
-| 7 | Maintainability | **Strong** | Frontend has no unit tests; some dead enum values |
+| 7 | Maintainability | **Strong** | Coverage now measured (backend 73.04% lines); frontend unit coverage is 2.22% |
 | 8 | Flexibility | Moderate | No deployment target configured |
-| 9 | Safety | **Weak** | No venue-capacity enforcement at the door |
+| 9 | Safety | Moderate | Capacity enforced at the door with an auditable override; no evacuation/occupancy reporting |
 
 The pattern is worth stating plainly in the report: quality attributes that are **structurally designed in** (security, reliability, maintainability) are strong, while those requiring **measurement or user contact** (performance, interaction capability) are the weakest. That is a characteristic profile of a developer-led project without a dedicated QA or UX role, and naming it is itself an evaluative observation.
 
@@ -72,9 +74,37 @@ The pattern is worth stating plainly in the report: quality attributes that are 
 | Resource utilisation | Real-time fan-out uses an in-process `EventEmitter` rather than Redis or a broker, appropriate at door-staff scale; QR codes are inlined as data URLs, removing an asset-host round trip per ticket |
 | Capacity | Inventory reservation uses a guarded atomic `$inc`, so throughput is bounded by MongoDB's document-level contention rather than an application lock |
 
-**Weakness — the most significant evidence gap in this document.** None of the above is *measured*. There is no load test, no latency budget, no throughput figure. The design reasoning is sound but unverified, and an unmeasured performance claim is an assumption.
+**Now measured.** `npm run load:test` (`scripts/load-test.sh`, autocannon) exercises the public
+read paths. Measured at **20 concurrent connections for 15s**, against an API backed by a
+**remote MongoDB Atlas cluster** — the network round-trip to that cluster dominates these
+figures, so a co-located database would be materially faster:
 
-**Recommendation.** A single `autocannon` or `k6` run against `POST /bookings/create` and `POST /bookings/scan`, reporting p50/p95 latency and requests/second at a stated concurrency, would convert this from assertion to evidence in well under an hour. Include the SSE connection count the dashboard sustains.
+| Endpoint | req/sec | p50 | p97.5 | p99 | errors |
+|---|---|---|---|---|---|
+| `GET /api/v1/events` (list) | 88.4 | 172 ms | 510 ms | 1009 ms | 0 |
+| `GET /api/v1/events/:slug` (detail) | 51.3 | 345 ms | 542 ms | 567 ms | 0 |
+
+No errors, non-2xx responses or timeouts in 2,096 requests, so the service is stable under
+that load — but the detail endpoint is roughly half the throughput of the list at double the
+p50, which is worth profiling before scaling.
+
+**Weakness — a hard rate-limit ceiling.** The API allowed **100 requests per IP per hour**,
+hardcoded. That is low for this product: one visitor browsing events, opening several detail
+pages and completing a checkout can consume a large share of it in a single sitting, and
+everyone behind shared NAT — a venue's wifi, a corporate network, a mobile carrier — shares
+one budget. It also made load testing impossible, since every run flatlined at 429. It is now
+configurable via `RATE_LIMIT_MAX` / `RATE_LIMIT_WINDOW_MS`, defaulting to the previous values
+so no deployment changes behaviour without opting in.
+
+**Remaining gap.** Write paths (`POST /bookings/create`, `POST /bookings/scan`) are
+deliberately not load tested: they mutate real data, and a run leaving thousands of phantom
+bookings behind would be worse than no measurement. Their *correctness* under concurrency is
+already proven by the integration suite; their *throughput* is not. Measuring them needs a
+disposable database, which is the natural next step.
+
+**Recommendation.** Re-run against a co-located database to separate application cost from
+network cost, set a latency budget (a p95 target) from the result, and extend to the write
+paths once a throwaway database is available.
 
 ---
 
@@ -132,9 +162,14 @@ The pattern is worth stating plainly in the report: quality attributes that are 
 | Integrity | Paystack webhooks verified by HMAC-SHA512 over the **raw** body, so client-reported payment status is never trusted; `reference`, `ticketId` and `event` are all stamped server-side after the client payload is spread, so a caller cannot choose its own admission code or attach to another charge; unique indexes on `ticketId` and `inviteToken` make duplicate credentials unrepresentable |
 | Non-repudiation & accountability | `AuditLog` is append-only, one row per scan attempt — success *or* rejection — recording actor, outcome, reason and device |
 | Authenticity | JWT with `passwordChangedAt` invalidation, so tokens issued before a password change are refused |
-| *(Hardening)* | `helmet`, `express-mongo-sanitize`, `express-xss-sanitizer`, `hpp` with an explicit whitelist, rate limiting at 100 req/hour/IP, credentialed CORS locked to a single origin |
+| Authorisation *(privilege acquisition)* | `SIGNUP_ROLES` restricts self-registration to `user`/`creator`; `admin` is only ever granted, by a root admin or the seed script. `canChangeRole` / `canDeleteUser` refuse self-changes, non-root admins touching `admin`, and demoting or deleting the root admin |
+| *(Hardening)* | `helmet`, `express-mongo-sanitize`, `express-xss-sanitizer`, `hpp` with an explicit whitelist, rate limiting (100 req/hour/IP by default, now configurable, with a tighter limiter on the AI chat endpoint), credentialed CORS locked to a single origin |
 
-**Strength.** Authorisation is defence-in-depth: a coarse role gate at the route, plus fine-grained ownership decisions in the service layer (`authorizeScan`, `canViewDashboard`), each independently unit-tested. An usher is scoped to assigned events only — least privilege, not merely authentication.
+**Strength.** Authorisation is defence-in-depth: a coarse role gate at the route, plus fine-grained ownership decisions in the service layer (`authorizeScan`, `canViewDashboard`, `canChangeRole`), each independently unit-tested. An usher is scoped to assigned events only — least privilege, not merely authentication.
+
+**Defect found and fixed — worth citing explicitly.** `POST /users/signup` spread the request body into the new user document, so `role` was attacker-controlled: **any visitor could register as `admin`** and obtain full access to every event, user and guest list. This is OWASP A01 (Broken Access Control) by mass assignment. It is now filtered through a frozen whitelist, and the fix was confirmed by attempting the escalation against a running server. Recording a found-and-fixed vulnerability of this severity, with the verification step, is stronger evidence of security awareness than a clean report would be.
+
+A second, subtler instance is worth noting alongside it: the guard preventing demotion of the root admin initially could not fire at all, because `isRootAdmin` is `select: false` and the repository method loading the target user did not request it. The guard read `undefined` and silently permitted the action. **A security control that depends on a field the query never loads is not a control** — it is a comment.
 
 **Weakness.** No automated dependency-vulnerability scanning; `npm audit` is not in CI. Given ~40 direct frontend dependencies this is a realistic exposure. The client-side route guard decodes but does not verify the JWT signature — correct as a UX layer, but it must be documented as such so no one later mistakes it for a control.
 
@@ -150,13 +185,16 @@ The pattern is worth stating plainly in the report: quality attributes that are 
 | Reusability | `authorizeScan` is reused verbatim by both the QR scanner and the manual check-in path, so the two cannot drift apart in who they permit |
 | Analysability | `AuditLog` reconstructs door history; centralised `AppError` and error handler; ESLint 9 + Prettier enforced in CI |
 | Modifiability | The repository layer is the only Mongoose caller, so the persistence library could be replaced without touching business logic |
-| Testability | Services take no `req`/`res` and return plain data, which is precisely why authorisation logic is unit-testable with neither HTTP nor a database |
+| Testability | Services take no `req`/`res` and return plain data, which is precisely why authorisation logic is unit-testable with neither HTTP nor a database — 154 backend unit tests run with no database at all |
+| Test coverage *(measured)* | Backend **73.04% lines / 84.83% branches / 35.39% functions**; frontend **2.22% lines**. Emitted as lcov by `npm run test:coverage` in both packages and archived by CI |
 
-**Strength.** Testability is a *consequence* of the modularity decision rather than an afterthought — the clearest demonstration in the codebase that architecture choices were made for reasons.
+**Strength.** Testability is a *consequence* of the modularity decision rather than an afterthought — the clearest demonstration in the codebase that architecture choices were made for reasons. The measured figures corroborate it: the layers designed as pure functions are the layers with high branch coverage.
 
-**Weakness.** The frontend has no unit or component tests at all (Playwright E2E only), so React logic is unverified. `Booking.status` declares two unreachable values (`scanned`, `rejected`) — a maintenance trap for the next developer.
+**Weakness.** Frontend unit coverage is **2.22%** — only two components have Vitest specs, with the rest of the UI covered by Playwright end-to-end runs that contribute nothing to a V8 unit-coverage report. Backend function coverage (35.39%) is similarly depressed because controllers, repositories and adapters are reached only by the integration suite, which is excluded from the coverage run. `Booking.status` also declares two unreachable values (`scanned`, `rejected`) — a maintenance trap for the next developer.
 
-**Recommendation.** Add Vitest + React Testing Library for the checkout state logic and form validation. Either implement or remove the unreachable enum values.
+**Deliberate omission worth defending.** Neither package declares a **failing coverage threshold**. A minimum set before the baseline is known either sits low enough to assert nothing or breaks the build on day one; in both cases it measures the threshold rather than the code. Publishing the number first and setting a floor under it once it is trusted is the defensible order, and CI marks the coverage step `continue-on-error` to make that stance explicit rather than accidental.
+
+**Recommendation.** Merge integration-run coverage into the same lcov report so the published figure reflects the suite that actually exercises the outer layers, extend Vitest to checkout validation and `usePaystack` state handling, then set thresholds just under the resulting numbers. Either implement or remove the unreachable enum values.
 
 ---
 
@@ -180,13 +218,16 @@ The pattern is worth stating plainly in the report: quality attributes that are 
 
 | Sub-characteristic | Evidence |
 |---|---|
-| Operational constraint | **None currently.** Nothing prevents admitting guests beyond the venue's safe occupancy |
-| Hazard warning | Not implemented |
+| Operational constraint | `Event.venueCapacity` is enforced at the door by `admissionService.capacityDecision`, evaluated **inside** the admission transaction so two scanners at capacity − 1 cannot both admit |
+| Hazard warning | The live dashboard exposes `remaining`, `atCapacity` and `capacitySource`, so an organiser sees capacity approaching rather than learning about it from a queue outside |
 | Fail-safe | Reservation expiry returns seats rather than stranding inventory — a commercial rather than physical safety property |
+| Accountability | Exceeding capacity requires a deliberate per-scan `overrideCapacity: true` after a 409 — not a sticky mode — and is recorded on the audit row as `reason: 'capacity_override'` |
 
-**Weakness.** A door scanner that admits without limit is a genuine physical-safety concern: venue occupancy limits exist in fire-safety regulation, and a system that silently exceeds them contributes to a hazard. For an assessment explicitly examining social, legal and ethical awareness, this is a substantive gap rather than a missing feature.
+**Strength.** This is the clearest example in the system of a **stop-and-confirm rather than a hard block**, and the reasoning is defensible in both directions: refusing outright would strand a paying guest at the door with no recourse, while admitting silently would defeat the safety purpose entirely. Requiring an explicit, logged decision keeps a named human accountable for the trade-off — which is what fire-safety regulation actually assumes exists. A field left blank means *unlimited* rather than *zero*, so an organiser who never entered a capacity is not accidentally locked out of their own door.
 
-**Recommendation.** Enforce capacity at the door: warn the scanner as admissions approach the event's capacity and require explicit override beyond it, with the override recorded in the audit log. This connects the existing live admitted-count, the atomic check-in and a real legal obligation into one defensible design decision — strong material for both the BCS/ethics discussion and the "advanced concepts" criterion.
+**Weakness.** Capacity is enforced but not *reported on*: there is no occupancy history or evacuation-support view, so the system can prove who was admitted but cannot readily answer "how many people are inside right now" after the fact. Nothing decrements on exit, since the system has no concept of leaving.
+
+**Recommendation.** Add an occupancy timeline to the dashboard and an exit-scan mode, so the admitted count reflects people present rather than people who arrived. That is the difference between an attendance record and a safety instrument.
 
 ---
 

@@ -161,6 +161,68 @@ export function EventDetails({
         </div>
       </div>
 
+      {/* Practical details attendees ask about before travelling. All optional: an organiser
+          who fills none of them ends up with exactly the event they had before these existed.
+          The chatbot reads these directly, so anything stated here is what it answers with —
+          which is why they are plain free text rather than fixed options that would not suit
+          every kind of event. */}
+      <div className="w-full">
+        <p className="text-sm font-semibold text-main-black mb-1">
+          Attendee information{" "}
+          <span className="font-normal text-main-black/50">(optional)</span>
+        </p>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {(
+            [
+              {
+                key: "venueName",
+                label: "Venue name",
+                placeholder: "The Roundhouse, Main Hall",
+              },
+              {
+                key: "dressCode",
+                label: "Dress code",
+                placeholder: "Smart casual — no sportswear",
+              },
+              {
+                key: "parkingInfo",
+                label: "Parking",
+                placeholder: "Underground car park, £8 flat rate",
+              },
+              {
+                key: "accessibilityInfo",
+                label: "Accessibility",
+                placeholder: "Step-free access, accessible toilets",
+              },
+              {
+                key: "ageRestriction",
+                label: "Age restriction",
+                placeholder: "18+ — photo ID required",
+              },
+            ] as const
+          ).map((field) => (
+            <label key={field.key} className="flex flex-col gap-1">
+              <span className="text-xs font-semibold text-main-black/80">
+                {field.label}
+              </span>
+              <input
+                type="text"
+                name={field.key}
+                value={eventData[field.key]}
+                placeholder={field.placeholder}
+                onChange={(e) =>
+                  setEventData((prev) => ({
+                    ...prev,
+                    [field.key]: e.target.value,
+                  }))
+                }
+                className="rounded-md border border-main-light-grey bg-sec-grey px-3 py-2.5 text-sm text-main-black transition-colors focus:border-main-purple/50 focus:outline-none"
+              />
+            </label>
+          ))}
+        </div>
+      </div>
+
       {/* Guest networking opt-out. A real checkbox rather than a styled div so it is
           keyboard-operable and announced with its checked state; the label wraps the input
           so the whole card is a hit target. */}

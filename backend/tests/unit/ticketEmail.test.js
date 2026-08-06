@@ -1,9 +1,5 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-// Explicit import rather than the global: this project's ESLint config does not register
-// Node globals, so bare `Buffer` fails no-undef (see the same pre-existing error in
-// paystack.js).
-import { Buffer } from 'node:buffer';
 import pdfTemplate from '../../src/shared/utils/document.js';
 import generateQRCode, {
   generateQRCodeBuffer,

@@ -108,3 +108,10 @@ export const findByResetToken = (hashedToken) =>
  */
 export const findAll = () =>
   User.find().select('+role +isRootAdmin').sort('name');
+
+/** Clears an archived event from every usher's assignments — see eventService.deleteEvent. */
+export const unassignAllFromEvent = (eventId) =>
+  User.updateMany(
+    { assignedEvents: eventId },
+    { $pull: { assignedEvents: eventId } },
+  );

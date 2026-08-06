@@ -172,6 +172,29 @@ export default function MobileNav({ data }: NavProps) {
                 {openProfile && (
                   <div className="bg-main-white p-4 rounded-sm border-[.5px] border-main-purple/30 w-full max-w-screen-nav duration-200 transition flex mt-4">
                     <ul className="flex-center flex-col gap-4 w-full">
+                      {/* Same reasoning as the desktop menu: personal inventory belongs with
+                          the account, not in the public nav where logged-out visitors were
+                          shown links that middleware bounced to /login. */}
+                      {(
+                        [
+                          ["/my-events", "My events"],
+                          ["/my-profile/tickets", "My tickets"],
+                        ] as [string, string][]
+                      ).map(([href, label]) => (
+                        <li key={href}>
+                          <Link
+                            href={href}
+                            onClick={() => setOpenNav(false)}
+                            className={`nav-text hover:text-main-purple ${
+                              pathname === href
+                                ? "text-main-purple"
+                                : "text-sec-black"
+                            }`}
+                          >
+                            {label}
+                          </Link>
+                        </li>
+                      ))}
                       <li>
                         <Link
                           href={"/my-profile"}
@@ -195,8 +218,8 @@ export default function MobileNav({ data }: NavProps) {
                 )}
               </div>
             ) : (
-              <Link href={"/login"}>
-                <Button title="get started">Get Started</Button>
+              <Link href={"/signup"}>
+                <Button title="become an organiser">Become an Organiser</Button>
               </Link>
             )}
           </li>

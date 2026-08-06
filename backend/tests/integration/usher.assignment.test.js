@@ -43,7 +43,11 @@ if (skipReason) {
   });
 
   test('assigning a user by email promotes them to usher for that event', async () => {
-    const usher = await usherService.assignUsher(event._id, plainUser.email, owner);
+    const usher = await usherService.assignUsher(
+      event._id,
+      plainUser.email,
+      owner,
+    );
     assert.equal(usher.role, 'usher');
 
     const list = await usherService.listUshers(event._id, owner);
@@ -52,7 +56,11 @@ if (skipReason) {
 
   test('the newly-assigned usher can actually authorize a scan for this event (closes the loop with Phase 2)', async () => {
     const refreshed = await User.findById(plainUser._id).select('+role');
-    const actor = { _id: refreshed._id, role: refreshed.role, assignedEvents: refreshed.assignedEvents };
+    const actor = {
+      _id: refreshed._id,
+      role: refreshed.role,
+      assignedEvents: refreshed.assignedEvents,
+    };
 
     const booking = await Booking.create({
       event: event._id,
@@ -87,7 +95,12 @@ if (skipReason) {
 
   test('assigning an email with no account gives a clear 404, not a crash', async () => {
     await assert.rejects(
-      () => usherService.assignUsher(event._id, 'no-such-account@example.com', owner),
+      () =>
+        usherService.assignUsher(
+          event._id,
+          'no-such-account@example.com',
+          owner,
+        ),
       (err) => err.statusCode === 404,
     );
   });
@@ -95,6 +108,9 @@ if (skipReason) {
   test('unassigning removes door access', async () => {
     await usherService.unassignUsher(event._id, plainUser._id, owner);
     const list = await usherService.listUshers(event._id, owner);
-    assert.equal(list.some((u) => u.email === plainUser.email), false);
+    assert.equal(
+      list.some((u) => u.email === plainUser.email),
+      false,
+    );
   });
 }

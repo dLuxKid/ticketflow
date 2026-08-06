@@ -146,8 +146,28 @@ const eventSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    // Soft delete, mirroring User.isActive. Deletion is never destructive here: an event is
+    // referenced by bookings (including paid ones), guests, audit logs and chat messages, so
+    // removing the document would invalidate real tickets and destroy the admission record
+    // that GDPR retention and any payment dispute depend on. Archiving hides it everywhere
+    // while keeping all of that intact, and is reversible.
+    isActive: {
+      type: Boolean,
+      default: true,
+      select: false,
+    },
+    deletedAt: { type: Date, select: false },
     refundPolicy: { type: String, default: 'No refunds' },
     additionalComments: { type: String },
+    // Practical details attendees ask about before arriving. All optional — an organiser
+    // filling none of them leaves the event exactly as it behaved before these existed.
+    // The chatbot reads these directly (chatbotService.get_event_details) so its answers
+    // come from what the organiser actually stated rather than from a model's guess.
+    venueName: { type: String, trim: true },
+    dressCode: { type: String, trim: true },
+    parkingInfo: { type: String, trim: true },
+    accessibilityInfo: { type: String, trim: true },
+    ageRestriction: { type: String, trim: true },
     // Sales dates only apply to events that actually sell tickets. An invite_only event
     // has no tickets and no checkout, so these are required only when the event is not
     // invite_only (public/hybrid). Required-as-a-function evaluates per-document at save.
@@ -228,6 +248,15 @@ eventSchema.virtual('isLive').get(function () {
   if (new Date(this.startDate) > now) return 'upcoming';
   if (now <= endOfDay(this.endDate)) return 'live';
   return 'past';
+});
+
+// Archived events disappear from every query that does not explicitly ask for them — the
+// same mechanism userModel uses. `$ne: false` rather than `true` so the thousands of events
+// created before this field existed (which store nothing) keep showing.
+eventSchema.pre(/^find/, function (next) {
+  if (this.getOptions?.().includeArchived) return next();
+  this.find({ isActive: { $ne: false } });
+  next();
 });
 
 eventSchema.pre('save', function (next) {

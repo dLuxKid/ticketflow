@@ -35,5 +35,7 @@ router.get('/:id', userController.getUser);
 // Promotion/demotion. The only API path that can grant `admin`, which is why it sits behind
 // the admin gate above and refuses self-changes and root demotion in the service layer.
 router.patch('/:id/role', userController.updateUserRole);
+// Deactivates rather than removes — see userService.deleteUser.
+router.delete('/:id', userController.deleteUser);
 
 export default router;

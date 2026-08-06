@@ -55,6 +55,23 @@ export const getAssignedEvents = catchAsync(async (req, res) => {
   });
 });
 
+/**
+ * Archives an event. Admin-only. Reports what the archive affected so the caller can warn an
+ * admin who has just hidden an event with paid attendees.
+ */
+export const deleteEvent = catchAsync(async (req, res) => {
+  const { event, affected } = await eventService.deleteEvent(
+    req.params.eventId,
+    req.user,
+  );
+
+  res.status(200).json({
+    status: 'success',
+    message: `"${event.eventName}" has been archived`,
+    data: { affected },
+  });
+});
+
 export const getEvent = catchAsync(async (req, res) => {
   const event = await eventService.getEventBySlug(req.params.slug);
 

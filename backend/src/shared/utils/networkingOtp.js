@@ -1,7 +1,4 @@
 import crypto from 'crypto';
-// Explicit import rather than the global: this project's ESLint config registers no Node
-// globals, so a bare `Buffer` trips no-undef (same treatment as tests/unit/ticketEmail.test.js).
-import { Buffer } from 'node:buffer';
 
 /**
  * One-time codes for guest access to an event's networking channel.

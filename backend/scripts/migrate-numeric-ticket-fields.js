@@ -48,12 +48,10 @@ const run = async () => {
       maximumBuyingLimit: toNumber(t.maximumBuyingLimit, 1) || 1,
     }));
 
-    const changed = JSON.stringify(ticketDetails) !== JSON.stringify(event.ticketDetails);
+    const changed =
+      JSON.stringify(ticketDetails) !== JSON.stringify(event.ticketDetails);
     if (changed) {
-      await events.updateOne(
-        { _id: event._id },
-        { $set: { ticketDetails } },
-      );
+      await events.updateOne({ _id: event._id }, { $set: { ticketDetails } });
       updated += 1;
     }
   }

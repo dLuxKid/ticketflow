@@ -26,6 +26,11 @@ type EventDetails = {
   eventDescription: string;
   eventLocation: locationData;
   eventCategory: string;
+  venueName?: string;
+  dressCode?: string;
+  parkingInfo?: string;
+  accessibilityInfo?: string;
+  ageRestriction?: string;
   socialMediaLinks: socialMediaURLs;
   ticketDetails: TicketDetail[];
   totalQuantity: number;

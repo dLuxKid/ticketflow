@@ -1,6 +1,8 @@
 # TicketFlow — Design Models
 
-**Document version:** 1.0 · **Verified against:** branch `dev`, 5 August 2026
+**Document version:** 1.1 · **Verified against:** branch `dev`, 6 August 2026
+
+> **Added in 1.1.** §6 — event lifecycle and archival state machine (derived `isLive`, soft-delete transition). §7 — sequence diagram for guest access to Meet and Greet by emailed one-time code.
 
 > Companion to [`technical-documentation.md`](technical-documentation.md), which carries the architecture overview and entity-relationship model. This document adds the **behavioural and structural** models — state machines, interaction sequences and package structure — so the design evidence spans several modelling techniques rather than one family.
 >
@@ -14,8 +16,8 @@
 | Data-flow diagram | Functional / process | `data-flow-diagram.md` |
 | Architecture / deployment diagram | Structural | `architecture-diagram.md`, `technical-documentation.md` §3 |
 | Entity-relationship diagram | Data | `technical-documentation.md` §4 |
-| **State machine diagram** | **Behavioural** | **§1 below** |
-| **Sequence diagram** | **Behavioural / interaction** | **§2–3 below** |
+| **State machine diagram** | **Behavioural** | **§1 and §6 below** |
+| **Sequence diagram** | **Behavioural / interaction** | **§2–3 and §7 below** |
 | **Package & class diagram** | **Structural** | **§4–5 below** |
 
 ---
@@ -297,4 +299,101 @@ classDiagram
 
 ---
 
-*Derived from branch `dev` on 5 August 2026. Diagrams render natively in GitHub, VS Code and the published artifact; export as PNG/SVG via the Mermaid Live Editor for pasting into the Word submission.*
+## 6. State machine — event lifecycle and archival
+
+An event's visible state is **derived, not stored**: `isLive` is computed from `startDate`, `endDate` and the current time. Only archival is a persisted transition.
+
+```mermaid
+stateDiagram-v2
+    [*] --> upcoming : created
+    upcoming --> live : startDate reached
+    live --> past : end of endDate
+    upcoming --> archived : admin DELETE
+    live --> archived : admin DELETE
+    past --> archived : admin DELETE
+    archived --> upcoming : isActive restored
+    archived --> [*]
+
+    note right of live
+        isLive is computed, never written.
+        The window runs to the END OF DAY
+        of endDate — a single-day event
+        (startDate == endDate) previously
+        produced a zero-length window and
+        was never live.
+    end note
+
+    note right of archived
+        isActive: false + deletedAt.
+        A pre(/^find/) hook hides it from
+        every query. NOTHING is deleted:
+        bookings (including paid ones),
+        guests, chat messages and audit
+        rows all survive, so the state is
+        fully reversible.
+        Ushers ARE unassigned — a scan
+        scope on a hidden event is
+        meaningless.
+    end note
+```
+
+The derived-versus-stored distinction is the design point. A stored `status` field would need a scheduler to advance it and would be wrong between ticks; computing it means the answer is correct by construction. The cost is that the computation exists in two places — server and client — and must agree, which is exactly how the zero-length-window defect stayed invisible until a single-day event was created.
+
+---
+
+## 7. Sequence — guest access to Meet and Greet by one-time code
+
+The problem this solves: most attendees have **no account**. A guest checkout or an emailed invite captures only a name and an email, so gating the attendee network on login would exclude the majority of the people it exists to connect. Authorisation is instead *proof of control over the email address on a booking*.
+
+```mermaid
+sequenceDiagram
+    participant G as Guest (no account)
+    participant F as Frontend
+    participant A as API
+    participant S as networkingGuestService
+    participant M as Mail
+
+    G->>F: Join the Meet and Greet
+    F->>A: POST /events/:id/network/guest/request { email }
+    A->>S: requestGuestAccess
+    S->>S: look up a valid booking for (event, email)
+
+    alt booking found
+        S->>S: generateOtp() — crypto.randomInt, 6 digits
+        S->>S: store SHA-256(code) + expiry (10 min)
+        S->>M: email the plaintext code
+    else no booking
+        S->>S: do nothing
+    end
+
+    S-->>A: { sent } (for logs/tests only)
+    A-->>F: 200 — IDENTICAL response either way
+    Note over A,F: The response must not reveal whether<br/>an address holds a ticket, or the endpoint<br/>becomes an attendee-enumeration oracle.
+
+    G->>F: enter the 6-digit code
+    F->>A: POST /events/:id/network/guest/verify { email, code }
+    A->>S: verifyGuestAccess
+    S->>S: compare SHA-256 with crypto.timingSafeEqual
+    S->>S: reject if expired or already used
+
+    alt valid
+        S->>S: find or create the attendee's User identity
+        S-->>A: { token, user }
+        A-->>F: session cookie
+        F->>A: GET /events/:id/network/stream (ordinary auth)
+    else invalid
+        S-->>A: generic failure
+        A-->>F: 401 — same message for wrong and expired
+    end
+```
+
+Four decisions in this flow are worth defending in the report:
+
+1. **Identical responses on request.** Differentiating "code sent" from "no such ticket" would turn the endpoint into a way to test whether any given person is attending — a privacy leak, not merely an information leak.
+2. **Only the hash is stored,** with a 10-minute TTL, mirroring the password-reset design already in the codebase rather than inventing a second convention.
+3. **`timingSafeEqual`, not `===`.** Over a 6-digit space, a timing side-channel is a realistic rather than theoretical concern.
+4. **Verification mints an *ordinary* session.** From that point the guest travels exactly the same authorisation paths as a registered attendee. The alternative — a parallel "guest permission" model — would be a second implementation of the same rules, free to drift out of agreement with the first.
+
+---
+
+*Derived from branch `dev` on 6 August 2026. Diagrams render natively in GitHub, VS Code and the published artifact; export as PNG/SVG via the Mermaid Live Editor for pasting into the Word submission.*

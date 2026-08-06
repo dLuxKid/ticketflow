@@ -70,5 +70,7 @@ if (misclassified.length > 0) {
   console.log(
     'catch it but risks flagging legitimate late staff re-checks as false positives — a',
   );
-  console.log('precision/recall trade-off documented here rather than silently tuned away.');
+  console.log(
+    'precision/recall trade-off documented here rather than silently tuned away.',
+  );
 }

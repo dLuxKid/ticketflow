@@ -1,6 +1,5 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import mongoose from 'mongoose';
 import Event from '../../src/models/eventModel.js';
 import Booking from '../../src/models/bookingModel.js';
 import * as dashboardService from '../../src/services/dashboardService.js';
@@ -66,7 +65,10 @@ if (skipReason) {
     const snap = await dashboardService.getSnapshot(event._id);
     // Only the 'issued' booking from the before() seed is pending (not yet admitted).
     assert.equal(snap.noShow.pendingCount, 1);
-    assert.ok(snap.noShow.averageProbability >= 0 && snap.noShow.averageProbability <= 1);
+    assert.ok(
+      snap.noShow.averageProbability >= 0 &&
+        snap.noShow.averageProbability <= 1,
+    );
     assert.ok(Number.isInteger(snap.noShow.expectedNoShows));
   });
 }

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { SIGNUP_ROLES } from '../../src/services/authService.js';
 import {
   canChangeRole,
+  canDeleteUser,
   ASSIGNABLE_ROLES,
 } from '../../src/services/userService.js';
 
@@ -87,4 +88,41 @@ test('every assignable role is a real schema role', () => {
     'user',
     'usher',
   ]);
+});
+
+// ── Deletion guards ─────────────────────────────────────────────────────────────
+// Deletion is deactivation, not removal — events, bookings and audit-log entries survive.
+// The guards mirror canChangeRole because the failure modes are the same: an admin removing
+// the last admin, or the root recovery account being destroyed.
+
+test('an admin can delete an ordinary user', () => {
+  assert.deepEqual(canDeleteUser(admin, target), { ok: true });
+});
+
+test('non-admins cannot delete anyone', () => {
+  for (const role of ['user', 'creator', 'usher']) {
+    const decision = canDeleteUser({ _id: 'x', role }, target);
+    assert.equal(decision.ok, false, `${role} should be refused`);
+    assert.equal(decision.status, 403);
+  }
+});
+
+test('an admin cannot delete their own account from the directory', () => {
+  const decision = canDeleteUser(admin, { ...admin });
+  assert.equal(decision.ok, false);
+  assert.equal(decision.status, 403);
+  assert.match(decision.message, /your own account/i);
+});
+
+test('the root administrator cannot be deleted', () => {
+  const root = { _id: 'root1', role: 'admin', isRootAdmin: true };
+  const decision = canDeleteUser(admin, root);
+  assert.equal(decision.ok, false);
+  assert.match(decision.message, /root administrator/i);
+});
+
+test('deleting a missing user reports not-found', () => {
+  const decision = canDeleteUser(admin, null);
+  assert.equal(decision.ok, false);
+  assert.equal(decision.status, 404);
 });

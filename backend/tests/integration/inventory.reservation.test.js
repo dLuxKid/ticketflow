@@ -14,7 +14,11 @@ import { connect, disconnect, buildEvent, skipReason } from '../helpers/db.js';
  */
 
 if (skipReason) {
-  test('inventory reservation (DB integration)', { skip: skipReason }, () => {});
+  test(
+    'inventory reservation (DB integration)',
+    { skip: skipReason },
+    () => {},
+  );
 } else {
   let eventId;
 
@@ -42,7 +46,11 @@ if (skipReason) {
     const fresh = await Event.findById(eventId);
     const tier = fresh.ticketDetails.find((t) => t.ticketName === 'General');
     assert.equal(tier.ticketQuantity, 0, 'quantity must not go negative');
-    assert.equal(fresh.numberOfAttendees, 1, 'attendee count reflects one sale');
+    assert.equal(
+      fresh.numberOfAttendees,
+      1,
+      'attendee count reflects one sale',
+    );
   });
 
   test('reservation for more tickets than remain fails without mutating', async () => {
@@ -63,6 +71,10 @@ if (skipReason) {
 
     const fresh = await Event.findById(event._id);
     const tier = fresh.ticketDetails.find((t) => t.ticketName === 'General');
-    assert.equal(tier.ticketQuantity, 2, 'quantity unchanged on failed reserve');
+    assert.equal(
+      tier.ticketQuantity,
+      2,
+      'quantity unchanged on failed reserve',
+    );
   });
 }

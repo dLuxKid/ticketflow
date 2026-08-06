@@ -16,6 +16,8 @@ the other two documents.
 | 6.0 Report live arrivals | `dashboardService`, `admissionBus` |
 | 7.0 Analyse | `anomalyReportService`, `anomalyService`, `noShowService`, `nlGuestQueryService` |
 | 8.0 Retain & erase PII | `retentionService` |
+| 9.0 Connect attendees (Meet and Greet) | `networkingService`, `networkingGuestService`, `networkingBus` |
+| 10.0 Answer questions (AI concierge) | `chatbotService`, `llmProvider`, `weatherService` |
 
 ---
 
@@ -31,11 +33,13 @@ graph LR
     MAIL(["Email service<br/>Gmail SMTP"])
     CLD(["Cloudinary"])
     SCH(["Retention scheduler"])
+    LLM(["LLM provider<br/>OpenAI / Gemini"])
+    MET(["Open-Meteo"])
 
     SYS(("0<br/>TicketFlow<br/>system"))
 
-    ATT -->|"credentials, ticket selection,<br/>buyer name & email"| SYS
-    SYS -->|"event listings, PDF ticket + QR,<br/>booking record"| ATT
+    ATT -->|"credentials, ticket selection,<br/>buyer name & email,<br/>chat questions, access code,<br/>chat messages"| SYS
+    SYS -->|"event listings, PDF ticket + QR,<br/>booking record, chatbot answers,<br/>Meet and Greet messages"| ATT
 
     ORG -->|"event details, cover image,<br/>guest CSV, NL question"| SYS
     SYS -->|"guest list, live arrivals,<br/>anomaly flags, no-show scores"| ORG
@@ -43,13 +47,19 @@ graph LR
     USH -->|"scanned code, deviceId, ip"| SYS
     SYS -->|"admit / reject verdict"| USH
 
-    ADM -->|"user administration requests"| SYS
-    SYS -->|"user records, any event's dashboard"| ADM
+    ADM -->|"user administration requests,<br/>role change, archive event"| SYS
+    SYS -->|"all users, all events,<br/>any event's dashboard"| ADM
 
     SYS -->|"checkout amount + reference"| PAY
     PAY -.->|"HMAC-signed webhook"| SYS
 
-    SYS -->|"ticket, invite and reset emails"| MAIL
+    SYS -->|"user question + event context<br/>(NO guest lists, NO PII)"| LLM
+    LLM -->|"answer or tool call"| SYS
+
+    SYS -->|"venue place name, event date"| MET
+    MET -->|"coordinates + daily forecast"| SYS
+
+    SYS -->|"ticket, invite, reset and<br/>Meet-and-Greet access-code emails"| MAIL
     SYS -->|"cover image"| CLD
     CLD -->|"hosted image URL"| SYS
 
@@ -71,6 +81,8 @@ graph TB
     MAIL(["Email service"])
     CLD(["Cloudinary"])
     SCH(["Retention scheduler"])
+    LLM(["LLM provider"])
+    MET(["Open-Meteo"])
 
     P1(("1.0<br/>Manage identity<br/>& access"))
     P2(("2.0<br/>Publish &<br/>manage events"))
@@ -80,6 +92,8 @@ graph TB
     P6(("6.0<br/>Report live<br/>arrivals"))
     P7(("7.0<br/>Analyse"))
     P8(("8.0<br/>Retain &<br/>erase PII"))
+    P9(("9.0<br/>Connect attendees<br/>Meet and Greet"))
+    P10(("10.0<br/>Answer questions<br/>AI concierge"))
 
     D1[("D1 users")]
     D2[("D2 events")]
@@ -87,6 +101,7 @@ graph TB
     D4[("D4 guests")]
     D5[("D5 auditlogs")]
     D6[("D6 no-show model<br/>ml/no_show/model.json")]
+    D7[("D7 messages")]
 
     %% 1.0
     ATT -->|"signup / login credentials"| P1
@@ -172,7 +187,41 @@ graph TB
     P8 -->|"name/email overwritten, erasedAt set"| D4
     P8 -->|"name/email/ticketUser overwritten,<br/>piiErasedAt set"| D3
     P8 -->|"erasure counts"| SCH
+
+    %% 9.0
+    ATT -->|"email address for this event"| P9
+    D3 -->|"is there a valid booking<br/>for (event, email)?"| P9
+    P9 -->|"networkingOtpHash (SHA-256)<br/>+ networkingOtpExpires (10 min)"| D3
+    P9 -->|"plaintext code"| MAIL
+    ATT -->|"6-digit code"| P9
+    P9 -->|"ordinary session (JWT)"| ATT
+    D2 -->|"networkingEnabled, isLive"| P9
+    P9 -->|"public message / DM"| D7
+    D7 -->|"channel history, DM thread"| P9
+    D1 -->|"opted-in attendee directory"| P9
+    P9 -->|"directory + SSE stream<br/>via networkingBus"| ATT
+
+    %% 10.0
+    ATT -->|"question in natural language"| P10
+    D2 -->|"event name, date, venue, dressCode,<br/>parking, accessibility, ageRestriction"| P10
+    P10 -->|"question + event context<br/>(no guest data ever)"| LLM
+    LLM -->|"answer or tool call"| P10
+    P10 -->|"venue place name + date"| MET
+    MET -->|"coordinates + daily forecast"| P10
+    P10 -->|"answer, dress-code and<br/>attendance advice"| ATT
 ```
+
+**Two boundaries in this level are deliberate and worth defending.**
+
+**9.0 reads D3 but never returns it.** The access-code request asks D3 whether a booking
+exists for `(event, email)` and answers the *caller* identically either way — a differentiated
+response would turn the endpoint into a way to test whether any named person is attending.
+The store is consulted; its contents do not cross the boundary.
+
+**10.0 never touches D3, D4 or D5.** The concierge reads event descriptions from D2 and
+nothing else, so no guest list, booking, buyer email or scan record is ever transmitted to a
+third-party model. That is a data-protection property enforced by which flows exist in the
+diagram, not by prompt instructions asking a model to behave.
 
 ---
 
@@ -227,12 +276,13 @@ admitted booking cannot exist without its audit row. Both facts depend on a repl
 
 | Store | Collection | Key elements | Written by | Read by |
 |---|---|---|---|---|
-| D1 | `users` | name, email, password hash, role, `assignedEvents`, reset token | 1.0, 4.0 | 1.0, 4.0, 5.0 |
-| D2 | `events` | eventName, slug, start/endDate, location, `ticketDetails[]`, `accessMode`, creator, coverImage, numberOfAttendees | 2.0, 3.0 | 2.0, 3.0, 4.0, 6.0, 8.0 |
-| D3 | `bookings` | event, user, name, email, price, ticketId, `inviteToken` (select:false), `source`, `status`, `transactionStatus`, reference, `piiErasedAt` | 3.0, 4.0, 5.0, 8.0 | 3.0, 5.0, 6.0, 7.0, 8.0 |
+| D1 | `users` | name, email, password hash, role, `isRootAdmin` (select:false), `assignedEvents`, `isActive`, reset token | 1.0, 4.0 | 1.0, 4.0, 5.0, 9.0 |
+| D2 | `events` | eventName, slug, start/endDate, location, `ticketDetails[]`, `accessMode`, `venueCapacity`, `networkingEnabled`, venueName, dressCode, parkingInfo, accessibilityInfo, ageRestriction, creator, coverImage, `isActive`/`deletedAt` | 2.0, 3.0 | 2.0, 3.0, 4.0, 6.0, 8.0, 9.0, 10.0 |
+| D3 | `bookings` | event, user, name, email, price, ticketId, `inviteToken` (select:false), `source`, `status`, `transactionStatus`, reference, `networkingOtpHash`/`networkingOtpExpires`, `piiErasedAt` | 3.0, 4.0, 5.0, 8.0, 9.0 | 3.0, 5.0, 6.0, 7.0, 8.0, 9.0 |
 | D4 | `guests` | event, name, email, vip, plusOnes, booking, `erasedAt` | 4.0, 8.0 | 4.0, 7.0, 8.0 |
 | D5 | `auditlogs` | event, booking, actor, outcome, reason, deviceId, ip, createdAt | 5.0 | 6.0, 7.0 |
 | D6 | `ml/no_show/model.json` | mean, std, coef, intercept | offline (`ml/no_show/train.py`) | 7.0 |
+| D7 | `messages` | event, sender, recipient (null = public channel), body, createdAt | 9.0 | 9.0 |
 
 ## Notes on flows carrying personal data
 
@@ -255,3 +305,15 @@ admitted booking cannot exist without its audit row. Both facts depend on a repl
   `canViewDashboard` check, the same owner/admin rule as 6.0.
 - **Passwords never leave 1.0.** Only the bcrypt hash enters D1, and the JWT returned to the
   actor carries no credential material.
+- **Access codes follow the password-reset pattern rather than inventing a second one.** Only
+  `SHA-256(code)` enters D3, with a 10-minute expiry, and verification uses
+  `crypto.timingSafeEqual`. The plaintext exists only in the email.
+- **D7 is a PII store that the retention sweep does not currently reach.** Chat messages are
+  attendee-authored free text attached to a named sender, so they can contain anything a
+  person chose to type. 8.0 anonymises D3 and D4 but not D7 — a real gap to state rather than
+  omit, and the natural next step for the retention design.
+- **Archival (`isActive: false` on D1/D2) is not erasure and must not be described as such.**
+  It hides records from queries while every byte remains; only 8.0 overwrites data. Conflating
+  the two would misrepresent the system's GDPR position.
+- **No flow carries D3, D4, D5 or D7 to the LLM provider.** 10.0 reads event descriptions from
+  D2 only. The absence of that edge in the Level 1 diagram *is* the control.

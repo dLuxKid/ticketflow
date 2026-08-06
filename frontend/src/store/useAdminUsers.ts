@@ -48,3 +48,23 @@ export const useChangeRole = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-users"] }),
   });
 };
+
+/**
+ * Deactivates a user. Soft delete server-side — the account and everything it owns survive,
+ * it simply can no longer sign in and disappears from the directory.
+ */
+export const useDeleteUser = () => {
+  const jwt = getCookie("jwt");
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await axios.delete(`${API_URLS.users.all}/${id}`, {
+        headers: { Authorization: "Bearer " + jwt },
+      });
+      return res.data;
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] }),
+  });
+};

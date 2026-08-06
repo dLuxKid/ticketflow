@@ -43,7 +43,7 @@ export default function NameEvent({
         </label>
 
         <Button onClick={handleSubmit} disabled={!eventData.eventName}>
-          Get Started
+          Continue
         </Button>
       </form>
     </div>

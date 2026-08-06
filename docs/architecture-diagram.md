@@ -27,24 +27,27 @@ graph TB
     end
 
     subgraph BE["Backend — Node / Express (:4000)"]
-        SEC["Security middleware<br/>helmet · cors(credentials) · rate-limit 100/hr<br/>mongo-sanitize · xss · hpp · rawBody capture"]
+        SEC["Security middleware<br/>helmet · cors(credentials) · rate-limit (configurable)<br/>mongo-sanitize · xss · hpp · rawBody capture"]
         subgraph PRES["Presentation"]
-            RT["Routes<br/>/api/events · /api/users · /api/bookings"]
-            CTL["Controllers<br/>auth · event · booking · payment · admission<br/>guest · usher · dashboard · nlQuery"]
+            RT["Routes<br/>/api/v1: events · users · bookings · chat"]
+            CTL["Controllers<br/>auth · event · booking · payment · admission<br/>guest · usher · dashboard · nlQuery · networking · chat"]
         end
         subgraph SVC["Services — business rules + authorisation"]
             CORE["auth · user · event · booking · payment<br/>guest · usher · admission · dashboard · retention"]
-            AI["Analytics<br/>anomaly · anomalyReport · noShow · nlGuestQuery"]
-            BUS["admissionBus<br/>(in-process EventEmitter)"]
+            NET["Meet and Greet<br/>networking · networkingGuest · networkingNotification"]
+            AI["Analytics (local)<br/>anomaly · anomalyReport · noShow · nlGuestQuery"]
+            BOT["AI concierge<br/>chatbotService · llmProvider · weatherService"]
+            BUS["admissionBus · networkingBus<br/>(in-process EventEmitters)"]
+            SWEEP["reservationSweeper<br/>(in-process, 5-min interval)"]
         end
         subgraph REPO["Repositories"]
-            RP["user · event · booking · guest · auditLog"]
+            RP["user · event · booking · guest · auditLog · message"]
         end
-        SH["Shared<br/>email(pug) · generateQrCode · paystack HMAC<br/>ticketIdGenerator · parseGuestCsv · AppError"]
+        SH["Shared<br/>email(pug) · generateQrCode · paystack HMAC<br/>ticketIdGenerator · parseGuestCsv · networkingOtp · AppError"]
     end
 
     subgraph DATA["Data tier"]
-        MDB[("MongoDB replica set<br/>users · events · bookings · guests · auditlogs")]
+        MDB[("MongoDB replica set<br/>users · events · bookings<br/>guests · auditlogs · messages")]
         MLM[("ml/no_show/model.json<br/>portable weights, read-only")]
     end
 
@@ -52,6 +55,8 @@ graph TB
         PS["Paystack"]
         CLD["Cloudinary"]
         SMTP["Gmail SMTP (nodemailer)"]
+        LLM["OpenAI (primary)<br/>Gemini (fallback)"]
+        METEO["Open-Meteo<br/>geocoding + forecast, no key"]
     end
 
     BR --> MW --> RSC
@@ -63,9 +68,14 @@ graph TB
 
     SEC --> RT --> CTL --> CORE
     CTL --> AI
+    CTL --> NET
+    CTL --> BOT
     CORE --> RP
     AI --> RP
+    NET --> RP
+    BOT --> RP
     CORE --> SH
+    NET --> SH
     AI --> MLM
     RP --> MDB
 
@@ -73,12 +83,28 @@ graph TB
     PS -.->|"signed webhook<br/>POST /api/bookings/webhook/paystack"| SEC
     SH --> SMTP
     CORE --> CLD
+    BOT -->|"fetch, no SDK"| LLM
+    BOT -->|"fetch"| METEO
 
     CORE -.->|"emit admitted / rejected"| BUS
-    BUS -.->|"SSE push<br/>GET /api/events/:id/stream"| ST
+    NET -.->|"emit message / presence"| BUS
+    BUS -.->|"SSE push<br/>/events/:id/stream · /events/:id/network/stream"| ST
+    SWEEP -.->|"release lapsed holds"| RP
 
     CRON["scripts/gdpr-retention-sweep.js<br/>(external scheduler / CI cron)"] --> CORE
 ```
+
+**Note on the AI boundary.** Only the concierge chatbot (`BOT`) leaves the process for
+inference. Everything else labelled AI here — anomaly detection, no-show prediction and
+natural-language guest queries — runs locally: the first two on rule thresholds and a
+portable weights file, and the NL guest query on a **regex intent parser, not a language
+model**. The distinction matters both for the data-protection argument (guest lists are never
+sent to a third party) and for accuracy in the report.
+
+**Note on provider failure.** `llmProvider` calls OpenAI first and falls back to Gemini over
+plain `fetch` with no vendor SDK, and with neither key configured the chatbot degrades to a
+canned reply rather than erroring. An outage at either provider therefore removes a feature;
+it never takes down a request path that sells or admits a ticket.
 
 **Note on the frontend guard.** `middleware.ts` decodes the JWT client-side and treats any
 unexpired token as authenticated — it does not verify the signature or read the role. It is a

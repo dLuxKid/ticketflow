@@ -75,7 +75,16 @@ const ActionLink = ({
   </Link>
 );
 
-export default function EventCard({ event }: { event: MyEvent }) {
+export default function EventCard({
+  event,
+  canDelete = false,
+  onDelete,
+}: {
+  event: MyEvent;
+  /** Admin-only. The server enforces this too — hiding the control is a courtesy. */
+  canDelete?: boolean;
+  onDelete?: (event: MyEvent) => void;
+}) {
   const status = STATUS[event.isLive] ?? STATUS.upcoming;
   const access = event.accessMode ? ACCESS_LABEL[event.accessMode] : undefined;
 
@@ -119,6 +128,31 @@ export default function EventCard({ event }: { event: MyEvent }) {
             </h2>
           </div>
 
+          <div className="flex shrink-0 items-center gap-2">
+          {canDelete && (
+            <button
+              type="button"
+              onClick={() => onDelete?.(event)}
+              title={`Archive ${event.eventName}`}
+              className="inline-flex items-center gap-1.5 rounded-full border border-main-error-red/30 px-3 py-2 text-sm font-semibold text-main-error-red transition-all hover:bg-main-error-red/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-main-error-red/40"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+                className="h-3.5 w-3.5"
+              >
+                <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+              </svg>
+              Archive
+              <span className="sr-only"> {event.eventName}</span>
+            </button>
+          )}
+
           <Link
             href={`/edit-event/${event.slug}`}
             className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-main-purple px-4 py-2 text-sm font-semibold text-main-white shadow-md shadow-main-purple/25 transition-all hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-main-purple/40 focus-visible:ring-offset-2"
@@ -137,6 +171,7 @@ export default function EventCard({ event }: { event: MyEvent }) {
             </svg>
             Edit
           </Link>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-sec-black/75">

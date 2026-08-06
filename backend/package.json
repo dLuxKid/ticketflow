@@ -18,12 +18,16 @@
     "migrate:ticket-ids": "node scripts/migrate-ticket-ids.js",
     "gdpr:sweep": "node scripts/gdpr-retention-sweep.js",
     "seed:admin": "node scripts/seed-admin.js",
+    "seed:usability": "node scripts/seed-usability.js",
     "reservations:release": "node scripts/release-expired-reservations.js",
     "notify:event-live": "node scripts/send-event-live-emails.js",
     "eval:chatbot": "node scripts/eval-chatbot.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "load:test": "bash scripts/load-test.sh",
+    "test:coverage": "node --test --experimental-test-coverage \"tests/unit/**/*.test.js\"",
+    "test:coverage:lcov": "node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage/lcov.info \"tests/unit/**/*.test.js\""
   },
   "author": "",
   "license": "ISC",
@@ -54,6 +58,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-n": "^18.2.2",
     "eslint-plugin-prettier": "^5.5.6",
+    "globals": "^17.9.0",
     "nodemon": "^3.1.14",
     "prettier": "^3.9.5"
   }

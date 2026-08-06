@@ -1,14 +1,17 @@
 name: CI
 
-# Runs on every push and PR. Two independent jobs: backend tests against a real
-# single-node MongoDB replica set (transactions — used by the atomic booking/check-in
-# paths — require one, a standalone mongod throws), and frontend typecheck/lint.
+# Runs on every push and PR to main and dev. Two independent jobs: backend lint plus tests
+# against a real single-node MongoDB replica set (transactions — used by the atomic
+# booking/check-in paths — require one, a standalone mongod throws), and frontend
+# typecheck, lint and component tests.
 
 on:
   push:
-    branches: [main]
+    # `dev` is where the work actually happens; gating only on `main` meant every change was
+    # unverified until merge, which is the moment feedback is least useful.
+    branches: [main, dev]
   pull_request:
-    branches: [main]
+    branches: [main, dev]
 
 jobs:
   backend:
@@ -27,6 +30,13 @@ jobs:
       - name: Install dependencies
         working-directory: backend
         run: npm ci
+
+      # Runs before the database is provisioned: linting needs nothing but node_modules, so
+      # a lint failure should not cost the time of spinning up a replica set. The backend was
+      # previously never linted in CI at all, which is how 76 errors accumulated unnoticed.
+      - name: Lint
+        working-directory: backend
+        run: npm run lint
 
       # A plain `services:` Mongo container can't be started with --replSet (no custom
       # command support there), so start it directly with docker run and initiate the
@@ -60,6 +70,22 @@ jobs:
         # reason to reintroduce the flakiness risk in CI for a marginal speed gain.
         run: node --test --test-concurrency=1 "tests/**/*.test.js"
 
+      # Measurement only — `continue-on-error` and no threshold. A coverage gate set before
+      # the baseline is known either sits low enough to assert nothing or breaks the build on
+      # day one. Publish the number first; set a floor under it once it is trusted.
+      - name: Coverage (unit)
+        working-directory: backend
+        continue-on-error: true
+        run: npm run test:coverage:lcov
+
+      - name: Upload backend coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage/lcov.info
+          if-no-files-found: ignore
+
       - name: Stop MongoDB
         if: always()
         run: docker rm -f mongo
@@ -92,6 +118,14 @@ jobs:
       # Component tests (Vitest + React Testing Library). Playwright covers whole journeys
       # and needs a running stack; these run headless in seconds and guard rendering logic
       # such as the ticket QR encoding the scannable ticketId.
-      - name: Unit tests
+      - name: Unit tests with coverage
         working-directory: frontend
-        run: npm test
+        run: npm run test:coverage
+
+      - name: Upload frontend coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/lcov.info
+          if-no-files-found: ignore

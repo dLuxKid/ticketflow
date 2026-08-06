@@ -16,6 +16,7 @@ type Booking = {
     coverImage: string;
     isLive: string;
     id: string;
+    slug: string;
   };
 };
 
@@ -63,9 +64,27 @@ export default async function Tickets() {
               </div>
               <div className="h-40 w-0.5 hidden sm:block rounded bg-white/50" />
               <div className="flex-start my-auto flex-col gap-1">
-                <h2 className="text-base md:text-lg font-bold text-main-white">
-                  {event.eventName}
-                </h2>
+                {/* The ticket links through to the event it is for — previously the only
+                    route to those details was searching the public listing again. */}
+                <Link
+                  href={`/explore-events/${event.slug}`}
+                  className="group inline-flex items-center gap-1.5 text-base font-bold text-main-white underline-offset-4 hover:underline md:text-lg"
+                >
+                  <h2>{event.eventName}</h2>
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                    className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5"
+                  >
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                  <span className="sr-only">View event details</span>
+                </Link>
                 <div className="text-sm flex-center gap-1 font-medium text-main-white/70">
                   <span>
                     <svg

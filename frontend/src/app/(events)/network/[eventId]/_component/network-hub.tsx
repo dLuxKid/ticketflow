@@ -53,6 +53,9 @@ export default function NetworkHub({ eventId }: { eventId: string }) {
   const [eventWindow, setEventWindow] = useState<{ startDate: string; endDate: string } | null>(
     null,
   );
+  // Named in the heading so a guest arriving from an emailed link can tell which event's
+  // room they are in — several may be open at once.
+  const [eventName, setEventName] = useState<string>("");
   const [liveStatus, setLiveStatus] = useState<"loading" | "upcoming" | "live" | "past">(
     "loading",
   );
@@ -80,6 +83,7 @@ export default function NetworkHub({ eventId }: { eventId: string }) {
     source.addEventListener("snapshot", (e) => {
       const s = JSON.parse((e as MessageEvent).data);
       setEventWindow({ startDate: s.startDate, endDate: s.endDate });
+      setEventName(s.eventName ?? "");
       setGroupMessages(s.group ?? []);
       setDirectory(s.directory ?? []);
       const mine = (s.directory ?? []).find(
@@ -193,7 +197,7 @@ export default function NetworkHub({ eventId }: { eventId: string }) {
     <section className="flex-center flex-col w-full max-w-screen-md mx-auto gap-6 py-10 px-4">
       <PageHeader
         eyebrow="EntryPoint"
-        title="Networking"
+        title={eventName ? `Meet and Greet · ${eventName}` : "Meet and Greet"}
         subtitle="Chat with everyone here, or message someone one-to-one."
         right={
           <span
@@ -229,7 +233,11 @@ export default function NetworkHub({ eventId }: { eventId: string }) {
                 : "bg-main-white text-main-black/70 shadow shadow-black/10"
             }`}
           >
-            {t === "group" ? "Group chat" : t === "directory" ? "Directory" : "DMs"}
+            {t === "group"
+              ? "Event Chat (Public)"
+              : t === "directory"
+                ? "Directory"
+                : "DMs"}
           </button>
         ))}
       </div>
@@ -258,7 +266,7 @@ export default function NetworkHub({ eventId }: { eventId: string }) {
             <input
               value={groupInput}
               onChange={(e) => setGroupInput(e.target.value)}
-              placeholder={live ? "Say something…" : "Networking opens when the event goes live"}
+              placeholder={live ? "Say something…" : "Meet and Greet opens when the event goes live"}
               disabled={!live}
               className="flex-1 rounded-big border border-main-light-grey px-4 py-2 text-sm disabled:opacity-50"
             />
@@ -349,7 +357,7 @@ export default function NetworkHub({ eventId }: { eventId: string }) {
                 <input
                   value={dmInput}
                   onChange={(e) => setDmInput(e.target.value)}
-                  placeholder={live ? "Message…" : "Networking opens when the event goes live"}
+                  placeholder={live ? "Message…" : "Meet and Greet opens when the event goes live"}
                   disabled={!live}
                   className="flex-1 rounded-big border border-main-light-grey px-4 py-2 text-sm disabled:opacity-50"
                 />

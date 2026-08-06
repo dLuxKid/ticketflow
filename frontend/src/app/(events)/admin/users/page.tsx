@@ -7,6 +7,7 @@ import { useUser } from "@/store/useUser";
 import {
   useAdminUsers,
   useChangeRole,
+  useDeleteUser,
   type AdminUser,
 } from "@/store/useAdminUsers";
 
@@ -36,6 +37,7 @@ export default function AdminUsersPage() {
   const { data: me } = useUser();
   const { data, isLoading, error } = useAdminUsers();
   const changeRole = useChangeRole();
+  const deleteUser = useDeleteUser();
   const [query, setQuery] = useState("");
 
   const myId: string | undefined = me?.data?.user?._id;
@@ -74,6 +76,27 @@ export default function AdminUsersPage() {
       </div>
     );
   }
+
+  const onDelete = (user: AdminUser) => {
+    // Native confirm, matching guest-manager's GDPR erase. It is keyboard-accessible and
+    // impossible to dismiss accidentally, which is what a destructive action needs — and it
+    // names the person, so nobody deactivates the wrong row from muscle memory.
+    const ok = window.confirm(
+      `Deactivate ${user.name} (${user.email})?\n\n` +
+        "They will not be able to sign in and will disappear from this list. " +
+        "Their events, bookings and admission history are kept, and the account can be " +
+        "restored.",
+    );
+    if (!ok) return;
+
+    deleteUser.mutate(user._id, {
+      onSuccess: () => toast.success(`${user.name} deactivated`),
+      onError: (err: any) =>
+        toast.error(
+          err?.response?.data?.message ?? "Could not deactivate that account",
+        ),
+    });
+  };
 
   const onChange = (user: AdminUser, role: string) => {
     if (role === user.role) return;
@@ -151,6 +174,9 @@ export default function AdminUsersPage() {
                     <th scope="col" className="px-5 py-3 text-right text-xs font-bold uppercase tracking-wider text-sec-black/60">
                       Change to
                     </th>
+                    <th scope="col" className="px-5 py-3 text-right text-xs font-bold uppercase tracking-wider text-sec-black/60">
+                      <span className="sr-only">Delete</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -221,6 +247,38 @@ export default function AdminUsersPage() {
                                 ))}
                               </select>
                             </label>
+                          )}
+                        </td>
+                        <td className="px-5 py-4 text-right">
+                          {locked ? (
+                            <span
+                              title={reason}
+                              className="text-xs text-sec-black/40"
+                            >
+                              —
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => onDelete(user)}
+                              disabled={deleteUser.isPending}
+                              className="inline-flex items-center gap-1.5 rounded-full border border-main-error-red/30 px-3 py-1.5 text-xs font-semibold text-main-error-red transition-colors hover:bg-main-error-red/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-main-error-red/40 disabled:opacity-50"
+                            >
+                              <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                aria-hidden="true"
+                                className="h-3.5 w-3.5"
+                              >
+                                <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                              </svg>
+                              Deactivate
+                              <span className="sr-only"> {user.name}</span>
+                            </button>
                           )}
                         </td>
                       </tr>

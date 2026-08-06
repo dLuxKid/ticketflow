@@ -1,4 +1,6 @@
 import Event from '../models/eventModel.js';
+import Booking from '../models/bookingModel.js';
+import Guest from '../models/guestModel.js';
 import APIFeatures from '../shared/utils/apiFeatures.js';
 
 /**
@@ -207,3 +209,24 @@ export const markNetworkingEmailSent = (eventId) =>
   Event.findByIdAndUpdate(eventId, {
     $set: { networkingEmailSentAt: new Date() },
   });
+
+/**
+ * Archives an event. Soft delete only — see the note on Event.isActive for why the document
+ * is never removed.
+ */
+export const archive = (id) =>
+  Event.findByIdAndUpdate(
+    id,
+    { $set: { isActive: false, deletedAt: new Date() } },
+    { new: true },
+  ).setOptions({ includeArchived: true });
+
+/** Counts, for reporting what an archive affects before and after it happens. */
+export const countReferences = async (id) => {
+  const [bookings, paidBookings, guests] = await Promise.all([
+    Booking.countDocuments({ event: id }),
+    Booking.countDocuments({ event: id, transactionStatus: 'success' }),
+    Guest.countDocuments({ event: id }),
+  ]);
+  return { bookings, paidBookings, guests };
+};

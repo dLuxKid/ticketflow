@@ -43,6 +43,11 @@ const initialState: eventData = {
   currency: "",
   accessMode: "public",
   networkingEnabled: true,
+  venueName: "",
+  dressCode: "",
+  parkingInfo: "",
+  accessibilityInfo: "",
+  ageRestriction: "",
 };
 
 export default function CreateEvent() {

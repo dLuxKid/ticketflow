@@ -64,7 +64,10 @@ if (skipReason) {
       [{ name: 'Manual Erase', email: 'manual@example.com' }],
       owner,
     );
-    const guest = await Guest.findOne({ event: recent._id, email: 'manual@example.com' });
+    const guest = await Guest.findOne({
+      event: recent._id,
+      email: 'manual@example.com',
+    });
 
     await retentionService.requestErasure(recent._id, guest._id, owner);
 
@@ -88,7 +91,10 @@ if (skipReason) {
       [{ name: 'Protected', email: 'protected@example.com' }],
       owner,
     );
-    const guest = await Guest.findOne({ event: recent._id, email: 'protected@example.com' });
+    const guest = await Guest.findOne({
+      event: recent._id,
+      email: 'protected@example.com',
+    });
 
     await assert.rejects(
       () => retentionService.requestErasure(recent._id, guest._id, stranger),
@@ -113,10 +119,16 @@ if (skipReason) {
 
     const result = await retentionService.sweepExpiredEvents(30);
 
-    assert.ok(result.expiredEvents >= 1, 'at least the far-past event is expired');
+    assert.ok(
+      result.expiredEvents >= 1,
+      'at least the far-past event is expired',
+    );
     assert.ok(result.guestsErased >= 1);
 
-    const oldGuest = await Guest.findOne({ event: longAgo._id, email: { $ne: 'old@example.com' } });
+    const oldGuest = await Guest.findOne({
+      event: longAgo._id,
+      email: { $ne: 'old@example.com' },
+    });
     assert.ok(oldGuest?.erasedAt, 'the old event guest was erased');
 
     const stillRecentGuest = await Guest.findOne({
@@ -133,6 +145,19 @@ if (skipReason) {
   test('sweeping twice is idempotent (no error, nothing double-processed)', async () => {
     const first = await retentionService.sweepExpiredEvents(30);
     const second = await retentionService.sweepExpiredEvents(30);
-    assert.equal(second.guestsErased, 0, 'already-erased guests are excluded on the next run');
+
+    // The first result was previously discarded, which made this test vacuous: if the sweep
+    // were broken and erased nothing at all, `second.guestsErased === 0` would still hold and
+    // the test would pass while proving nothing about idempotency.
+    assert.equal(
+      typeof first.guestsErased,
+      'number',
+      'the first sweep should report how many guests it erased',
+    );
+    assert.equal(
+      second.guestsErased,
+      0,
+      'already-erased guests are excluded on the next run',
+    );
   });
 }

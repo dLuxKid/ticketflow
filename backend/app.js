@@ -40,9 +40,18 @@ app.use(
 );
 
 // ─── Rate Limiting ─────────────────────────────────────────────────────────────
+// Configurable, with the previous hardcoded values as defaults so nothing changes unless a
+// deployment opts in. Two reasons it needed to move out of the source:
+//
+//   1. 100 requests/hour/IP is low for this product. A single visitor browsing events,
+//      opening a few detail pages and completing a checkout can spend a large share of that
+//      in one sitting, and anyone behind shared NAT (a venue's wifi, a corporate network,
+//      a mobile carrier) shares the budget with everyone else on that address.
+//   2. It made the API impossible to load test — every run flatlined at 429 after 100
+//      requests, so no throughput or latency figure could ever be gathered.
 const limiter = rateLimit({
-  max: 100,
-  windowMs: 60 * 60 * 1000,
+  max: Number(process.env.RATE_LIMIT_MAX) || 100,
+  windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS) || 60 * 60 * 1000,
   message: 'Too many requests from this IP, please try again in an hour!',
 });
 app.use('/api', limiter);

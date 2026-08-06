@@ -1,10 +1,10 @@
 # TicketFlow — Agile Delivery Plan (Azure Boards)
 
-**Document version:** 1.0 · **Prepared:** 5 August 2026 · **Tool:** Azure DevOps — Azure Boards (Scrum process)
+**Document version:** 1.1 · **Prepared:** 5 August 2026 · **Revised:** 6 August 2026 · **Tool:** Azure DevOps — Azure Boards (Scrum process)
 
 > **Purpose.** Supplies the Task 1.1 evidence: the agile approach, the Scrum roles adopted, the specific techniques used for **requirements, planning and tracking**, and the per-member contribution breakdown that every band of the marking criteria requires.
 >
-> **How to use this honestly.** The sprint structure below is derived from what the repository actually shows was delivered — the phased commit history maps cleanly onto six increments. The **names in §4 and §8 must be filled in to reflect who genuinely did what.** A board that contradicts your team's real working pattern is worse than a thin one: markers can compare it against the repository, and an inconsistency reads as fabrication rather than evidence.
+> **How to use this honestly.** The sprint structure below is derived from what the repository actually shows was delivered — the phased commit history maps cleanly onto seven increments. The **names in §4 and §8 must be filled in to reflect who genuinely did what.** A board that contradicts your team's real working pattern is worse than a thin one: markers can compare it against the repository, and an inconsistency reads as fabrication rather than evidence.
 >
 > **One risk to address now.** The Git history is authored almost entirely by a single account. If work was in fact shared, add `Co-authored-by:` trailers going forward, and treat Azure Boards as the primary contribution record — with each work item's *Assigned To*, state changes and comments carrying the attribution the commits do not. If the work genuinely was concentrated, say so plainly in the report and account for what the other members contributed instead (requirements, testing, documentation, research); an accurate uneven split is defensible, a fabricated even one is not.
 
@@ -15,7 +15,7 @@
 | Setting | Value | Rationale |
 |---|---|---|
 | Process template | **Scrum** | Gives Epic → Feature → Product Backlog Item → Task with Story Points, matching the framework the Outstanding band asks you to apply |
-| Iterations | `TicketFlow\Sprint 1…6` | Two-week sprints |
+| Iterations | `TicketFlow\Sprint 1…7` | Two-week sprints, compressed to one week for Sprints 6–7 |
 | Area paths | `TicketFlow\Backend`, `\Frontend`, `\Data & ML`, `\QA`, `\DevOps` | Lets you filter contribution by discipline — the fastest way to evidence who owned what |
 | Board columns | New → Approved → Committed → In Progress → In Review → Done | "In Review" makes peer review visible on the board rather than implied |
 | Definition of Ready | Story has acceptance criteria, is estimated, and has no unresolved dependency | Prevents unrefined items entering a sprint |
@@ -39,7 +39,7 @@ Rotate the Scrum Master role each sprint if your team prefers — note it either
 
 ## 3. Sprint calendar
 
-**Adjust these dates to your actual module dates before submitting.** The pattern — six two-week sprints closing shortly before the deadline — is what matters.
+**Adjust these dates to your actual module dates before submitting.** The pattern — a run of two-week sprints closing shortly before the deadline, compressed at the end under scope pressure — is what matters.
 
 | Sprint | Dates | Goal |
 |---|---|---|
@@ -48,7 +48,10 @@ Rotate the Scrum Master role each sprint if your team prefers — note it either
 | 3 | 22 Jun – 5 Jul 2026 | Admission that cannot double-admit |
 | 4 | 6 – 19 Jul 2026 | Invite-only guest management and live arrivals |
 | 5 | 20 Jul – 2 Aug 2026 | Analytics and intelligence features |
-| 6 | 3 – 16 Aug 2026 | Compliance, quality, safety, release and demo |
+| 6 | 3 – 9 Aug 2026 | Compliance, quality, safety, release and demo |
+| 7 | 10 – 16 Aug 2026 | Attendee engagement, AI concierge, administration and quality engineering |
+
+Sprints 6 and 7 are **one week each** rather than two — the deadline did not move to accommodate the added scope. Compressing the cadence rather than pretending the work fit is the accurate account, and the retrospective should record what that cost.
 
 ---
 
@@ -77,7 +80,9 @@ Fill in the names. Each member owns a discipline **and** contributes to design, 
 | **E5 Guest management** | Guest list import · Invite issuance · GDPR erasure |
 | **E6 Live operations** | Arrivals dashboard · Real-time streaming · Anomaly detection |
 | **E7 Intelligence** | Natural-language guest queries · No-show prediction |
-| **E8 Quality & compliance** | Automated testing · CI/CD · Accessibility · Usability evaluation · Documentation |
+| **E8 Quality & compliance** | Automated testing · CI/CD · Coverage measurement · Load testing · Accessibility · Usability evaluation · Documentation |
+| **E9 Attendee networking** | Meet and Greet directory · Event Chat (Public) · Direct messages · Guest access by one-time code |
+| **E10 AI concierge** | Chatbot with tool calling · Event Q&A · Weather and dress-code advice |
 
 ---
 
@@ -156,6 +161,30 @@ Story points use a Fibonacci scale (1, 2, 3, 5, 8, 13). Points shown are indicat
 | S6.7 | As the team, usability is tested with real users so that design claims are evidenced | 5 | M2 | E8 |
 | S6.8 | As the team, component tests cover the frontend so that rendering logic is verified | 4 | M4 | E8 |
 
+### Sprint 7 — Engagement, concierge and administration *(84 pts)*
+
+The largest sprint by points, and worth explaining rather than hiding: it absorbed a **scope expansion accepted mid-project** (attendee networking and the AI concierge were not in the original backlog) alongside a **security defect found during review** that could not wait. A sprint carrying 84 points against a ~40-point velocity is a planning failure by the numbers; presenting it honestly, with the reason, is better evidence of agile understanding than smoothing it across earlier sprints would be. Note in the retrospective what this cost.
+
+| ID | User story | Pts | Owner | Epic |
+|---|---|---|---|---|
+| S7.1 | As an attendee, I can meet other attendees so that events feel social | 8 | M3 | E9 |
+| S7.2 | As an attendee, I can chat with everyone at the event so that I can join the conversation | 5 | M4 | E9 |
+| S7.3 | As an attendee, I can message someone privately so that I can follow up one to one | 5 | M4 | E9 |
+| S7.4 | As a guest without an account, I can join the Meet and Greet so that I am not excluded | 8 | M3 | E9 |
+| S7.5 | As a visitor, I can ask questions in plain English so that I can find the right event | 13 | M5 | E10 |
+| S7.6 | As an attendee, I am told what to wear and expect so that I arrive prepared | 8 | M5 | E10 |
+| S7.7 | As an organiser, I can describe my venue fully so that attendees know what to expect | 5 | M4 | E2 |
+| S7.8 | As the platform, administrators cannot be self-registered so that access cannot be escalated | 5 | M3 | E1 |
+| S7.9 | As the root administrator, I control who becomes an administrator so that privilege is not shared freely | 8 | M3 | E1 |
+| S7.10 | As an administrator, I can remove events and users so that the platform can be moderated | 8 | M3 | E1 |
+| S7.11 | As the team, we know how much code is tested so that quality claims are evidenced | 3 | M5 | E8 |
+| S7.12 | As the team, we know the system holds under load so that performance is measured, not assumed | 5 | M1 | E8 |
+| S7.13 | As the team, the backend is linted in CI so that defects are caught before merge | 3 | M1 | E8 |
+
+**Review demo:** guest receives an access code by email → joins Event Chat (Public) → asks the concierge what to wear → admin archives a test event.
+
+**Two items to draw attention to in the report.** S7.8 was not a feature but a **vulnerability fix**: signup accepted an arbitrary `role`, so any visitor could register as an administrator. Finding it during review, fixing it, and verifying the fix against a running server is exactly the security-awareness evidence the rubric asks for. S7.13 paid for itself immediately — the first CI lint run caught a route bound to a controller export that did not exist, which would have crashed the server on boot.
+
 ---
 
 ## 7. Techniques for requirements, planning and tracking
@@ -191,14 +220,16 @@ Complete this from your board once the work items carry real assignments. Export
 
 | Member | Role | Design contribution | Implementation contribution | Testing contribution | Stories | Points |
 |---|---|---|---|---|---|---|
-| M1 *[name]* | Scrum Master · DevOps | CI/CD pipeline design, container topology, branching strategy | GitHub Actions workflow, Docker Compose, replica-set provisioning | CI test orchestration, sequential-run flakiness investigation | S1.6, S6.3, S6.4 | 15 |
+| M1 *[name]* | Scrum Master · DevOps | CI/CD pipeline design, container topology, branching strategy | GitHub Actions workflow, Docker Compose, replica-set provisioning, load-test harness | CI test orchestration, sequential-run flakiness investigation, backend lint gate | S1.6, S6.3, S6.4, S7.12, S7.13 | 23 |
 | M2 *[name]* | Product Owner · UX | Market research, backlog and acceptance criteria, design system, accessibility audit | Theme tokens, navigation, accessibility remediation | Usability study (ISO 9241-11, SUS), WCAG 2.2 AA audit | S6.2, S6.7 | 13 |
-| M3 *[name]* | Backend lead | Data model and ERD, state machines, transaction boundaries, security model | Auth, events, reservation and payment flow, atomic admission, capacity guardrail | Integration tests for concurrency and authorisation | S1.1–S1.3, S1.5, S2.2–S2.4, S3.2, S3.3, S4.1, S4.3, S6.5, S6.6 | 97 |
-| M4 *[name]* | Frontend lead | Interaction design, component architecture, screen flows | Checkout, scanner, live dashboard, guest manager | Component tests (Vitest/RTL), Playwright E2E | S1.4, S2.1, S2.5, S3.1, S3.5, S4.2, S4.4, S4.5, S6.8 | 57 |
-| M5 *[name]* | QA · Data & ML | Test strategy, quality model mapping, ML feature design | Anomaly rules, NL query parser, no-show model, retention sweep | Unit-test suite, evaluation harnesses, GDPR sweep tests | S3.4, S3.6, S4.6, S5.1–S5.4, S6.1 | 63 |
-| | | | | | **Total** | **245** |
+| M3 *[name]* | Backend lead | Data model and ERD, state machines, transaction boundaries, security model, role/privilege model | Auth, events, reservation and payment flow, atomic admission, capacity guardrail, Meet and Greet, guest OTP access, administration | Integration tests for concurrency and authorisation, role-decision unit tests | S1.1–S1.3, S1.5, S2.2–S2.4, S3.2, S3.3, S4.1, S4.3, S6.5, S6.6, S7.1, S7.4, S7.8–S7.10 | 134 |
+| M4 *[name]* | Frontend lead | Interaction design, component architecture, screen flows | Checkout, scanner, live dashboard, guest manager, chat UI, extended event form | Component tests (Vitest/RTL), Playwright E2E | S1.4, S2.1, S2.5, S3.1, S3.5, S4.2, S4.4, S4.5, S6.8, S7.2, S7.3, S7.7 | 72 |
+| M5 *[name]* | QA · Data & ML | Test strategy, quality model mapping, ML and AI feature design | Anomaly rules, NL query parser, no-show model, retention sweep, AI concierge, weather advice | Unit-test suite, evaluation harnesses, GDPR sweep tests, coverage measurement | S3.4, S3.6, S4.6, S5.1–S5.4, S6.1, S7.5, S7.6, S7.11 | 87 |
+| | | | | | **Total** | **329** |
 
-> **The distribution above is deliberately uneven, and that is the point of showing it.** M3 carries 40% of the points because the backend concentrates the genuinely hard work (transactions, concurrency, payment integrity), while M1 and M2 carry far fewer *story* points because CI configuration, accessibility auditing and usability research are high-value work that story points measure badly. Say this in the report rather than flattening the numbers — recognising that velocity is a planning tool and not a productivity ranking is itself an evaluative observation, and it protects members whose contribution does not show up as points.
+> **The distribution above is deliberately uneven, and that is the point of showing it.** M3 carries roughly 41% of the points because the backend concentrates the genuinely hard work (transactions, concurrency, payment integrity, the privilege model), while M1 and M2 carry far fewer *story* points because CI configuration, accessibility auditing and usability research are high-value work that story points measure badly. Say this in the report rather than flattening the numbers — recognising that velocity is a planning tool and not a productivity ranking is itself an evaluative observation, and it protects members whose contribution does not show up as points.
+>
+> Note also that the totals **grew by a third in Sprint 7** (245 → 329) without the team growing. That is what accepting a mid-project scope expansion actually costs, and the honest reading is that it was absorbed by the members already carrying the most, which is a delivery risk rather than a success. A retrospective that names this is stronger evidence than a burndown that hides it.
 
 **If the split is uneven, present it as it is and explain why** — differing prior experience, timetable clashes, a member joining late. An honest account with evidence scores better than a suspiciously even one, and the individual reflection in Task 3 explicitly asks you to evaluate your own contribution critically.
 

@@ -22,6 +22,25 @@ export default defineConfig({
     setupFiles: ["./vitest.setup.tsx"],
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
     exclude: ["e2e/**", "node_modules/**", ".next/**"],
+    coverage: {
+      provider: "v8",
+      // `text` for the terminal, `lcov` for badge/reporting services, `json-summary` so a
+      // script can read the totals without parsing human output.
+      reporter: ["text", "lcov", "json-summary"],
+      reportsDirectory: "coverage",
+      // Deliberately NO thresholds. A minimum set before the baseline is known either sits
+      // so low it asserts nothing, or fails the build on day one — neither tells you
+      // anything. Measure first, then set the floor just under the real number.
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: [
+        "src/**/*.{test,spec}.{ts,tsx}",
+        // Type declarations and static data carry no logic to exercise; counting them
+        // would depress the number without indicating any real risk.
+        "src/types/**",
+        "src/assets/**",
+        "src/**/layout.tsx",
+      ],
+    },
   },
   resolve: {
     alias: { "@": path.resolve(__dirname, "./src") },

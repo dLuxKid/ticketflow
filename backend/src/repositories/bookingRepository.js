@@ -134,7 +134,12 @@ export const findByUser = (userId) =>
     fields: 'event ticketId',
   })
     .sort()
-    .populate('event', 'coverImage eventName startDate startTime eventLocation')
+    // `slug` is what the event detail page is addressed by, so without it a ticket cannot
+    // link through to the event it is for.
+    .populate(
+      'event',
+      'coverImage eventName startDate startTime eventLocation slug',
+    )
     .limitFields().query;
 
 /**

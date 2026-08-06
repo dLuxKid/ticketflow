@@ -39,7 +39,11 @@ if (skipReason) {
 
   test('import creates a guest + linked invite booking with a token', async () => {
     const event = await Event.create(
-      buildEvent({ user: owner._id, accessMode: 'invite_only', ticketDetails: [] }),
+      buildEvent({
+        user: owner._id,
+        accessMode: 'invite_only',
+        ticketDetails: [],
+      }),
     );
 
     const result = await guestService.importGuests(
@@ -49,10 +53,15 @@ if (skipReason) {
     );
     assert.deepEqual(result.added, ['ada@example.com']);
 
-    const guest = await Guest.findOne({ event: event._id, email: 'ada@example.com' });
+    const guest = await Guest.findOne({
+      event: event._id,
+      email: 'ada@example.com',
+    });
     assert.ok(guest.booking, 'guest is linked to its booking');
 
-    const booking = await Booking.findById(guest.booking).select('+inviteToken');
+    const booking = await Booking.findById(guest.booking).select(
+      '+inviteToken',
+    );
     assert.equal(booking.source, 'invite');
     assert.equal(booking.ticketType, 'VIP');
     assert.ok(booking.inviteToken, 'invite booking carries a token');
@@ -62,28 +71,44 @@ if (skipReason) {
     const event = await Event.create(
       buildEvent({ user: owner._id, accessMode: 'hybrid' }),
     );
-    await guestService.importGuests(event._id, [{ name: 'Bo', email: 'bo@example.com' }], owner);
+    await guestService.importGuests(
+      event._id,
+      [{ name: 'Bo', email: 'bo@example.com' }],
+      owner,
+    );
     const second = await guestService.importGuests(
       event._id,
       [{ name: 'Bo', email: 'bo@example.com' }],
       owner,
     );
     assert.deepEqual(second.skipped, ['bo@example.com']);
-    const count = await Guest.countDocuments({ event: event._id, email: 'bo@example.com' });
+    const count = await Guest.countDocuments({
+      event: event._id,
+      email: 'bo@example.com',
+    });
     assert.equal(count, 1);
   });
 
   test('a public event rejects guest-list management', async () => {
     const event = await Event.create(buildEvent({ user: owner._id })); // default public
     await assert.rejects(
-      () => guestService.importGuests(event._id, [{ name: 'X', email: 'x@e.com' }], owner),
+      () =>
+        guestService.importGuests(
+          event._id,
+          [{ name: 'X', email: 'x@e.com' }],
+          owner,
+        ),
       (err) => err.statusCode === 400,
     );
   });
 
   test('purchasing a ticket for an invite_only event is blocked (403)', async () => {
     const event = await Event.create(
-      buildEvent({ user: owner._id, accessMode: 'invite_only', ticketDetails: [] }),
+      buildEvent({
+        user: owner._id,
+        accessMode: 'invite_only',
+        ticketDetails: [],
+      }),
     );
     await assert.rejects(
       () =>
@@ -98,17 +123,29 @@ if (skipReason) {
 
   test('an imported guest QR admits exactly once', async () => {
     const event = await Event.create(
-      buildEvent({ user: owner._id, accessMode: 'invite_only', ticketDetails: [] }),
+      buildEvent({
+        user: owner._id,
+        accessMode: 'invite_only',
+        ticketDetails: [],
+      }),
     );
     await guestService.importGuests(
       event._id,
       [{ name: 'Cy', email: 'cy@example.com' }],
       owner,
     );
-    const guest = await Guest.findOne({ event: event._id, email: 'cy@example.com' });
-    const booking = await Booking.findById(guest.booking).select('+inviteToken');
+    const guest = await Guest.findOne({
+      event: event._id,
+      email: 'cy@example.com',
+    });
+    const booking = await Booking.findById(guest.booking).select(
+      '+inviteToken',
+    );
 
-    const admit = await admissionService.checkInByScan(booking.inviteToken, owner);
+    const admit = await admissionService.checkInByScan(
+      booking.inviteToken,
+      owner,
+    );
     assert.equal(admit.outcome, 'admitted');
 
     await assert.rejects(

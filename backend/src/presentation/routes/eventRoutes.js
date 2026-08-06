@@ -43,6 +43,9 @@ router.get('/my/assigned-events', eventController.getAssignedEvents);
 // Ownership is enforced in eventService.updateEvent; the service allows the event's
 // own creator or an admin. No role gate here so any user who owns an event can edit it.
 router.patch('/update/:eventId', eventController.updateEvent);
+// Archives rather than removes — an event is referenced by paid bookings and the admission
+// audit log. Admin-only; enforced in eventService.deleteEvent.
+router.delete('/:eventId', eventController.deleteEvent);
 
 // ─── Live arrivals dashboard (organiser / admin) ────────────────────────────────
 // Snapshot for initial render; SSE stream for live updates. Both authorize the viewer

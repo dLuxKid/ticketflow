@@ -1268,6 +1268,11 @@ export default function EditEventForm({ event }: { event: eventData }) {
     // Events predating the field report undefined; they had networking, so default
     // to on rather than silently switching it off on the next save.
     networkingEnabled: event.networkingEnabled ?? true,
+    venueName: event.venueName ?? "",
+    dressCode: event.dressCode ?? "",
+    parkingInfo: event.parkingInfo ?? "",
+    accessibilityInfo: event.accessibilityInfo ?? "",
+    ageRestriction: event.ageRestriction ?? "",
     ticketDetails: event.ticketDetails ?? [],
     socialMediaLinks: event.socialMediaLinks ?? {
       twitter: "",
@@ -1566,6 +1571,11 @@ export default function EditEventForm({ event }: { event: eventData }) {
       otherImages: eventData.otherImages,
       accessMode: eventData.accessMode,
       networkingEnabled: eventData.networkingEnabled,
+      venueName: eventData.venueName,
+      dressCode: eventData.dressCode,
+      parkingInfo: eventData.parkingInfo,
+      accessibilityInfo: eventData.accessibilityInfo,
+      ageRestriction: eventData.ageRestriction,
     };
 
     try {

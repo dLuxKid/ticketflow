@@ -16,6 +16,7 @@ export const API_URLS = {
     base: `${baseUrl}/api/v1/events`,
     create: `${baseUrl}/api/v1/events/create`,
     update: (id: string) => `${baseUrl}/api/v1/events/update/${id}`,
+    delete: (id: string) => `${baseUrl}/api/v1/events/${id}`,
     myEvents: `${baseUrl}/api/v1/events/my/events`,
     assignedEvents: `${baseUrl}/api/v1/events/my/assigned-events`,
     count: `${baseUrl}/api/v1/events/count`,

@@ -60,6 +60,17 @@ export const updateUserRole = catchAsync(async (req, res) => {
   });
 });
 
+/** Deactivates another user. Admin-only; guards live in userService.canDeleteUser. */
+export const deleteUser = catchAsync(async (req, res) => {
+  const user = await userService.deleteUser(req.user, req.params.id);
+
+  res.status(200).json({
+    status: 'success',
+    message: `${user.name} has been deactivated`,
+    data: null,
+  });
+});
+
 export const deleteMe = catchAsync(async (req, res) => {
   await userService.deleteMe(req.user.id);
 

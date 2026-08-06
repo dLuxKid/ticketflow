@@ -144,7 +144,11 @@ export const buildAnomalyEvalSet = () => {
   const cases = [];
   for (const tpl of TEMPLATES) {
     for (let i = 0; i < tpl.count; i++) {
-      cases.push({ name: `${tpl.name}#${i}`, label: tpl.label, rows: tpl.build(i) });
+      cases.push({
+        name: `${tpl.name}#${i}`,
+        label: tpl.label,
+        rows: tpl.build(i),
+      });
     }
   }
   return cases; // 152 cases across 8 templates
