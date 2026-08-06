@@ -16,6 +16,7 @@ import errorHandler from './src/shared/errors/errorHandler.js';
 import eventRouter from './src/presentation/routes/eventRoutes.js';
 import userRouter from './src/presentation/routes/userRoutes.js';
 import bookingRouter from './src/presentation/routes/bookingRoutes.js';
+import chatRouter from './src/presentation/routes/chatRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -85,6 +86,7 @@ app.get('/', (req, res) =>
 app.use('/api/v1/events', eventRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/bookings', bookingRouter);
+app.use('/api/v1/chat', chatRouter);
 
 // ─── 404 Handler ───────────────────────────────────────────────────────────────
 app.all('*', (req, res, next) => {

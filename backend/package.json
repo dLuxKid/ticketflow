@@ -19,6 +19,7 @@
     "gdpr:sweep": "node scripts/gdpr-retention-sweep.js",
     "reservations:release": "node scripts/release-expired-reservations.js",
     "notify:event-live": "node scripts/send-event-live-emails.js",
+    "eval:chatbot": "node scripts/eval-chatbot.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write ."

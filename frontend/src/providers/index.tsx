@@ -3,6 +3,7 @@
 import NextTopLoader from "nextjs-toploader";
 import TanstackQueryProvider from "@/providers/TanstackQueryProvider";
 import { Toaster } from "sonner";
+import ChatWidget from "@/components/chatbot/chat-widget";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -17,6 +18,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         <Toaster position="top-right" />
       </div>
       {children}
+      <ChatWidget />
     </TanstackQueryProvider>
   );
 }

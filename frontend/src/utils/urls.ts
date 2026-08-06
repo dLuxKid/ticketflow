@@ -44,6 +44,7 @@ export const API_URLS = {
     networkDm: (eventId: string, userId: string) =>
       `${baseUrl}/api/v1/events/${eventId}/network/dms/${userId}`,
   },
+  chat: `${baseUrl}/api/v1/chat`,
   bookings: {
     checkIn: (id: string) => `${baseUrl}/api/v1/bookings/check-in/${id}`,
     eventBookings: (eventId: string) =>

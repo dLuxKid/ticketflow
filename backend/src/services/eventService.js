@@ -79,3 +79,19 @@ export const updateEvent = async (eventId, data, user) => {
 export const getTrendingEvents = () => eventRepository.findTrending();
 
 export const getUpcomingEvents = () => eventRepository.findUpcoming();
+
+/**
+ * Thin translation from a small, LLM-friendly filter set (Phase 8's chatbot search_events
+ * tool) to the query-string shape APIFeatures already expects — reuses the exact same
+ * search behind public event discovery rather than a second implementation. Only
+ * category/city/name are exposed: APIFeatures' `startDate` handling is an exact-match
+ * equality check, not a range, so it isn't useful for "events next month"-style queries and
+ * isn't offered here rather than pretending it works.
+ */
+export const searchEvents = ({ category, city, name } = {}) => {
+  const queryParams = { limit: 5 };
+  if (category) queryParams.eventCategory = category;
+  if (city) queryParams.eventLocation = city;
+  if (name) queryParams.eventName = name;
+  return eventRepository.findActiveWithFeatures(queryParams);
+};
