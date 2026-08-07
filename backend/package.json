@@ -27,7 +27,7 @@
     "format": "prettier --write .",
     "load:test": "bash scripts/load-test.sh",
     "test:coverage": "node --test --experimental-test-coverage \"tests/unit/**/*.test.js\"",
-    "test:coverage:lcov": "node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage/lcov.info \"tests/unit/**/*.test.js\""
+    "test:coverage:lcov": "mkdir -p coverage && node --test --experimental-test-coverage --test-reporter=lcov --test-reporter-destination=coverage/lcov.info \"tests/unit/**/*.test.js\""
   },
   "author": "",
   "license": "ISC",
