@@ -6,7 +6,7 @@ import mongoose from 'mongoose';
  * Its own collection (not embedded in Event) because a list can run to hundreds and needs
  * indexed lookups by event and by email independent of loading the event document. Once an
  * invite is issued, the corresponding admission `Booking` (source: 'invite') is created and
- * referenced by `booking` — a guest-list entry becomes exactly one admission document.
+ * referenced by `booking` - a guest-list entry becomes exactly one admission document.
  */
 const guestSchema = new mongoose.Schema(
   {
@@ -40,7 +40,7 @@ const guestSchema = new mongoose.Schema(
     },
     // GDPR retention (Phase 6): set once this guest's PII (name/email) has been
     // anonymized, either by the post-event retention sweep or a manual erasure request.
-    // `name`/`email` above are overwritten in place at that point — this flag is what lets
+    // `name`/`email` above are overwritten in place at that point - this flag is what lets
     // the sweep skip documents it has already processed, and lets an organiser/auditor see
     // that erasure happened and when.
     erasedAt: {
@@ -50,7 +50,7 @@ const guestSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// One invite per email per event — prevents duplicate guest-list entries.
+// One invite per email per event - prevents duplicate guest-list entries.
 guestSchema.index({ event: 1, email: 1 }, { unique: true });
 // Retention sweep query pattern: guests for a set of expired events not yet erased.
 guestSchema.index({ event: 1, erasedAt: 1 });

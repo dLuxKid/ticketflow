@@ -3,7 +3,7 @@
  *
  * Emails every admittable attendee of every event currently in its live window
  * (startDate <= now <= endDate), with the link to join the networking group. Fires on
- * every run by design — there is no "already notified" gate, so running this repeatedly
+ * every run by design - there is no "already notified" gate, so running this repeatedly
  * (or on a short cron interval) re-sends every time. See
  * networkingNotificationService.js for the reasoning and its consequence for the cron.
  *

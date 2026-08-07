@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import slugify from 'slugify';
 
-// True when the event sells tickets (public/hybrid) — used to make sales-date fields
+// True when the event sells tickets (public/hybrid) - used to make sales-date fields
 // required only for those, since an invite_only event has no ticket sales at all.
 function requiredForTicketedEvent() {
   return this.accessMode !== 'invite_only';
@@ -110,9 +110,9 @@ const eventSchema = new mongoose.Schema(
     },
     ticketDetails: [ticketSchema],
     // How guests get in:
-    //   public      — ticket tiers required, checkout open, listed in public discovery
-    //   invite_only — no tiers, checkout disabled, hidden from discovery, guest-list only
-    //   hybrid      — ticket tiers AND a guest list both active
+    //   public      - ticket tiers required, checkout open, listed in public discovery
+    //   invite_only - no tiers, checkout disabled, hidden from discovery, guest-list only
+    //   hybrid      - ticket tiers AND a guest list both active
     // See the guest-management merge design note: one access mode, not two event types.
     accessMode: {
       type: String,
@@ -129,7 +129,7 @@ const eventSchema = new mongoose.Schema(
     },
     // Safe physical occupancy of the venue, as distinct from how many tickets were put on
     // sale. Organisers routinely oversell against expected no-shows, so ticket inventory is
-    // the wrong number to enforce at the door — fire-safety occupancy limits apply to bodies
+    // the wrong number to enforce at the door - fire-safety occupancy limits apply to bodies
     // in the room. Optional: when unset the door falls back to totalQuantity, and an event
     // with neither (an invite-only event carries no ticket inventory) is treated as
     // unlimited rather than blocked. See admissionService.capacityDecision.
@@ -138,7 +138,7 @@ const eventSchema = new mongoose.Schema(
       min: [1, 'Venue capacity must be at least 1'],
     },
     // Guest networking (Phase 7) is opt-out per event, chosen at creation. Defaults to true
-    // so existing events — which predate the field and read as `undefined` — keep the
+    // so existing events - which predate the field and read as `undefined` - keep the
     // behaviour they already had; the service treats only an explicit `false` as disabled.
     // Some events genuinely should not have one (a private ceremony, a corporate briefing),
     // and the organiser is the only one who can know that.
@@ -159,7 +159,7 @@ const eventSchema = new mongoose.Schema(
     deletedAt: { type: Date, select: false },
     refundPolicy: { type: String, default: 'No refunds' },
     additionalComments: { type: String },
-    // Practical details attendees ask about before arriving. All optional — an organiser
+    // Practical details attendees ask about before arriving. All optional - an organiser
     // filling none of them leaves the event exactly as it behaved before these existed.
     // The chatbot reads these directly (chatbotService.get_event_details) so its answers
     // come from what the organiser actually stated rather than from a model's guess.
@@ -224,12 +224,12 @@ const eventSchema = new mongoose.Schema(
  * instant. Two reasons:
  *
  * 1. Events are routinely stored with an identical `startDate` and `endDate` (a single-day
- *    event picked from one date field), which made the window zero-length — such an event
+ *    event picked from one date field), which made the window zero-length - such an event
  *    was *never* live, so its networking channel could never open. That is the bug this
  *    fixes.
  * 2. `startTime`/`endTime` are deliberately not folded in. They are stored in a different
- *    frame from the dates in existing records — one event here has startDate at 23:00 UTC
- *    (local midnight) but startTime at 17:00 — so combining them would produce a confidently
+ *    frame from the dates in existing records - one event here has startDate at 23:00 UTC
+ *    (local midnight) but startTime at 17:00 - so combining them would produce a confidently
  *    wrong window rather than a roughly right one.
  *
  * The bias is intentional: for a chat channel, opening slightly early or closing slightly
@@ -250,7 +250,7 @@ eventSchema.virtual('isLive').get(function () {
   return 'past';
 });
 
-// Archived events disappear from every query that does not explicitly ask for them — the
+// Archived events disappear from every query that does not explicitly ask for them - the
 // same mechanism userModel uses. `$ne: false` rather than `true` so the thousands of events
 // created before this field existed (which store nothing) keep showing.
 eventSchema.pre(/^find/, function (next) {

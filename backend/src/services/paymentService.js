@@ -34,7 +34,7 @@ export const handlePaystackWebhook = async (rawBody, signature) => {
   const reference = payload?.data?.reference;
 
   if (eventType === 'charge.success' && reference != null) {
-    // Confirms the reservation and delivers tickets. Safe under Paystack's retries — the
+    // Confirms the reservation and delivers tickets. Safe under Paystack's retries - the
     // guarded transition inside confirmReservation makes repeat deliveries impossible.
     const result = await bookingService.confirmReservation(reference, {
       transactionNumber: payload?.data?.id,
@@ -47,12 +47,12 @@ export const handlePaystackWebhook = async (rawBody, signature) => {
     (eventType === 'charge.failed' || eventType === 'charge.abandoned') &&
     reference != null
   ) {
-    // Give the seats back — an abandoned checkout must not shrink sellable inventory.
+    // Give the seats back - an abandoned checkout must not shrink sellable inventory.
     const result = await bookingService.releaseReservation(reference, 'failed');
     return { handled: true, event: eventType, ...result };
   }
 
-  // Unknown/irrelevant event — acknowledged but no state change.
+  // Unknown/irrelevant event - acknowledged but no state change.
   return { handled: false, event: eventType };
 };
 
@@ -83,7 +83,7 @@ export const verifyTransaction = async (reference, fetchImpl = fetch) => {
     id: body?.data?.id,
     message: body?.data?.gateway_response,
     // Returned in the currency's minor unit. Verifying that a charge *succeeded* without
-    // checking what it was FOR leaves underpayment undetected — see confirmCheckout.
+    // checking what it was FOR leaves underpayment undetected - see confirmCheckout.
     amountMinor: body?.data?.amount,
     currency: body?.data?.currency,
   };
@@ -93,7 +93,7 @@ export const verifyTransaction = async (reference, fetchImpl = fetch) => {
  * Confirms a checkout from the buyer's browser callback, after verifying the charge with
  * Paystack server-side.
  *
- * The webhook is the primary confirmation path, but it is not guaranteed to arrive — it can
+ * The webhook is the primary confirmation path, but it is not guaranteed to arrive - it can
  * be delayed, misconfigured, or blocked in local development. Without this the buyer's
  * reservation would sit `pending` and be swept away 15 minutes after they successfully paid.
  * The client's claim of success is never trusted: it only names the reference, and the
@@ -114,7 +114,7 @@ export const confirmCheckout = async (reference) => {
   const secretKey = process.env.PAYSTACK_SECRET_KEY;
   if (!secretKey) {
     console.warn(
-      'PAYSTACK_SECRET_KEY is not set — confirming checkout without verification. ' +
+      'PAYSTACK_SECRET_KEY is not set - confirming checkout without verification. ' +
         'This is development-only behaviour; configure the key before taking payments.',
     );
     return bookingService.confirmReservation(reference);
@@ -127,8 +127,8 @@ export const confirmCheckout = async (reference) => {
 
   // A successful charge is not the same as a *sufficient* one. Checking only `status` meant
   // any completed payment against this reference confirmed the booking, whatever its value.
-  // The expected amount is recomputed from the reservation's own stored prices — which are
-  // now written from the event's tiers, not the request — so this compares the charge
+  // The expected amount is recomputed from the reservation's own stored prices - which are
+  // now written from the event's tiers, not the request - so this compares the charge
   // against the server's number rather than against anything the payer influenced.
   const expectedMinor = await bookingService.expectedAmountMinor(reference);
   if (expectedMinor > 0 && Number(verified.amountMinor) < expectedMinor) {

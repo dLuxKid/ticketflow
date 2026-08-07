@@ -1,5 +1,5 @@
 """
-No-show prediction — training script (Phase 5, feature 3/3).
+No-show prediction - training script (Phase 5, feature 3/3).
 
 No real historical attendance data exists yet (this is a pre-launch merge), so this trains
 on a SYNTHETIC dataset generated from an explicit, documented generative process below. This
@@ -15,7 +15,7 @@ Features (all derived from fields that already exist on Booking/Guest by Phase 4
   plus_ones       - number of plus-ones on the booking
 
 Assumed relationships in the synthetic generator (documented, not claimed to be real-world
-fact — replace with data-driven coefficients once real attendance history exists):
+fact - replace with data-driven coefficients once real attendance history exists):
   + longer RSVP lead time  -> slightly HIGHER no-show risk (early enthusiasm fades)
   + paid (purchase)        -> LOWER no-show risk (financial commitment)
   + VIP                    -> LOWER no-show risk (higher personal investment)

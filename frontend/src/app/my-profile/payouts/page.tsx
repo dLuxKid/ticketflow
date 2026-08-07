@@ -11,7 +11,7 @@ import {
 } from "@/store/usePayout";
 
 /**
- * Payout onboarding — connecting the bank account an organiser's ticket revenue is settled
+ * Payout onboarding - connecting the bank account an organiser's ticket revenue is settled
  * to, and the only place the platform fee is stated to them.
  *
  * The flow is deliberately two-step: enter the account, then **confirm the name it resolves
@@ -117,7 +117,7 @@ export default function PayoutsPage() {
           <p className="mt-4 text-sm text-sec-black/70">
             You receive the ticket price minus the {payout.platformFeePercent}%
             platform fee and the payment provider&apos;s processing charge.
-            Paystack settles it to this account directly — TicketFlow never
+            Paystack settles it to this account directly - TicketFlow never
             holds your money.
           </p>
         </section>
@@ -152,7 +152,7 @@ export default function PayoutsPage() {
             <p className="mt-1 text-sm text-red-900/80">
               {(banksError as any)?.response?.data?.message ??
                 "The payment provider could not be reached."}{" "}
-              Payouts cannot be set up until this is resolved — if you run this
+              Payouts cannot be set up until this is resolved - if you run this
               deployment, check that the Paystack keys are configured.
             </p>
           </div>
@@ -226,7 +226,7 @@ export default function PayoutsPage() {
               {resolvedName}
             </p>
             <p className="mt-2 text-sm text-emerald-900/80">
-              Confirm this is correct before connecting — payments to a wrong
+              Confirm this is correct before connecting - payments to a wrong
               account cannot be reversed.
             </p>
             <button

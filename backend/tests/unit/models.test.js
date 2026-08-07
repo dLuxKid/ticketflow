@@ -8,7 +8,7 @@ import Guest from '../../src/models/guestModel.js';
 import AuditLog from '../../src/models/auditLogModel.js';
 
 /**
- * Phase 1 — model-level schema guarantees. These run without a database: Mongoose applies
+ * Phase 1 - model-level schema guarantees. These run without a database: Mongoose applies
  * defaults at construction, computes virtuals on access, and validateSync() runs validators
  * in memory.
  */

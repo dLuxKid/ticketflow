@@ -6,7 +6,7 @@ import { platformFeeMinor, toMinorUnits } from './pricingService.js';
  * Revenue reporting for organisers and administrators.
  *
  * Answers two questions that the product previously could not answer at all: *what has this
- * event earned me, net of the platform fee*, and — for an administrator — *what has the
+ * event earned me, net of the platform fee*, and - for an administrator - *what has the
  * platform earned across every event*. Before this, the only financial figure anywhere was
  * a per-event "Gross Sales" total on one page, with no notion of the fee and no aggregate.
  *
@@ -15,14 +15,14 @@ import { platformFeeMinor, toMinorUnits } from './pricingService.js';
  */
 
 /**
- * The fee is computed **per transaction, then summed** — never as a percentage of the
+ * The fee is computed **per transaction, then summed** - never as a percentage of the
  * grand total.
  *
  * `platformFeeMinor` rounds down, so 3% of ten separate ₦101 charges is ten lots of 3 kobo
  * (30), whereas 3% of ₦1,010 charged once is 30.3 → 30. Those agree here, but they do not in
  * general, and Paystack deducts per transaction. Reporting a figure derived differently from
  * the way the money actually moved would produce a statement that never reconciles with the
- * provider's — the kind of discrepancy that is very hard to explain after the fact.
+ * provider's - the kind of discrepancy that is very hard to explain after the fact.
  */
 const feeForTransactions = (grossByReference) =>
   grossByReference.reduce(
@@ -99,7 +99,7 @@ export const getRevenueSummary = async (user) => {
       grossMinor,
       platformFeeMinor: feeMinor,
       // What the organiser is due from the provider, before Paystack's own processing
-      // charge — which they bear (`bearer: 'subaccount'`) and which this system never sees,
+      // charge - which they bear (`bearer: 'subaccount'`) and which this system never sees,
       // so it cannot be reported here without inventing it. Labelled accordingly in the UI.
       netMinor: grossMinor - feeMinor,
     };

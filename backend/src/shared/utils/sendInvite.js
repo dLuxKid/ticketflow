@@ -2,7 +2,7 @@ import nodemailer from 'nodemailer';
 import { generateQRCodeBuffer } from './generateQrCode.js';
 
 /**
- * Emails a guest their invite with a scannable QR encoding the single-use invite token —
+ * Emails a guest their invite with a scannable QR encoding the single-use invite token -
  * the same delivery channel as a purchased ticket, minus the checkout.
  *
  * The QR is attached inline via `cid:` rather than embedded as a data URL: Gmail strips

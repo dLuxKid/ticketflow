@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
  * Hero headline with a typed, cycling tail and a subheading that follows it.
  *
  * "We are" is fixed; the phrase after it types itself out, holds, deletes and moves on.
- * Only the keywords in each phrase take the accent colour — colouring the whole line would
+ * Only the keywords in each phrase take the accent colour - colouring the whole line would
  * emphasise nothing, so each phrase names the one or two words worth carrying.
  *
  * Two things the effect is careful about:
@@ -50,7 +50,7 @@ const PHRASES: Phrase[] = [
   },
 ];
 
-// Deliberately unhurried — the headline is meant to be read, not raced through.
+// Deliberately unhurried - the headline is meant to be read, not raced through.
 const TYPE_MS = 95;
 const DELETE_MS = 45; // deleting reads as tidying up, so it stays quicker than typing
 const HOLD_MS = 2800; // long enough to finish the line and take in the subheading
@@ -144,7 +144,7 @@ export default function HeroHeadline() {
 
   return (
     <div className="flex w-full flex-col items-center">
-      {/* Explicit leading so both lines share one rhythm — the default line-height at these
+      {/* Explicit leading so both lines share one rhythm - the default line-height at these
           display sizes is loose enough that "We are" and the phrase looked unrelated. */}
       <h1 className="text-center text-3xl font-semibold leading-[1.15] text-main-white sm:text-4xl md:text-6xl xl:text-7xl">
         {/* The single stable sentence assistive tech reads. */}

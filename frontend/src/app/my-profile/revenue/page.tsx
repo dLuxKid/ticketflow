@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRevenue, type RevenueRow } from "@/store/useRevenue";
 
 /**
- * Revenue report — per event and in total, net of the platform fee.
+ * Revenue report - per event and in total, net of the platform fee.
  *
  * One page serves both audiences because the underlying question is the same ("what has
  * been earned, and what was deducted"); only the scope differs, and the server decides that
@@ -110,7 +110,7 @@ export default function RevenuePage() {
       {/* Stated rather than left for the reader to discover: the organiser bears Paystack's
           processing charge, which this system never sees, so "net" here is provider-gross. */}
       <p className="rounded-big border border-main-light-grey/70 bg-main-grey-bg p-4 text-sm text-sec-black/70">
-        Figures cover <strong>confirmed payments only</strong> — reservations that were never
+        Figures cover <strong>confirmed payments only</strong> - reservations that were never
         paid are excluded. The platform fee is calculated per transaction. Amounts shown as
         net are before the payment provider&apos;s own processing charge, which is deducted
         by Paystack at settlement and is not visible to TicketFlow.
@@ -121,7 +121,7 @@ export default function RevenuePage() {
 
         {data.events.length === 0 ? (
           <p className="body-text text-sec-black/70">
-            No events yet — revenue appears here once tickets are sold.
+            No events yet - revenue appears here once tickets are sold.
           </p>
         ) : (
           <div className="overflow-x-auto rounded-big border border-main-light-grey/70">
@@ -151,7 +151,7 @@ export default function RevenuePage() {
                     </td>
                     {isPlatform && (
                       <td className="px-4 py-3 text-sec-black/70">
-                        {row.organiser ?? "—"}
+                        {row.organiser ?? "-"}
                       </td>
                     )}
                     <td className="px-4 py-3 text-right tabular-nums">

@@ -5,7 +5,7 @@ import Event from '../../src/models/eventModel.js';
 /**
  * Event.isLive drives the networking channel (networkingService.canPostToNetworking) and the
  * "Live now" badges. It previously compared exact instants, so a single-day event stored with
- * startDate === endDate had a zero-length window and was never live — its chat could not be
+ * startDate === endDate had a zero-length window and was never live - its chat could not be
  * opened at all, on the day it was actually happening.
  *
  * `new Event({...})` builds a document without touching the database, so the virtual can be
@@ -20,7 +20,7 @@ const build = (startDate, endDate) => new Event({ startDate, endDate });
  *
  * These two tests previously pinned "today at 09:00 UTC" and "today at 00:30 UTC" and
  * asserted `live`. Both are in the *future* when the suite runs early in the UTC day, so
- * they failed every morning before 09:00 — a real scheduling flake that would have broken
+ * they failed every morning before 09:00 - a real scheduling flake that would have broken
  * any CI run in that window, while passing all afternoon.
  *
  * Note that "a few minutes ago" is NOT a safe substitute: just after midnight UTC it lands

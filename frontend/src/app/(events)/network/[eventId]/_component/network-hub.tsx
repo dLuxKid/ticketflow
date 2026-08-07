@@ -15,12 +15,12 @@ import { useUser } from "@/store/useUser";
 /**
  * Guest networking hub: group chat, opt-in directory, and DMs for one event, all fed by a
  * single SSE connection (same shape as live-dashboard.tsx's EventSource subscription).
- * Sending is a normal REST call — SSE is receive-only — and the sender sees their own
+ * Sending is a normal REST call - SSE is receive-only - and the sender sees their own
  * message arrive back over the same stream, so there's no optimistic local state to keep in
  * sync, matching how the live dashboard handles scans.
  *
  * Liveness is recomputed client-side on a timer from the event's actual start/end
- * (delivered once in the snapshot), not held as a static string from that snapshot — a tab
+ * (delivered once in the snapshot), not held as a static string from that snapshot - a tab
  * left open across the boundary would otherwise keep showing "Live" long after the window
  * closed, while the server correctly rejects sends, with nothing on screen explaining why.
  */
@@ -54,7 +54,7 @@ export default function NetworkHub({ eventId }: { eventId: string }) {
     null,
   );
   // Named in the heading so a guest arriving from an emailed link can tell which event's
-  // room they are in — several may be open at once.
+  // room they are in - several may be open at once.
   const [eventName, setEventName] = useState<string>("");
   const [liveStatus, setLiveStatus] = useState<"loading" | "upcoming" | "live" | "past">(
     "loading",
@@ -104,7 +104,7 @@ export default function NetworkHub({ eventId }: { eventId: string }) {
       const peerId =
         message.recipient === myId ? message.sender._id : message.recipient;
       setDmThreads((prev) => {
-        if (!(peerId in prev)) return prev; // thread not open — will load fresh when opened
+        if (!(peerId in prev)) return prev; // thread not open - will load fresh when opened
         return { ...prev, [peerId]: [...prev[peerId], message] };
       });
     });
@@ -122,7 +122,7 @@ export default function NetworkHub({ eventId }: { eventId: string }) {
   }, [dmThreads, activePeer]);
 
   // Recompute liveness against the wall clock every few seconds, rather than trusting the
-  // one-time string the snapshot carried — the whole reason this exists (see file header).
+  // one-time string the snapshot carried - the whole reason this exists (see file header).
   useEffect(() => {
     if (!eventWindow) return;
 
@@ -131,7 +131,7 @@ export default function NetworkHub({ eventId }: { eventId: string }) {
       const start = new Date(eventWindow.startDate).getTime();
       // Must mirror Event.isLive on the server exactly: the window runs to the END of the
       // final day. Single-day events are commonly stored with startDate === endDate, which
-      // under an exact-instant comparison is a zero-length window — the channel would say
+      // under an exact-instant comparison is a zero-length window - the channel would say
       // "not live" for the entire event while the server happily accepted messages.
       const end = new Date(eventWindow.endDate);
       end.setUTCHours(23, 59, 59, 999);

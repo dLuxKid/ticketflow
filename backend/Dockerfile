@@ -11,7 +11,7 @@ RUN npm ci --omit=dev
 
 COPY . .
 
-# config.env (secrets) is intentionally NOT baked into the image — see .dockerignore.
+# config.env (secrets) is intentionally NOT baked into the image - see .dockerignore.
 # Provide runtime config via docker-compose's env_file/environment instead.
 
 EXPOSE 4000

@@ -6,12 +6,12 @@ import { sendChatMessage } from "@/utils/actions";
 
 /**
  * Floating AI concierge widget (Phase 8), mounted globally so it's available on every page.
- * No conversation persistence — history lives only in this component's state for the
+ * No conversation persistence - history lives only in this component's state for the
  * current page session, matching the backend's stateless-per-request design (see
  * chatbotService.js).
  *
  * The launcher is a speech-bubble silhouette that pops, haloes and shows a teaser until it
- * has been opened once — all of it suppressed under prefers-reduced-motion, and none of it
+ * has been opened once - all of it suppressed under prefers-reduced-motion, and none of it
  * load-bearing: the button works identically with every animation switched off. It used to
  * be a plain circle with Chat.png inside; the icon is now inline SVG so it can invert with
  * the open/close state and inherit currentColor.
@@ -30,7 +30,7 @@ export default function ChatWidget() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
-  /** True once the launcher has been opened — the attention cues never return after that. */
+  /** True once the launcher has been opened - the attention cues never return after that. */
   const [used, setUsed] = useState(false);
   const [showTeaser, setShowTeaser] = useState(false);
 
@@ -66,7 +66,7 @@ export default function ChatWidget() {
     const reply =
       res?.status === "success"
         ? res.data.reply
-        : "Sorry, I'm having trouble answering that right now — please try again in a moment.";
+        : "Sorry, I'm having trouble answering that right now - please try again in a moment.";
 
     setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
     setLoading(false);
@@ -130,7 +130,7 @@ export default function ChatWidget() {
 
       <div className="flex items-end gap-2.5">
         {/* Teaser. Rendered only while the launcher has never been used, and marked
-            aria-hidden because the button beside it already carries an accessible name —
+            aria-hidden because the button beside it already carries an accessible name -
             announcing both would read as two separate controls. */}
         {attention && showTeaser && (
           <span
@@ -167,7 +167,7 @@ export default function ChatWidget() {
             aria-label={open ? "Close chat assistant" : "Open chat assistant"}
             aria-expanded={open}
             /* Chat-bubble silhouette: generous radius with one squared-off bottom-right
-               corner, which is the corner nearest the page edge — so it reads as a speech
+               corner, which is the corner nearest the page edge - so it reads as a speech
                bubble with its tail pointing into the corner it lives in. */
             className={`relative flex size-16 items-center justify-center rounded-[26px] rounded-br-lg bg-main-purple text-main-white shadow-xl shadow-main-purple/40 transition-transform duration-200 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-main-purple/50 focus-visible:ring-offset-2 active:scale-95 ${
               attention ? "animate-chat-pop" : ""

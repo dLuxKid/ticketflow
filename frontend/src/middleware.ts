@@ -38,7 +38,7 @@ export function middleware(request: NextRequest) {
         userType = "CREATOR";
         isAuthenticated = true;
       } else {
-        // cookies-next v6 no longer works in middleware — use Next.js native API
+        // cookies-next v6 no longer works in middleware - use Next.js native API
         response.cookies.delete("jwt");
       }
     } catch (error) {

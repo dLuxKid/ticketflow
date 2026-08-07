@@ -2,7 +2,7 @@ import User from '../models/userModel.js';
 
 /**
  * Persistence layer for User documents.
- * No business logic — only database operations.
+ * No business logic - only database operations.
  */
 
 export const create = (data) => User.create(data);
@@ -32,7 +32,7 @@ export const findByIdWithPayout = (id) =>
 /**
  * Sets a user's role on an admin's authority.
  *
- * `isRootAdmin` is deliberately not settable here — root status comes only from
+ * `isRootAdmin` is deliberately not settable here - root status comes only from
  * scripts/seed-admin.js, so no API path can mint a second unremovable administrator.
  *
  * @param {string} id
@@ -72,7 +72,7 @@ export const assignToEvent = (userId, eventId) =>
   ).then(
     (updated) =>
       updated ??
-      // Already a creator/admin — leave their role untouched, just record the assignment.
+      // Already a creator/admin - leave their role untouched, just record the assignment.
       User.findByIdAndUpdate(
         userId,
         { $addToSet: { assignedEvents: eventId } },
@@ -87,7 +87,7 @@ export const unassignFromEvent = (userId, eventId) =>
     { new: true, select: '+role' },
   );
 
-/** Users (any role) assigned to a given event — the event's door-staff roster. */
+/** Users (any role) assigned to a given event - the event's door-staff roster. */
 export const findAssignedToEvent = (eventId) =>
   User.find({ assignedEvents: eventId }).select('+role');
 
@@ -110,7 +110,7 @@ export const findByResetToken = (hashedToken) =>
  * Every user, for the admin directory.
  *
  * `+role +isRootAdmin` are essential, not incidental: both are `select: false`, so without
- * them the directory would list every account with an undefined role — leaving an admin
+ * them the directory would list every account with an undefined role - leaving an admin
  * unable to see who holds what, or which account is the undemotable root.
  *
  * Note this still excludes soft-deleted accounts: the schema's pre-find hook filters
@@ -119,7 +119,7 @@ export const findByResetToken = (hashedToken) =>
 export const findAll = () =>
   User.find().select('+role +isRootAdmin').sort('name');
 
-/** Clears an archived event from every usher's assignments — see eventService.deleteEvent. */
+/** Clears an archived event from every usher's assignments - see eventService.deleteEvent. */
 export const unassignAllFromEvent = (eventId) =>
   User.updateMany(
     { assignedEvents: eventId },

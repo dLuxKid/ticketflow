@@ -92,7 +92,7 @@ export function TicketDetails({
   const isInviteOnly = eventData.accessMode === "invite_only";
 
   const isAllInputFilled = () => {
-    // Invite-only events admit guests from a guest list, not a purchase — they carry no
+    // Invite-only events admit guests from a guest list, not a purchase - they carry no
     // ticket tiers at all (the backend rejects tiers on an invite_only event outright),
     // so sales dates and ticket fields simply don't apply here.
     if (isInviteOnly) return true;
@@ -117,7 +117,7 @@ export function TicketDetails({
   }, []);
 
   // Defensive: if the organiser goes back and switches to invite-only after already
-  // filling in ticket tiers, clear them — an invite_only event must carry none.
+  // filling in ticket tiers, clear them - an invite_only event must carry none.
   useEffect(() => {
     if (isInviteOnly && eventData.ticketDetails.length > 0) {
       setTicketInfo([]);
@@ -150,7 +150,7 @@ export function TicketDetails({
           <div className="w-full rounded-md border border-main-purple bg-main-purple/5 p-6">
             <h4 className="sub-title-text mb-2">No tickets needed</h4>
             <p className="body-text text-main-black/80">
-              This is an invite-only event — there&apos;s nothing to sell here.
+              This is an invite-only event - there&apos;s nothing to sell here.
               Once the event is created, build your guest list and send invites
               from the event&apos;s Guest List page.
             </p>

@@ -8,11 +8,11 @@ import {
 } from '../../src/services/chatbot/llmProvider.js';
 
 /**
- * Phase 8 — LLM provider adapters. No network: a fake `fetch` returns canned responses
+ * Phase 8 - LLM provider adapters. No network: a fake `fetch` returns canned responses
  * shaped exactly like each provider's documented API, so this proves the request/response
  * translation is correct without needing real API keys or hitting a paid endpoint. This is
  * the part most likely to have a bug, since it can't be exercised end-to-end without live
- * keys — see the eval script / integration self-skip note for the live-key-gated coverage.
+ * keys - see the eval script / integration self-skip note for the live-key-gated coverage.
  */
 
 const fakeResponse = (body, ok = true, status = 200) => ({

@@ -11,7 +11,7 @@ import { connect, disconnect, buildEvent, skipReason } from '../helpers/db.js';
 /**
  * Checkout split and price authority, end to end against a real database.
  *
- * The unit tests prove the arithmetic; these prove the wiring — that the organiser's
+ * The unit tests prove the arithmetic; these prove the wiring - that the organiser's
  * subaccount is actually loaded and reaches the checkout config, that a client-supplied
  * price is really overwritten on the persisted booking, and that an organiser without a
  * payout account cannot sell tickets.
@@ -109,7 +109,7 @@ if (skipReason) {
   test('the organiser subaccount is actually loaded despite being select:false', async () => {
     // Pinned deliberately. `payout.subaccountCode` is select:false, so a repository method
     // that forgets `+payout.subaccountCode` sees undefined and concludes the organiser has
-    // no payout account — failing open into "cannot sell tickets" with no error to explain
+    // no payout account - failing open into "cannot sell tickets" with no error to explain
     // it. The root-admin guard was broken by exactly this once already.
     const event = await eventRepository.findByIdWithPayoutAccount(paidEventId);
     assert.equal(event.user.payout.subaccountCode, 'ACCT_integration');
@@ -215,7 +215,7 @@ if (skipReason) {
 
   test('an organiser with no payout account cannot sell tickets', async () => {
     // Refusing is the point: charging anyway would settle the whole amount into the
-    // platform account, invisibly to both the organiser and the buyer — precisely the
+    // platform account, invisibly to both the organiser and the buyer - precisely the
     // silent revenue retention this feature exists to remove.
     await assert.rejects(
       () =>

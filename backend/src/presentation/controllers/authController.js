@@ -152,7 +152,7 @@ export const isLoggedIn = async (req, res, next) => {
     const currentUser = await authService.verifyAndGetUser(token);
     req.user = currentUser;
   } catch {
-    // Token invalid or expired — treat as unauthenticated
+    // Token invalid or expired - treat as unauthenticated
   }
 
   return next();

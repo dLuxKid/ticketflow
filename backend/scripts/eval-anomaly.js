@@ -62,13 +62,13 @@ if (misclassified.length > 0) {
     'Known limitation: "slow_drip_sharing_known_limitation" cases are false negatives by',
   );
   console.log(
-    'design — devices arrive further apart than the 5-minute multi-device window, so slow,',
+    'design - devices arrive further apart than the 5-minute multi-device window, so slow,',
   );
   console.log(
     'deliberate ticket-forwarding over ~10 minutes is not caught. Widening the window would',
   );
   console.log(
-    'catch it but risks flagging legitimate late staff re-checks as false positives — a',
+    'catch it but risks flagging legitimate late staff re-checks as false positives - a',
   );
   console.log(
     'precision/recall trade-off documented here rather than silently tuned away.',

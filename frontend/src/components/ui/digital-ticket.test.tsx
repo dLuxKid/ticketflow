@@ -53,7 +53,7 @@ describe("DigitalTicket", () => {
 
   it("renders a QR code element at all", () => {
     const { container } = render(<DigitalTicket ticketBodyDetails={ticket} />);
-    // A ticket without a QR is not scannable — this pins the second defect.
+    // A ticket without a QR is not scannable - this pins the second defect.
     expect(container.querySelector("svg")).toBeTruthy();
   });
 

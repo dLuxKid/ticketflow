@@ -4,7 +4,7 @@ import path from "path";
 
 /**
  * Unit/component test runner. Playwright already covers whole user journeys end to end;
- * this layer exists for logic that is expensive to reach through a browser — rendering
+ * this layer exists for logic that is expensive to reach through a browser - rendering
  * branches, form validation, and regressions we want pinned cheaply.
  *
  * `e2e/` is excluded because Playwright owns those specs and its `test` export would
@@ -29,7 +29,7 @@ export default defineConfig({
       reporter: ["text", "lcov", "json-summary"],
       reportsDirectory: "coverage",
       // Deliberately NO thresholds. A minimum set before the baseline is known either sits
-      // so low it asserts nothing, or fails the build on day one — neither tells you
+      // so low it asserts nothing, or fails the build on day one - neither tells you
       // anything. Measure first, then set the floor just under the real number.
       include: ["src/**/*.{ts,tsx}"],
       exclude: [

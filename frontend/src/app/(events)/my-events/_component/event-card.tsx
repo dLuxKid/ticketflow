@@ -11,7 +11,7 @@ import { formatDateRange, formatTimeRange } from "@/utils/utils";
  * A row in the organiser's event list.
  *
  * The cover previously used object-fill, which stretched every image to the box instead of
- * cropping it — portraits and logos came out visibly squashed. `object-cover` preserves the
+ * cropping it - portraits and logos came out visibly squashed. `object-cover` preserves the
  * aspect ratio, which matters more here than showing the whole image.
  */
 
@@ -81,7 +81,7 @@ export default function EventCard({
   onDelete,
 }: {
   event: MyEvent;
-  /** Admin-only. The server enforces this too — hiding the control is a courtesy. */
+  /** Admin-only. The server enforces this too - hiding the control is a courtesy. */
   canDelete?: boolean;
   onDelete?: (event: MyEvent) => void;
 }) {
@@ -201,7 +201,7 @@ export default function EventCard({
         <div className="mt-auto flex flex-wrap gap-2 border-t border-main-light-grey/70 pt-3">
           {/* Tested positively rather than as `!== "public"`. Legacy events created before
               accessMode existed return it as undefined, which that check treated as
-              non-public — so a plain ticketed event advertised a guest list it does not
+              non-public - so a plain ticketed event advertised a guest list it does not
               have. Only the two modes that actually carry one qualify. */}
           {(event.accessMode === "invite_only" ||
             event.accessMode === "hybrid") && (

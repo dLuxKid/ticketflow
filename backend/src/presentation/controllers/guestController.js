@@ -5,7 +5,7 @@ import catchAsync from '../../shared/middleware/catchAsync.js';
 
 /**
  * Presentation layer for guest-list management.
- * HTTP concerns only — business logic lives in guestService.
+ * HTTP concerns only - business logic lives in guestService.
  */
 
 /** Lists the guests for an event (organiser/admin). */

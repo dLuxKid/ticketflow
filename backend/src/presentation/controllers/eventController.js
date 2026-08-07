@@ -4,7 +4,7 @@ import catchAsync from '../../shared/middleware/catchAsync.js';
 
 /**
  * Presentation layer for event management.
- * Handles HTTP concerns only — delegates all business logic to eventService.
+ * Handles HTTP concerns only - delegates all business logic to eventService.
  */
 
 export const createEvent = catchAsync(async (req, res) => {
@@ -115,7 +115,7 @@ export const getUpcomingEvents = catchAsync(async (req, res) => {
 });
 
 /**
- * Revenue summary — per event plus totals, scoped by role.
+ * Revenue summary - per event plus totals, scoped by role.
  *
  * No role gate on the route: `revenueService` decides scope from `req.user.role`, so an
  * organiser receives only their own events and an admin the whole platform. Gating the

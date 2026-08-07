@@ -4,7 +4,7 @@ import { defineConfig } from "@playwright/test";
  * E2E config (Phase 6).
  *
  * Assumes the backend API is already running and reachable at API_BASE_URL (default
- * http://localhost:4000), pointed at a disposable test database — these tests create real
+ * http://localhost:4000), pointed at a disposable test database - these tests create real
  * accounts and events through the real HTTP API (including a real Cloudinary upload and a
  * real invite-token generation), so never point this at a production backend.
  *
@@ -13,7 +13,7 @@ import { defineConfig } from "@playwright/test";
 export default defineConfig({
   testDir: "./e2e",
   timeout: 30_000,
-  fullyParallel: false, // each test seeds its own event via the real API — keep it simple
+  fullyParallel: false, // each test seeds its own event via the real API - keep it simple
   reporter: "list",
   use: {
     baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000",

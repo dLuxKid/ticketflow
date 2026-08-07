@@ -2,7 +2,7 @@
 /// <reference types="next/image-types/global" />
 
 /**
- * Type declarations for Next's ambient modules — image imports (`.png`, `.jpeg`, `.webp`…)
+ * Type declarations for Next's ambient modules - image imports (`.png`, `.jpeg`, `.webp`…)
  * resolving to `StaticImageData`, and Next's own globals.
  *
  * **Why this file exists, given `next-env.d.ts` already says the same thing.**
@@ -10,7 +10,7 @@
  * default (see `.gitignore`). It therefore exists on any machine where the app has been
  * run, and does not exist in a fresh checkout. CI runs `tsc --noEmit` *without* first
  * running a Next build, so every `import x from "@/assets/images/….png"` failed there with
- * TS2307 while typechecking cleanly for every developer locally — the classic
+ * TS2307 while typechecking cleanly for every developer locally - the classic
  * "works on my machine" split, caused by a build artefact that is not in the repository.
  *
  * Committing this small file makes the typecheck self-contained: it depends only on what is

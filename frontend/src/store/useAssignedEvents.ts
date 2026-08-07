@@ -8,7 +8,7 @@ import axios from "axios";
  *
  * Separate from `useMyEvents`, which returns events the user *created*. Door staff usually
  * created nothing, so without this their "My events" page was empty and the scanner was
- * unreachable — even though the API would have authorised them to scan.
+ * unreachable - even though the API would have authorised them to scan.
  */
 export const useAssignedEvents = () => {
   const jwt = getCookie("jwt");

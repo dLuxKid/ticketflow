@@ -1,5 +1,5 @@
 /**
- * Inherits `currentColor` so the caller can recolour it — the mobile trigger has to turn
+ * Inherits `currentColor` so the caller can recolour it - the mobile trigger has to turn
  * white while the navbar floats over the dark hero, which a hardcoded fill could not do.
  */
 export default function NavIcon() {

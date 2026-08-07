@@ -3,7 +3,7 @@ import APIFeatures from '../shared/utils/apiFeatures.js';
 
 /**
  * Persistence layer for Booking documents.
- * No business logic — only database operations.
+ * No business logic - only database operations.
  */
 
 export const insertMany = (data, session) =>
@@ -15,7 +15,7 @@ export const updateById = (id, data, options = { new: true }) =>
   Booking.findByIdAndUpdate(id, data, options);
 
 /**
- * Returns a booking with its event's owner populated — used for ownership checks.
+ * Returns a booking with its event's owner populated - used for ownership checks.
  */
 export const findByIdWithEventOwner = (id) =>
   Booking.findById(id).populate({ path: 'event', select: 'user' });
@@ -27,7 +27,7 @@ export const findByReference = (reference) => Booking.find({ reference });
  * Confirms a reservation: flips every still-`pending` booking under this reference to
  * `success` and drops the expiry hold.
  *
- * Guarded on `transactionStatus: 'pending'` so it is idempotent — Paystack retries its
+ * Guarded on `transactionStatus: 'pending'` so it is idempotent - Paystack retries its
  * webhook, and the client also calls the verify endpoint, so this runs more than once per
  * checkout by design. `modifiedCount > 0` identifies the single call that actually won the
  * transition, which is what gates ticket delivery so nobody is emailed twice.
@@ -76,7 +76,7 @@ export const countByEventAndStatus = (eventId, status, session) =>
   );
 
 /**
- * Bookings not yet admitted/rejected/revoked — the population a no-show prediction is
+ * Bookings not yet admitted/rejected/revoked - the population a no-show prediction is
  * meaningful for (there is no "will they show up" question once they already have).
  */
 export const findPendingByEvent = (eventId) =>
@@ -103,7 +103,7 @@ export const anonymize = (bookingId) =>
 
 /**
  * Resolves a scanned QR payload to its booking. The code may be an invite token (invited
- * guests) or a ticketId (purchased guests) — one lookup covers every guest type. Selects
+ * guests) or a ticketId (purchased guests) - one lookup covers every guest type. Selects
  * the normally-hidden inviteToken and populates the event owner for authorization.
  */
 /**
@@ -113,7 +113,7 @@ export const anonymize = (bookingId) =>
  * hand at a door does not. Ticket IDs are Crockford base32 and always uppercase, and legacy
  * IDs carry a leading `#` that is displayed on the ticket but is easy to omit (or to add).
  * Matching only the raw string meant an usher who typed a correct code in lowercase, or
- * without the `#`, was told the ticket was invalid — indistinguishable at the door from a
+ * without the `#`, was told the ticket was invalid - indistinguishable at the door from a
  * forged one.
  *
  * Invite tokens are deliberately NOT case-folded: they are random 24-byte values where case
@@ -137,8 +137,8 @@ export const findByScanCode = (code) =>
     .select('+inviteToken')
     // `venueCapacity` and `totalQuantity` are required, not optional extras: the door reads
     // them to decide whether the room is full. Selecting only `user` here left both
-    // undefined, so admissionService computed a capacity of 0 — which capacityDecision
-    // treats as "no limit configured" — and the fire-safety guardrail silently never fired
+    // undefined, so admissionService computed a capacity of 0 - which capacityDecision
+    // treats as "no limit configured" - and the fire-safety guardrail silently never fired
     // on a single real scan. A projection that omits a field a decision depends on disables
     // that decision without failing.
     .populate({ path: 'event', select: 'user venueCapacity totalQuantity' });
@@ -146,7 +146,7 @@ export const findByScanCode = (code) =>
 /**
  * Atomically admits a booking: flips status to `admitted` only if it is currently in an
  * admittable state. Because this is a single-document conditional update, two concurrent
- * scans of the same ticket cannot both admit — exactly one matches, the other gets null.
+ * scans of the same ticket cannot both admit - exactly one matches, the other gets null.
  *
  * @returns {Promise<object|null>} the admitted booking, or null if it wasn't admittable
  */
@@ -190,7 +190,7 @@ const NOT_ADMITTABLE = ['revoked', 'rejected'];
 
 /**
  * Resolves an attendee's booking by event + email. Email, not `user`, is the identifier
- * guaranteed present on every booking regardless of source — a guest-checkout purchase or
+ * guaranteed present on every booking regardless of source - a guest-checkout purchase or
  * an organiser-issued invite may both exist with no `user` set yet (see claimBooking).
  */
 export const findByEventAndEmail = (eventId, email) =>
@@ -225,7 +225,7 @@ export const findByEventAndUser = (eventId, userId) =>
 
 /**
  * Links a booking to the account that just authenticated as its owner. Bookings created
- * before the attendee had (or used) an account — an invite, or a guest checkout — only
+ * before the attendee had (or used) an account - an invite, or a guest checkout - only
  * carry an email; this is what makes them DM-addressable by user id afterward.
  */
 export const claimBooking = (bookingId, userId) =>
@@ -253,7 +253,7 @@ export const setNetworkingProfile = (
     { new: true },
   );
 
-/** Every admittable attendee of an event — the recipient list for the "event is live" email. */
+/** Every admittable attendee of an event - the recipient list for the "event is live" email. */
 export const findNotifiableByEvent = (eventId) =>
   Booking.find({ event: eventId, status: { $nin: NOT_ADMITTABLE } }).select(
     'name email',

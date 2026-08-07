@@ -124,8 +124,8 @@ export default async function Event({ params }: Props) {
               </p>
             </div>
 
-            {/* Rendered only for the fields the organiser actually filled in — an empty
-                "Dress code: —" row tells an attendee nothing and implies the organiser
+            {/* Rendered only for the fields the organiser actually filled in - an empty
+                "Dress code: -" row tells an attendee nothing and implies the organiser
                 forgot rather than that it simply does not apply. */}
             {beforeYouGo.length > 0 && (
               <div className="flex w-full flex-col gap-3">

@@ -1,8 +1,8 @@
 name: CI
 
 # Runs on every push and PR to main and dev. Two independent jobs: backend lint plus tests
-# against a real single-node MongoDB replica set (transactions — used by the atomic
-# booking/check-in paths — require one, a standalone mongod throws), and frontend
+# against a real single-node MongoDB replica set (transactions - used by the atomic
+# booking/check-in paths - require one, a standalone mongod throws), and frontend
 # typecheck, lint and component tests.
 
 on:
@@ -44,7 +44,7 @@ jobs:
 
       # A plain `services:` Mongo container can't be started with --replSet (no custom
       # command support there), so start it directly with docker run and initiate the
-      # replica set ourselves — the same requirement documented in
+      # replica set ourselves - the same requirement documented in
       # IMPLEMENTATION_PROMPT.md's Phase 0 note.
       - name: Start MongoDB as a single-node replica set
         run: |
@@ -60,7 +60,7 @@ jobs:
             echo "waiting for PRIMARY..."; sleep 2
           done
 
-      - name: Run tests (sequential — see note below)
+      - name: Run tests (sequential - see note below)
         working-directory: backend
         env:
           MONGO_TEST_URI: mongodb://127.0.0.1:27017/ticketflow_ci?replicaSet=rs0
@@ -69,12 +69,12 @@ jobs:
         # --test-concurrency=1: Node's test runner executes files concurrently by default.
         # Under the free-tier Atlas cluster used for local development we measured real
         # connection/replication contention from that concurrency (documented in the
-        # session history) — forcing sequential execution gave a reliable signal. A local
+        # session history) - forcing sequential execution gave a reliable signal. A local
         # single-node replica set is less contended than shared Atlas, but there's no
         # reason to reintroduce the flakiness risk in CI for a marginal speed gain.
         run: node --test --test-concurrency=1 "tests/**/*.test.js"
 
-      # Measurement only — `continue-on-error` and no threshold. A coverage gate set before
+      # Measurement only - `continue-on-error` and no threshold. A coverage gate set before
       # the baseline is known either sits low enough to assert nothing or breaks the build on
       # day one. Publish the number first; set a floor under it once it is trusted.
       - name: Coverage (unit)
@@ -99,7 +99,7 @@ jobs:
       # result was a permanently red step reporting a condition nobody intended to fix.
       # A gate makes the two states honest: configured and working, or explicitly skipped.
       # Either way `lcov.info` is still uploaded as a build artifact above, so the coverage
-      # data is never lost — only its publication is optional.
+      # data is never lost - only its publication is optional.
       #
       # base-path is not optional here. Both lcov files address their sources as `src/...`
       # relative to their own package, so without it the backend's src/ and the frontend's
@@ -176,7 +176,7 @@ jobs:
           parallel: true
 
   # Tells Coveralls both parallel uploads are in, so it can combine them and publish one
-  # number. `if: always()` because a failing test job must still close the build — otherwise
+  # number. `if: always()` because a failing test job must still close the build - otherwise
   # Coveralls waits on a report that will never arrive and the badge sticks on a stale run.
   # Skipped entirely when Coveralls is not configured, so the pipeline shows no red step for
   # a reporting integration nobody has enabled.
@@ -197,3 +197,92 @@ jobs:
           github-token: ${{ secrets.COVERALLS_REPO_TOKEN }}
           parallel-finished: true
           carryforward: "backend,frontend"
+
+  # ── Package and publish container images ────────────────────────────────────
+  #
+  # This is the CD half, and it is deliberately narrow: it *packages and publishes* a
+  # versioned artifact to GitHub's Container Registry. It does not deploy - nothing pulls
+  # and runs these images automatically, because no hosting target is configured. Calling
+  # that out matters: "published to a registry" and "running in production" are different
+  # claims, and only the first is true here.
+  #
+  # Gated on `needs: [backend, frontend]`, so an image is only ever built from a commit whose
+  # lint, typecheck and full test suite passed. An image built from a red build is worse than
+  # no image: it looks releasable and is not.
+  #
+  # Runs on pushes to `main` only - never on pull_request. A PR runs code from a fork or a
+  # branch that has not been reviewed, and giving that code a token with `packages: write`
+  # would let it publish images under this repository's name.
+  publish:
+    name: Publish container images
+    needs: [backend, frontend]
+    if: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      # Least privilege: the default GITHUB_TOKEN cannot write packages unless asked, and
+      # nothing else in this workflow needs it.
+      packages: write
+
+    strategy:
+      # Both images are independent; a frontend build failing should not hide a working
+      # backend image, and vice versa.
+      fail-fast: false
+      matrix:
+        include:
+          - name: backend
+            context: backend
+            build-args: ""
+          - name: frontend
+            context: frontend
+            # NEXT_PUBLIC_* values are inlined into the bundle by `next build`, so this URL is
+            # baked into the image and cannot be changed at run time. The published frontend
+            # image is therefore environment-specific: override this variable per target, or
+            # the image will call an API on localhost. The backend image has no such
+            # constraint - it reads all configuration from the environment at start-up.
+            build-args: |
+              NEXT_PUBLIC_BASE_URL=${{ vars.NEXT_PUBLIC_BASE_URL || 'http://localhost:4000' }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # GHCR rejects image names containing uppercase characters, and GitHub owner names are
+      # case-preserving (`dLuxKid`). Lowercasing here rather than relying on an action to do
+      # it silently keeps the failure mode visible instead of surprising.
+      - name: Derive lowercase image name
+        id: image
+        run: echo "name=ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')-${{ matrix.name }}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # `latest` plus the commit SHA. The SHA tag is the one that matters: `latest` is
+      # ambiguous the moment two builds exist, so anything reproducible should pin the SHA.
+      - name: Derive tags and labels
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ steps.image.outputs.name }}
+          tags: |
+            type=raw,value=latest
+            type=sha,format=long
+
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ matrix.context }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: ${{ matrix.build-args }}
+          # Layer cache kept in the same registry, so rebuilds that only change application
+          # code do not reinstall dependencies from scratch on every push.
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

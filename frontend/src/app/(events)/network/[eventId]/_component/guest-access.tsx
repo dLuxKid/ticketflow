@@ -16,7 +16,7 @@ import { baseUrl } from "@/utils/urls";
  *
  * Proof is control of the email on the booking. The server responds identically whether or
  * not the address matches one, so this component must never claim the code "was sent" as
- * fact — it says what it can honestly say, and moves to the code step either way.
+ * fact - it says what it can honestly say, and moves to the code step either way.
  */
 export default function GuestAccess({
   eventId,
@@ -61,7 +61,7 @@ export default function GuestAccess({
       // The server issues an ordinary session token, so from here the guest is simply a
       // signed-in user and every existing networking call works unchanged.
       setCookie("jwt", res.data.token, { maxAge: 60 * 60 * 24 * 7, path: "/" });
-      toast.success("You're in — welcome to the channel");
+      toast.success("You're in - welcome to the channel");
       onAuthenticated();
     } catch (err: any) {
       toast.error(

@@ -38,14 +38,14 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       required: requiredForPurchase,
     },
-    // Only known once the charge settles — a purchase booking is now reserved BEFORE
+    // Only known once the charge settles - a purchase booking is now reserved BEFORE
     // checkout (see bookingService.reserveBooking), so this cannot be required at insert.
     transactionNumber: {
       type: Number,
     },
     // The code a purchased ticket's QR carries, and what the door scanner resolves against
     // (see bookingRepository.findByInviteTokenOrTicketId). Always server-issued by
-    // shared/utils/ticketIdGenerator.js — never accepted from the client. Unique index below.
+    // shared/utils/ticketIdGenerator.js - never accepted from the client. Unique index below.
     ticketId: {
       type: String,
       required: requiredForPurchase,
@@ -83,7 +83,7 @@ const bookingSchema = new mongoose.Schema(
       required: [true, 'Booking must have a ticket type.'],
     },
     // How this admission came to exist: a paid purchase or an organiser invite.
-    // Reporting-only — it never changes how admission is granted (see guest-management merge).
+    // Reporting-only - it never changes how admission is granted (see guest-management merge).
     source: {
       type: String,
       enum: ['purchase', 'invite'],
@@ -119,7 +119,7 @@ const bookingSchema = new mongoose.Schema(
       type: Date,
     },
     // One-time code letting a guest who never made an account into this event's networking
-    // channel. Only the SHA-256 hash is stored, so a database leak cannot be replayed —
+    // channel. Only the SHA-256 hash is stored, so a database leak cannot be replayed -
     // the same treatment as passwordResetToken on the user model. `select: false` keeps it
     // out of every ordinary booking read.
     networkingOtpHash: {
@@ -130,7 +130,7 @@ const bookingSchema = new mongoose.Schema(
       type: Date,
       select: false,
     },
-    // Guest networking (Phase 7): must opt in to appear in the event's attendee directory —
+    // Guest networking (Phase 7): must opt in to appear in the event's attendee directory -
     // privacy-by-default, not privacy-by-exception. Lives on Booking, not User, because
     // visibility is scoped to *this* event; the same account attending a different event
     // should not inherit it.

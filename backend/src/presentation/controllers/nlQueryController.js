@@ -3,7 +3,7 @@ import catchAsync from '../../shared/middleware/catchAsync.js';
 
 /**
  * Presentation layer for natural-language guest-list queries.
- * HTTP concerns only — parsing and execution live in nlGuestQueryService.
+ * HTTP concerns only - parsing and execution live in nlGuestQueryService.
  */
 export const query = catchAsync(async (req, res) => {
   const result = await nlGuestQueryService.answerQuestion(

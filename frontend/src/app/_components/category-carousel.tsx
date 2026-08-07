@@ -10,7 +10,7 @@ import { event_categories } from "@/assets/data/event-categories";
  * Event-categories carousel. Softened for the cotton theme: a cool purple-tinted gradient
  * overlay (instead of a flat harsh black), plush corners and a soft shadow. Scrolls
  * horizontally with snap, arrow controls, and a right-edge fade hint so it's obvious there's
- * more to see — the arrows/fade appear only while there's something to scroll to.
+ * more to see - the arrows/fade appear only while there's something to scroll to.
  */
 export default function CategoryCarousel() {
   const scroller = useRef<HTMLDivElement>(null);
@@ -61,7 +61,7 @@ export default function CategoryCarousel() {
               width={400}
               height={400}
             />
-            {/* Soft, cool-tinted overlay — readable text without harshly dimming the photo. */}
+            {/* Soft, cool-tinted overlay - readable text without harshly dimming the photo. */}
             <div className="absolute inset-0 bg-gradient-to-t from-main-black/70 via-main-purple/20 to-main-black/25" />
             <div className="absolute inset-0 flex-center p-6">
               <h4 className="text-main-white font-semibold md:font-bold text-lg md:text-xl lg:text-2xl [text-shadow:0_1px_8px_rgba(0,0,0,0.35)]">
@@ -72,7 +72,7 @@ export default function CategoryCarousel() {
         ))}
       </div>
 
-      {/* Right-edge fade hint — only while there's more to the right. */}
+      {/* Right-edge fade hint - only while there's more to the right. */}
       <div
         aria-hidden
         className={`pointer-events-none absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-main-grey-bg to-transparent transition-opacity duration-300 ${

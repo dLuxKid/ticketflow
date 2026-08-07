@@ -1,13 +1,13 @@
 /**
  * Held-out message -> expected-tool pairs for evaluating the chatbot's tool-selection
- * (scripts/eval-chatbot.js) — the "did the LLM pick the right tool" question, which is a
+ * (scripts/eval-chatbot.js) - the "did the LLM pick the right tool" question, which is a
  * genuinely different axis from nlQueryEvalSet's exact-match accuracy (a rule-based
  * parser's structured output) and anomalyCases' precision/recall/F1 (a numeric classifier).
- * This is the one eval in the codebase that needs a real hosted LLM to mean anything — a
+ * This is the one eval in the codebase that needs a real hosted LLM to mean anything - a
  * stubbed provider would just replay whatever this file hardcodes.
  *
  * `expectedTool: null` cases are chit-chat/greetings the model should answer directly,
- * without reaching for a tool it doesn't need — same "decline rather than guess" principle
+ * without reaching for a tool it doesn't need - same "decline rather than guess" principle
  * nlQueryEvalSet's null cases test for the rule-based parser.
  */
 export const CHATBOT_EVAL_SET = [
@@ -64,7 +64,7 @@ export const CHATBOT_EVAL_SET = [
   },
   { message: 'what payment methods do you accept', expectedTool: 'answer_faq' },
 
-  // no tool — chit-chat / out of scope
+  // no tool - chit-chat / out of scope
   { message: 'hi there', expectedTool: null },
   { message: 'hello!', expectedTool: null },
   { message: 'thanks, that helped', expectedTool: null },

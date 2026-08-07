@@ -5,7 +5,7 @@ import { executeQuery } from '../../src/services/nlQuery/executeQuery.js';
 import { NL_QUERY_EVAL_SET } from '../fixtures/nlQueryEvalSet.js';
 
 /**
- * Phase 5 — natural-language guest queries. Hand-picked cases for the parser and executor,
+ * Phase 5 - natural-language guest queries. Hand-picked cases for the parser and executor,
  * plus a regression guard on the full held-out set so a future regex change can't silently
  * drop accuracy. Full report: `node scripts/eval-nlquery.js`.
  */
@@ -95,7 +95,7 @@ test('regression guard: full held-out set stays at reported accuracy', () => {
   ).length;
   const accuracy = correct / NL_QUERY_EVAL_SET.length;
 
-  // Bound set at the measured 1.000 (see scripts/eval-nlquery.js) — this test fails before
+  // Bound set at the measured 1.000 (see scripts/eval-nlquery.js) - this test fails before
   // a report or demo would silently show a regression.
   assert.ok(accuracy >= 0.95, `accuracy dropped: ${accuracy}`);
 });

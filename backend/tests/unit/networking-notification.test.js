@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import { isCurrentlyLive } from '../../src/services/networkingNotificationService.js';
 
 /**
- * Phase 7 — "is this event live right now" predicate behind the event-live notification.
+ * Phase 7 - "is this event live right now" predicate behind the event-live notification.
  * Pure, no DB required. Deliberately keyed off the same startDate<=now<=endDate window
  * Event.isLive uses, so this and the dashboard/networking access gate never disagree.
  *
  * No "already notified" branch here (by design the notification fires on every trigger,
- * not once ever per event) — see networkingNotificationService.js for why.
+ * not once ever per event) - see networkingNotificationService.js for why.
  */
 
 test('an event inside its live window is currently live', () => {

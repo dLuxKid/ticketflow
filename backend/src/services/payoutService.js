@@ -3,14 +3,14 @@ import { PLATFORM_FEE_PERCENT } from './pricingService.js';
 import AppError from '../shared/errors/AppError.js';
 
 /**
- * Organiser payout onboarding — connecting a bank account so ticket revenue can be split
+ * Organiser payout onboarding - connecting a bank account so ticket revenue can be split
  * to it at checkout.
  *
  * Three calls to Paystack, each doing one job:
- *   1. `listBanks`      — the banks a user may choose from (their codes are Paystack's).
- *   2. `resolveAccount` — turns a bank + account number into the registered account NAME,
+ *   1. `listBanks`      - the banks a user may choose from (their codes are Paystack's).
+ *   2. `resolveAccount` - turns a bank + account number into the registered account NAME,
  *                         so the organiser confirms who will be paid before committing.
- *   3. `createSubaccount` — registers the destination and returns the `ACCT_...` code that
+ *   3. `createSubaccount` - registers the destination and returns the `ACCT_...` code that
  *                         the split at checkout routes to.
  *
  * Step 2 exists to prevent the most likely and least recoverable failure in this flow:
@@ -19,7 +19,7 @@ import AppError from '../shared/errors/AppError.js';
  * money exists, not after.
  *
  * Written against the REST API with `fetch` and no SDK, matching how `paystack.js` and
- * `llmProvider.js` already talk to third parties — one less dependency in the money path,
+ * `llmProvider.js` already talk to third parties - one less dependency in the money path,
  * and the request shape stays visible at the call site.
  */
 
@@ -52,7 +52,7 @@ const paystackRequest = async (
       headers: {
         // The bank directory is public data and Paystack serves it unauthenticated. Demanding
         // a secret key for it coupled the *first* step of payout onboarding to a key that a
-        // deployment may not have configured yet — which presented as an empty bank dropdown
+        // deployment may not have configured yet - which presented as an empty bank dropdown
         // with no explanation, exactly when the organiser is trying to set payments up.
         ...(requiresAuth ? { Authorization: `Bearer ${secretKey()}` } : {}),
         'Content-Type': 'application/json',
@@ -148,7 +148,7 @@ export const maskAccountNumber = (accountNumber) => {
  *
  * `percentage_charge` is sent because Paystack requires it, but nothing in this system
  * relies on it: every transaction overrides the split with an explicit `transaction_charge`
- * computed server-side (see pricingService.buildSplit). That is deliberate — the direction
+ * computed server-side (see pricingService.buildSplit). That is deliberate - the direction
  * of `percentage_charge` is ambiguous in Paystack's documentation, and a field whose
  * meaning cannot be verified must not be the thing that decides who gets paid.
  *
@@ -211,7 +211,7 @@ export const connectPayoutAccount = async (
 
 /**
  * Loads and describes one user's payout setup. Exists so the controller never has to reach
- * for a repository — the layering rule this codebase relies on for testability.
+ * for a repository - the layering rule this codebase relies on for testability.
  */
 export const getPayoutFor = async (userId) => {
   const user = await userRepository.findByIdWithPayout(userId);

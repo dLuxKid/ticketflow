@@ -91,7 +91,7 @@ if (skipReason) {
   test('the scan lookup selects the fields the capacity limit is read from', async () => {
     // The regression: the populate selected only `user`, so venueCapacity and totalQuantity
     // arrived undefined, admissionService computed a limit of 0, and capacityDecision reads
-    // 0 as "unlimited" — disabling fire-safety enforcement on every scan without any error.
+    // 0 as "unlimited" - disabling fire-safety enforcement on every scan without any error.
     const booking = await makeBooking('CAPACITYFIELD');
     const loaded = await bookingRepository.findByScanCode(booking.ticketId);
 
@@ -137,7 +137,7 @@ if (skipReason) {
 
   test('re-scanning an admitted ticket at a full venue says already admitted', async () => {
     // The venue is at capacity by now. Re-scanning someone already inside adds nobody, so
-    // answering "the venue is full" — and offering a supervisor override — would be both
+    // answering "the venue is full" - and offering a supervisor override - would be both
     // wrong and alarming at a door. The guest is already in.
     const already = await makeBooking('ALREADYIN0001');
     await admissionService.checkInByScan(already.ticketId, organiser, {

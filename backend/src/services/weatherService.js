@@ -1,7 +1,7 @@
 /**
  * Weather for an event's location, via Open-Meteo.
  *
- * Open-Meteo is used because it needs no API key and no attribution key management — two
+ * Open-Meteo is used because it needs no API key and no attribution key management - two
  * REST calls (geocode a city, then fetch a daily forecast) hit with plain `fetch`, matching
  * how this codebase already handles Paystack and the LLM providers rather than adding an SDK
  * for single-endpoint usage.
@@ -20,13 +20,13 @@ export const __setFetchForTesting = (fn) => {
 const GEOCODE_URL = 'https://geocoding-api.open-meteo.com/v1/search';
 const FORECAST_URL = 'https://api.open-meteo.com/v1/forecast';
 
-/** Open-Meteo's forecast horizon. Beyond this there is no data — not a bad guess, none. */
+/** Open-Meteo's forecast horizon. Beyond this there is no data - not a bad guess, none. */
 export const FORECAST_HORIZON_DAYS = 16;
 
 /**
  * WMO weather codes, grouped rather than enumerated: the caller needs "is it wet / freezing /
  * dangerous", not 99 individual descriptions.
- * @see https://open-meteo.com/en/docs — WMO Weather interpretation codes
+ * @see https://open-meteo.com/en/docs - WMO Weather interpretation codes
  */
 const WMO = {
   0: 'Clear sky',
@@ -151,7 +151,7 @@ export const getDailyForecast = async (latitude, longitude, date) => {
 
 /**
  * Pure: turns a forecast plus the organiser's own event details into practical advice.
- * Exported for unit testing — no network, no clock beyond what is passed in.
+ * Exported for unit testing - no network, no clock beyond what is passed in.
  *
  * **The safety notes are not a crime-risk assessment.** No free, reliable, globally-available
  * crime API exists, and inventing a "safety score" for a neighbourhood would be both
@@ -166,7 +166,7 @@ export const buildAdvice = ({ forecast, event }) => {
   const dressCode = [];
   const safety = [];
 
-  // The organiser's own stated dress code always leads — it is a requirement, not a
+  // The organiser's own stated dress code always leads - it is a requirement, not a
   // suggestion, and no weather inference should outrank it.
   if (event?.dressCode?.trim()) {
     dressCode.push(`The organiser asks for: ${event.dressCode.trim()}.`);
@@ -181,34 +181,34 @@ export const buildAdvice = ({ forecast, event }) => {
     );
 
     if (maxC <= 5) {
-      dressCode.push('It will be cold — a proper coat, and layers underneath.');
+      dressCode.push('It will be cold - a proper coat, and layers underneath.');
     } else if (maxC <= 14) {
       dressCode.push('Mild but not warm; bring a jacket for the evening.');
     } else if (maxC >= 27) {
       dressCode.push(
-        'It will be hot — light, breathable fabrics, and bring water.',
+        'It will be hot - light, breathable fabrics, and bring water.',
       );
     }
 
     if (WET_CODES.has(code) || (precipitationChance ?? 0) >= 50) {
       dressCode.push(
-        `Rain is likely (${precipitationChance ?? 'high'}% chance) — waterproof layer and shoes you don't mind getting wet.`,
+        `Rain is likely (${precipitationChance ?? 'high'}% chance) - waterproof layer and shoes you don't mind getting wet.`,
       );
     }
     if (windKph !== null && windKph >= 40) {
       dressCode.push(
-        'Strong winds forecast — umbrellas will struggle; a hood is the better bet.',
+        'Strong winds forecast - umbrellas will struggle; a hood is the better bet.',
       );
     }
 
     if (FREEZING_CODES.has(code) || minC <= 0) {
       safety.push(
-        'Freezing conditions are forecast — surfaces may be icy underfoot, so allow extra travel time.',
+        'Freezing conditions are forecast - surfaces may be icy underfoot, so allow extra travel time.',
       );
     }
     if (SEVERE_CODES.has(code)) {
       safety.push(
-        `Severe weather is forecast (${description.toLowerCase()}) — check for travel disruption before you set off, and follow any organiser updates.`,
+        `Severe weather is forecast (${description.toLowerCase()}) - check for travel disruption before you set off, and follow any organiser updates.`,
       );
     }
   }
@@ -217,7 +217,7 @@ export const buildAdvice = ({ forecast, event }) => {
   const endHour = event?.endTime ? new Date(event.endTime).getUTCHours() : null;
   if (endHour !== null && (endHour >= 21 || endHour <= 5)) {
     safety.push(
-      'This one runs late — arrange your route home in advance rather than at the end of the night.',
+      'This one runs late - arrange your route home in advance rather than at the end of the night.',
     );
   }
 
@@ -233,7 +233,7 @@ export const buildAdvice = ({ forecast, event }) => {
 
   if (dressCode.length === 0) {
     dressCode.push(
-      'No dress code was set by the organiser, and no forecast is available yet — dress for the venue and the season.',
+      'No dress code was set by the organiser, and no forecast is available yet - dress for the venue and the season.',
     );
   }
   safety.push(
@@ -281,7 +281,7 @@ export const getEventConditions = async (event) => {
     return {
       ...base,
       forecast: null,
-      note: `That is ${lead} days away — beyond the ${FORECAST_HORIZON_DAYS}-day forecast horizon, so no weather data is available yet.`,
+      note: `That is ${lead} days away - beyond the ${FORECAST_HORIZON_DAYS}-day forecast horizon, so no weather data is available yet.`,
       dressCode,
       safety,
       safetyDisclaimer: SAFETY_DISCLAIMER,
@@ -341,4 +341,4 @@ export const getEventConditions = async (event) => {
  * to drift away from over a long conversation.
  */
 export const SAFETY_DISCLAIMER =
-  'These are practical attendance notes based on the forecast and the organiser-supplied details. They are not a crime or neighbourhood-safety assessment — TicketFlow has no such data.';
+  'These are practical attendance notes based on the forecast and the organiser-supplied details. They are not a crime or neighbourhood-safety assessment - TicketFlow has no such data.';

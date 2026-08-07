@@ -7,10 +7,10 @@ import * as networkingNotificationService from '../../src/services/networkingNot
 import { connect, disconnect, buildEvent, skipReason } from '../helpers/db.js';
 
 /**
- * Phase 7 — the event-live notification sweep only fires for events inside their live
- * window, and — by explicit design — on every run, not once ever per event (see
+ * Phase 7 - the event-live notification sweep only fires for events inside their live
+ * window, and - by explicit design - on every run, not once ever per event (see
  * networkingNotificationService.js for why). No SMTP is configured under test, so
- * individual sends fail — that must not stop the event's "last sent at" timestamp from
+ * individual sends fail - that must not stop the event's "last sent at" timestamp from
  * updating, same non-fatal-delivery rule sendInvite.js already established for invites.
  */
 

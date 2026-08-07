@@ -117,7 +117,7 @@
 //   const [loading, setLoading] = useState<boolean>(false);
 
 //   const [numberOfTickets, setNumberOfTickets] = useState<number>(
-//     // Invite-only events have no ticket tiers — start with 0 rows so the ticket section
+//     // Invite-only events have no ticket tiers - start with 0 rows so the ticket section
 //     // renders nothing and never dereferences an empty ticketInfo array.
 //     eventData.ticketDetails.length ||
 //       (eventData.accessMode === "invite_only" ? 0 : 1)
@@ -392,7 +392,7 @@
 //             {(
 //               [
 //                 { value: "public", label: "Public", description: "Anyone can find and buy a ticket." },
-//                 { value: "invite_only", label: "Invite-only", description: "No public tickets — guest list only." },
+//                 { value: "invite_only", label: "Invite-only", description: "No public tickets - guest list only." },
 //                 { value: "hybrid", label: "Hybrid", description: "Public tickets plus invited guests." },
 //               ] as { value: eventData["accessMode"]; label: string; description: string }[]
 //             ).map((mode) => (
@@ -1348,7 +1348,7 @@ export default function EditEventForm({ event }: { event: eventData }) {
   const [loading, setLoading] = useState<boolean>(false);
 
   const [numberOfTickets, setNumberOfTickets] = useState<number>(
-    // Invite-only events have no ticket tiers — start with 0 rows so the ticket section
+    // Invite-only events have no ticket tiers - start with 0 rows so the ticket section
     // renders nothing and never dereferences an empty ticketInfo array.
     eventData.ticketDetails.length ||
       (eventData.accessMode === "invite_only" ? 0 : 1)
@@ -1629,7 +1629,7 @@ export default function EditEventForm({ event }: { event: eventData }) {
             {(
               [
                 { value: "public", label: "Public", description: "Anyone can find and buy a ticket." },
-                { value: "invite_only", label: "Invite-only", description: "No public tickets — guest list only." },
+                { value: "invite_only", label: "Invite-only", description: "No public tickets - guest list only." },
                 { value: "hybrid", label: "Hybrid", description: "Public tickets plus invited guests." },
               ] as { value: eventData["accessMode"]; label: string; description: string }[]
             ).map((mode) => (

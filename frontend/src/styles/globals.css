@@ -3,7 +3,7 @@
 @import "tailwindcss";
 
 @theme {
-  /* "Soft cotton" palette — cool, airy, low-glare. Softened from the original electric
+  /* "Soft cotton" palette - cool, airy, low-glare. Softened from the original electric
      scheme: the vivid purple becomes a calm cool indigo, near-black becomes a cool slate
      (easier on the eyes, still AA-contrast), and the neutrals pick up a faint lavender-blue
      so whites read as soft rather than clinical. Button text keeps ≥4.8:1 on the indigo. */
@@ -103,13 +103,13 @@ button:disabled:hover {
 
 /* Section rhythm.
    In @layer base so per-element Tailwind utilities can override it. Unlayered, this rule
-   beat every utility regardless of specificity — cascade layers outrank specificity — so a
+   beat every utility regardless of specificity - cascade layers outrank specificity - so a
    section could not opt out of these defaults, and classes written on the element (the
    scanner's own py-10 px-4, for instance) were silently discarded.
 
    No min-height: sections size to their content. `md:min-h-[100svh]` here forced EVERY
    section to fill the viewport on desktop, which is why short pages carried acres of dead
-   space. A section that genuinely should fill the screen — the home hero — opts in with
+   space. A section that genuinely should fill the screen - the home hero - opts in with
    `min-h-[100svh]` on the element.
 
    Vertical padding is a fixed scale rather than the previous `md:py-[7.5%]`: percentage
@@ -124,8 +124,8 @@ button:disabled:hover {
 
 main {
   @apply min-h-[100svh] w-full overflow-x-hidden relative;
-  /* Two overlapping, very soft cool washes — indigo up top, a faint sky-blue off to one
-     side — melting into the airy neutral. Diffuse and low-opacity so pages feel soft and
+  /* Two overlapping, very soft cool washes - indigo up top, a faint sky-blue off to one
+     side - melting into the airy neutral. Diffuse and low-opacity so pages feel soft and
      cool ("cotton") with gentle depth, never busy. */
   background-color: var(--color-main-grey-bg);
   background-image:
@@ -226,7 +226,7 @@ main {
    of the eye is genuinely hostile to some users.
 
    Every animation here is disabled under prefers-reduced-motion (WCAG 2.2 SC
-   2.3.3 Animation from Interactions) — the launcher then simply sits still, and
+   2.3.3 Animation from Interactions) - the launcher then simply sits still, and
    nothing about its function depends on the movement. */
 
 @keyframes chat-pop {

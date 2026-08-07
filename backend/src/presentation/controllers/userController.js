@@ -4,7 +4,7 @@ import catchAsync from '../../shared/middleware/catchAsync.js';
 
 /**
  * Presentation layer for user management.
- * Handles HTTP concerns only — delegates all business logic to userService.
+ * Handles HTTP concerns only - delegates all business logic to userService.
  */
 
 export const getAllUsers = catchAsync(async (req, res) => {
@@ -118,7 +118,7 @@ export const connectPayout = catchAsync(async (req, res) => {
 
   res.status(200).json({
     status: 'success',
-    message: 'Payout account connected — your events can now sell tickets',
+    message: 'Payout account connected - your events can now sell tickets',
     data: { payout },
   });
 });

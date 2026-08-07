@@ -7,7 +7,7 @@ import AppError from '../shared/errors/AppError.js';
 /**
  * Read-side wiring for anomaly detection: groups an event's audit rows by booking and
  * runs the pure detector (anomalyService) over each ticket's history. Reuses the
- * dashboard's access rule — the same organiser/admin who may watch the live dashboard may
+ * dashboard's access rule - the same organiser/admin who may watch the live dashboard may
  * see its anomaly flags.
  */
 export const getAnomaliesForEvent = async (eventId, user) => {

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { isPastRetentionWindow } from '../../src/services/retentionService.js';
 
 /**
- * Phase 6 — GDPR retention window logic. Pure, no DB required.
+ * Phase 6 - GDPR retention window logic. Pure, no DB required.
  */
 
 test('an event well past its retention window is eligible', () => {

@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
  * the user) and scroll state needs the client.
  *
  * In `overlay` mode the bar floats transparently over the hero and only becomes a solid,
- * bordered header once the page is scrolled — so the hero reads full-bleed from the very top
+ * bordered header once the page is scrolled - so the hero reads full-bleed from the very top
  * instead of starting under a white strip. Every other page keeps the existing solid sticky
  * bar, so nothing shifts outside the home page.
  *
@@ -60,7 +60,7 @@ export default function NavShell({
       {/* The bar is `fixed`, not `sticky`, on purpose. Every layout except the home page
           renders <Navbar> INSIDE <main>, and globals.css gives main `overflow-x-hidden`;
           an overflow-hidden element becomes a scroll container, so a sticky descendant
-          sticks to that container's scrollport rather than the viewport — which is why the
+          sticks to that container's scrollport rather than the viewport - which is why the
           bar used to scroll away and disappear. Fixed positioning is not affected by
           ancestor overflow, so it behaves identically on every page.
 

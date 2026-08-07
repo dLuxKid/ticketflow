@@ -9,7 +9,7 @@ import * as nlGuestQueryService from '../../src/services/nlGuestQueryService.js'
 import { connect, disconnect, buildEvent, skipReason } from '../helpers/db.js';
 
 /**
- * Phase 5 — end-to-end: a plain question against a real guest list returns the correct
+ * Phase 5 - end-to-end: a plain question against a real guest list returns the correct
  * guests and count, and access control matches the dashboard's rule.
  */
 

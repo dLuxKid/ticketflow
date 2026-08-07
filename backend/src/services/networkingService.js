@@ -8,7 +8,7 @@ import AppError from '../shared/errors/AppError.js';
  * Guest networking (Phase 7): a per-event group chat, an opt-in attendee directory, and
  * DMs, open while the event is live.
  *
- * Eligibility is "holds a non-revoked/non-rejected booking for this event" — the same
+ * Eligibility is "holds a non-revoked/non-rejected booking for this event" - the same
  * admission-status check Phase 2/4 already established, not a new "attendee" concept.
  */
 
@@ -19,7 +19,7 @@ const isOrganizerOrAdmin = (event, user) =>
  * Pure: has the organiser switched networking on for this event? Exported for unit testing.
  *
  * Only an explicit `false` disables it. Events created before the field existed store
- * `undefined`, and those already had networking — treating absence as "off" would silently
+ * `undefined`, and those already had networking - treating absence as "off" would silently
  * remove a feature from every event already in the database.
  */
 export const isNetworkingEnabled = (event) =>
@@ -38,9 +38,9 @@ export const canPostToNetworking = (event) =>
   isNetworkingEnabled(event) && event?.isLive === 'live';
 
 /**
- * Loads the event and the viewer's booking (if any), authorizes access, and — the first
+ * Loads the event and the viewer's booking (if any), authorizes access, and - the first
  * time a booking created without an account (an invite, or a guest checkout) is accessed by
- * its matching email — links it to the now-authenticated user. That link is what makes an
+ * its matching email - links it to the now-authenticated user. That link is what makes an
  * attendee DM-addressable by user id afterward without requiring every booking to have been
  * created by a logged-in buyer.
  */
@@ -127,7 +127,7 @@ export const postDm = async (eventId, user, peerUserId, body) => {
   assertLive(event);
   if (!body?.trim()) throw new AppError('Message cannot be empty', 400);
 
-  // The recipient must themselves be an eligible attendee of this event — DMs stay inside
+  // The recipient must themselves be an eligible attendee of this event - DMs stay inside
   // the event, they are not a general messaging feature.
   const peerBooking = await bookingRepository.findByEventAndUser(
     eventId,

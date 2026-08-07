@@ -8,7 +8,7 @@ import {
 } from '../../src/services/networkingService.js';
 
 /**
- * Phase 7 — pure access-gate logic for guest networking. No DB required.
+ * Phase 7 - pure access-gate logic for guest networking. No DB required.
  */
 
 const oid = () => new mongoose.Types.ObjectId();
@@ -73,7 +73,7 @@ test('posting is allowed only while the event is live', () => {
 
 test('networking is enabled unless explicitly turned off', () => {
   assert.equal(isNetworkingEnabled({ networkingEnabled: true }), true);
-  // Pre-existing events predate the field — absence must not read as "off".
+  // Pre-existing events predate the field - absence must not read as "off".
   assert.equal(isNetworkingEnabled({}), true);
   assert.equal(isNetworkingEnabled({ networkingEnabled: undefined }), true);
   assert.equal(isNetworkingEnabled({ networkingEnabled: false }), false);

@@ -1,9 +1,9 @@
-# Phase 0 — Change log & test plan
+# Phase 0 - Change log & test plan
 
 Branch: `phase-0-harden-flaws` · Commit: `Phase 0: harden load-bearing flaws before the guest-management merge`
 
 Phase 0 fixes the four flaws the guest-management features depend on. This
-document records **every change** and the **tests each change should be verified against** —
+document records **every change** and the **tests each change should be verified against** -
 the automated ones already written, plus the manual/API and edge cases to add for complete
 coverage (LO3 evidence).
 
@@ -17,7 +17,7 @@ node --test "tests/**/*.test.js"          # all tests
 node --test "tests/unit/**/*.test.js"     # unit only (no DB needed)
 ```
 
-- **Unit tests run anywhere** (no DB, no install — Node's built-in `node:test`).
+- **Unit tests run anywhere** (no DB, no install - Node's built-in `node:test`).
 - **Integration tests** (oversell, ownership) self-skip unless `MONGO_TEST_URI` points at a
   throwaway test database. The oversell/transaction path requires MongoDB running as a
   **replica set** (a standalone `mongod` throws on transactions).
@@ -28,12 +28,12 @@ Current local result: **6 pass, 2 skipped** (the 2 skips are the DB-gated suites
 
 ---
 
-## 0.1 — Atomic inventory decrement (oversell race)
+## 0.1 - Atomic inventory decrement (oversell race)
 
 ### Changes
 | File | Change |
 |------|--------|
-| `src/repositories/eventRepository.js` | New `reserveTicketInventory(eventId, ticketName, count, session)` — guarded atomic `findOneAndUpdate` that matches only while `ticketQuantity >= count` and applies `$inc` to decrement stock and increment `numberOfAttendees` in one atomic single-document write. |
+| `src/repositories/eventRepository.js` | New `reserveTicketInventory(eventId, ticketName, count, session)` - guarded atomic `findOneAndUpdate` that matches only while `ticketQuantity >= count` and applies `$inc` to decrement stock and increment `numberOfAttendees` in one atomic single-document write. |
 | `src/repositories/bookingRepository.js` | `insertMany` now accepts an optional `session` for transactional inserts. |
 | `src/services/bookingService.js` | `createBooking` rewritten: fail-fast 404 if event missing; reserve every ticket type inside a `session.withTransaction`; insert bookings in the same session; send ticket emails only **after** commit. |
 
@@ -44,7 +44,7 @@ Current local result: **6 pass, 2 skipped** (the 2 skips are the DB-gated suites
 | 0.1-b | Reserve more than remain | Returns `null`; quantity unchanged | ✅ automated |
 | 0.1-c | Quantity after a successful sale | Lands at 0, **never negative**; `numberOfAttendees` +1 | ✅ automated |
 | 0.1-d | Multi-tier booking where one tier is sold out | Whole transaction rolls back; **no** bookings inserted for the available tier | ➕ add (needs replica set) |
-| 0.1-e | Load test: 200 concurrent buys / minute against limited stock | Sold count == stock exactly; no oversell; p95 latency acceptable | ➕ add (perf — k6/artillery, Phase 6) |
+| 0.1-e | Load test: 200 concurrent buys / minute against limited stock | Sold count == stock exactly; no oversell; p95 latency acceptable | ➕ add (perf - k6/artillery, Phase 6) |
 | 0.1-f | Regression: normal single purchase | Booking created, stock −1, email sent once | ➕ add (manual/API) |
 
 ### Manual/API check
@@ -53,15 +53,15 @@ only one 201 and one 409 `Not enough "…" tickets remaining`.
 
 ---
 
-## 0.2 — RBAC + ownership (broken access control / IDOR)
+## 0.2 - RBAC + ownership (broken access control / IDOR)
 
 ### Changes
 | File | Change |
 |------|--------|
 | `src/repositories/userRepository.js` | New `findByIdWithRole` (selects the `select:false` `role`). |
 | `src/services/authService.js` | `verifyAndGetUser` now loads the user **with role**, so `req.user.role` is populated (previously `undefined`, which would have made `restrictTo` reject everyone). |
-| `src/services/eventService.js` | `updateEvent(eventId, data, user)` — loads event, allows update only if `user` is the owner or an admin, else 403. |
-| `src/services/bookingService.js` | `checkInAttendee(ticketId, isCheckedIn, user)` — loads booking + event owner, same owner/admin rule, 404 if booking missing. |
+| `src/services/eventService.js` | `updateEvent(eventId, data, user)` - loads event, allows update only if `user` is the owner or an admin, else 403. |
+| `src/services/bookingService.js` | `checkInAttendee(ticketId, isCheckedIn, user)` - loads booking + event owner, same owner/admin rule, 404 if booking missing. |
 | `src/repositories/bookingRepository.js` | New `findByIdWithEventOwner` (populates `event.user` for the check). |
 | `src/presentation/controllers/{event,booking}Controller.js` | Pass `req.user` into the two services. |
 | `src/presentation/routes/eventRoutes.js` | Comment documents that ownership is enforced in the service (no route role-gate, so user-role owners keep access). |
@@ -76,7 +76,7 @@ only one 201 and one 409 `Not enough "…" tickets remaining`.
 | 0.2-e | Owner checks in own event's ticket | success, `isCheckedIn:true` | ✅ automated |
 | 0.2-f | Unauthenticated request to protected route | 401 | ➕ add |
 | 0.2-g | Update / check-in of non-existent id | 404 (not 403) | ➕ add |
-| 0.2-h | **Regression:** `req.user.role` now populated — a creator can still create & update their events | success (proves the role-loading fix didn't break auth) | ➕ add |
+| 0.2-h | **Regression:** `req.user.role` now populated - a creator can still create & update their events | success (proves the role-loading fix didn't break auth) | ➕ add |
 
 ### Manual/API check
 Log in as user B, take their JWT, `PATCH /api/v1/events/update/<A's eventId>` → expect 403.
@@ -84,13 +84,13 @@ Repeat with A's JWT → expect 200.
 
 ---
 
-## 0.3 — Server-side Paystack verification
+## 0.3 - Server-side Paystack verification
 
 ### Changes
 | File | Change |
 |------|--------|
-| `src/shared/utils/paystack.js` | New pure `isValidPaystackSignature(rawBody, signature, secretKey)` — recomputes HMAC-SHA512 over the raw body and compares in constant time. |
-| `src/services/paymentService.js` | New `handlePaystackWebhook(rawBody, signature)` — 401 on bad/missing signature; on `charge.success` sets bookings' `transactionStatus` to `success` by reference; `charge.failed/abandoned` → `failed`; unknown events acknowledged with no change. |
+| `src/shared/utils/paystack.js` | New pure `isValidPaystackSignature(rawBody, signature, secretKey)` - recomputes HMAC-SHA512 over the raw body and compares in constant time. |
+| `src/services/paymentService.js` | New `handlePaystackWebhook(rawBody, signature)` - 401 on bad/missing signature; on `charge.success` sets bookings' `transactionStatus` to `success` by reference; `charge.failed/abandoned` → `failed`; unknown events acknowledged with no change. |
 | `src/repositories/bookingRepository.js` | New `updateStatusByReference(reference, transactionStatus)`. |
 | `src/presentation/controllers/paymentController.js` | New webhook controller using the captured raw body. |
 | `src/presentation/routes/bookingRoutes.js` | New public route `POST /bookings/webhook/paystack` (authenticated by signature, not JWT). |
@@ -122,7 +122,7 @@ curl -X POST localhost:4000/api/v1/bookings/webhook/paystack \
 
 ---
 
-## 0.4 — Numeric ticket typing
+## 0.4 - Numeric ticket typing
 
 ### Changes
 | File | Change |
@@ -145,7 +145,7 @@ curl -X POST localhost:4000/api/v1/bookings/webhook/paystack \
 
 ## Cross-cutting regression checklist
 
-Run before merging Phase 0 — these must still pass:
+Run before merging Phase 0 - these must still pass:
 
 - [ ] Signup / login unaffected by the `role` select change.
 - [ ] Existing happy-path purchase creates bookings, decrements stock, emails a ticket.

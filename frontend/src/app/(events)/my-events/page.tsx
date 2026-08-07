@@ -19,7 +19,7 @@ import { toast } from "sonner";
 /**
  * Organiser's event list.
  *
- * The header band was `bg-main-black` with a `bg-red-900` wrapper around the filter tabs —
+ * The header band was `bg-main-black` with a `bg-red-900` wrapper around the filter tabs -
  * the red was leftover debug styling that shipped, and the black clashed with the cotton
  * palette every other page uses. It is now a white band consistent with the rest of the app.
  *
@@ -41,14 +41,14 @@ function MyEventContent() {
   const { data: me } = useUser();
 
   const assignedEvents: MyEvent[] = assigned?.data?.events ?? [];
-  // An admin's list is every event on the platform, not just their own — so the heading and
+  // An admin's list is every event on the platform, not just their own - so the heading and
   // empty state need to say so, otherwise "Events you created" would be plainly wrong.
   const isAdmin = me?.data?.user?.role === "admin";
 
   const deleteEvent = useDeleteEvent();
 
   const onArchive = (event: MyEvent) => {
-    // Names the event and states plainly what survives — an admin archiving an event with
+    // Names the event and states plainly what survives - an admin archiving an event with
     // paying attendees needs to know it is reversible and that their tickets are not voided.
     const ok = window.confirm(
       `Archive "${event.eventName}"?\n\n` +
@@ -62,7 +62,7 @@ function MyEventContent() {
         const a = res?.data?.affected;
         toast.success(
           a?.bookings
-            ? `"${event.eventName}" archived — ${a.bookings} booking(s) kept${a.paidBookings ? `, ${a.paidBookings} of them paid` : ""}`
+            ? `"${event.eventName}" archived - ${a.bookings} booking(s) kept${a.paidBookings ? `, ${a.paidBookings} of them paid` : ""}`
             : `"${event.eventName}" archived`,
         );
       },
@@ -169,7 +169,7 @@ function MyEventContent() {
       <div className="px-[5%] py-10 md:py-12">
         <div className="mx-auto max-w-screen-2xl">
           {/* Door-staff assignments come first: someone working a door is here to scan, not
-              to browse events they created — and until this section existed they had no
+              to browse events they created - and until this section existed they had no
               route to the scanner at all. Hidden entirely when there are none, so it never
               adds noise for organisers who do not work doors. */}
           {assignedEvents.length > 0 && (

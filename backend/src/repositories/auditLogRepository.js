@@ -2,7 +2,7 @@ import AuditLog from '../models/auditLogModel.js';
 
 /**
  * Persistence layer for AuditLog documents.
- * No business logic — only database operations.
+ * No business logic - only database operations.
  */
 
 /**
@@ -19,7 +19,7 @@ export const record = async (data, session) => {
 };
 
 /**
- * Returns audit entries for an event, most recent first — dashboard/analytics read path.
+ * Returns audit entries for an event, most recent first - dashboard/analytics read path.
  */
 export const findByEvent = (eventId, limit = 100) =>
   AuditLog.find({ event: eventId }).sort({ createdAt: -1 }).limit(limit);

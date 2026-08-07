@@ -4,7 +4,7 @@ import { detectAnomalies } from '../../src/services/anomalyService.js';
 import { buildAnomalyEvalSet } from '../fixtures/anomalyCases.js';
 
 /**
- * Phase 5 — anomaly detection. Hand-picked unit cases for each rule, plus a regression
+ * Phase 5 - anomaly detection. Hand-picked unit cases for each rule, plus a regression
  * guard on the full labelled eval set so a future threshold change can't silently tank
  * precision/recall without a test noticing. Full numbers + confusion matrix:
  * `node scripts/eval-anomaly.js`.
@@ -58,7 +58,7 @@ test('does not flag multi_device once the 3rd device falls outside the window', 
     { outcome: 'rejected', createdAt: at(9 * 60000), deviceId: 'c' }, // outside 5-min window
   ];
   const result = detectAnomalies(rows);
-  // Documented known limitation (see anomalyCases.js) — asserted here, not hidden.
+  // Documented known limitation (see anomalyCases.js) - asserted here, not hidden.
   assert.equal(result.anomalous, false);
 });
 

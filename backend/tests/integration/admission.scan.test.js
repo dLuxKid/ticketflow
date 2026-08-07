@@ -8,7 +8,7 @@ import * as admissionService from '../../src/services/admissionService.js';
 import { connect, disconnect, buildEvent, skipReason } from '../helpers/db.js';
 
 /**
- * Phase 2 — proves the atomic single-use check-in.
+ * Phase 2 - proves the atomic single-use check-in.
  *
  * Two simultaneous scans of one ticket must yield exactly one admission; both a success
  * and a subsequent rejection must leave audit rows. Requires a MongoDB replica set (the
@@ -48,7 +48,7 @@ if (skipReason) {
     // ticket makes the event's own capacity 1 (venueCapacity is unset, so the door falls
     // back to totalQuantity), which means the second guest admitted in this file would be
     // refused for being over capacity rather than for the reason under test. That is the
-    // capacity guardrail behaving correctly — the fixture, not the rule, was wrong.
+    // capacity guardrail behaving correctly - the fixture, not the rule, was wrong.
     event = await Event.create(
       buildEvent({
         user: owner._id,

@@ -21,7 +21,7 @@ export const hardcodedCountries = [
 ];
 
 export const hardcodedStates: Record<string, reactSelectOptions[]> = {
-  // UK entries are counties/administrative areas rather than cities — the field is labelled
+  // UK entries are counties/administrative areas rather than cities - the field is labelled
   // "State/County" because "state" has no meaning here. The existing city-named values are
   // kept so events already stored against them still resolve.
   "United Kingdom": [

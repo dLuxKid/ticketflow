@@ -111,7 +111,7 @@ export function EventDetails({
       value: "invite_only",
       label: "Invite-only",
       description:
-        "No public tickets — you build the guest list and send invites.",
+        "No public tickets - you build the guest list and send invites.",
     },
     {
       value: "hybrid",
@@ -163,7 +163,7 @@ export function EventDetails({
 
       {/* Practical details attendees ask about before travelling. All optional: an organiser
           who fills none of them ends up with exactly the event they had before these existed.
-          The chatbot reads these directly, so anything stated here is what it answers with —
+          The chatbot reads these directly, so anything stated here is what it answers with -
           which is why they are plain free text rather than fixed options that would not suit
           every kind of event. */}
       <div className="w-full">
@@ -182,7 +182,7 @@ export function EventDetails({
               {
                 key: "dressCode",
                 label: "Dress code",
-                placeholder: "Smart casual — no sportswear",
+                placeholder: "Smart casual - no sportswear",
               },
               {
                 key: "parkingInfo",
@@ -197,7 +197,7 @@ export function EventDetails({
               {
                 key: "ageRestriction",
                 label: "Age restriction",
-                placeholder: "18+ — photo ID required",
+                placeholder: "18+ - photo ID required",
               },
             ] as const
           ).map((field) => (

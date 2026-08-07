@@ -1,8 +1,8 @@
 /**
  * E2E seeding helpers (Phase 6).
  *
- * Seeds through the REAL backend HTTP API — real signup, real event creation (including a
- * real Cloudinary upload for the required cover image) — rather than writing to MongoDB
+ * Seeds through the REAL backend HTTP API - real signup, real event creation (including a
+ * real Cloudinary upload for the required cover image) - rather than writing to MongoDB
  * directly. This keeps the E2E suite honest about exercising the actual API contract, at
  * the cost of leaving real (harmless, clearly-named) rows in whatever database the backend
  * under test is pointed at. Never point E2E_API_BASE_URL at a production backend.
@@ -58,7 +58,7 @@ export const seedInviteOnlyEvent = async (): Promise<SeededOrganiser> => {
       startTime: later,
       endDate: later,
       endTime: later,
-      eventDescription: "Seeded by Playwright E2E — safe to delete.",
+      eventDescription: "Seeded by Playwright E2E - safe to delete.",
       eventLocation: {
         address: "1 Test Street",
         city: "Testville",

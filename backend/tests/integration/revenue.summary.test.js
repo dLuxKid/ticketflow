@@ -8,7 +8,7 @@ import { platformFeeMinor } from '../../src/services/pricingService.js';
 import { connect, disconnect, buildEvent, skipReason } from '../helpers/db.js';
 
 /**
- * Revenue reporting: the figures, and — more importantly — who can see whose.
+ * Revenue reporting: the figures, and - more importantly - who can see whose.
  *
  * Scope is the security property here. An organiser must never see another organiser's
  * takings, and an admin must see everything; both are decided inside the service from the
@@ -67,7 +67,7 @@ if (skipReason) {
     // Alice: two separate transactions, ₦10,000 and ₦5,000.
     await paidBooking(aliceEventId, 111111, 10000);
     await paidBooking(aliceEventId, 222222, 5000);
-    // A pending hold that must NOT count — it has not been paid.
+    // A pending hold that must NOT count - it has not been paid.
     await Booking.create({
       event: aliceEventId,
       email: 'revenue@example.com',

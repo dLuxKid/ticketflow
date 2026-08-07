@@ -3,7 +3,7 @@ import crypto from 'crypto';
 /**
  * One-time codes for guest access to an event's networking channel.
  *
- * Six digits, because the recipient types it from an email on a phone at a venue — long
+ * Six digits, because the recipient types it from an email on a phone at a venue - long
  * enough that guessing is impractical inside the short expiry, short enough to key in
  * without errors. Generated with `crypto.randomInt` rather than `Math.random`: this is a
  * credential, and a predictable one would let anyone holding a guest's email address into
@@ -17,7 +17,7 @@ export const generateOtp = () =>
   String(crypto.randomInt(0, 1_000_000)).padStart(6, '0');
 
 /**
- * Only the hash is ever persisted. SHA-256 without a salt is appropriate here — unlike a
+ * Only the hash is ever persisted. SHA-256 without a salt is appropriate here - unlike a
  * password, the input has high entropy relative to its ten-minute life, and the hash must be
  * recomputable for a constant-time comparison on verify.
  */

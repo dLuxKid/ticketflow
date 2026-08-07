@@ -10,12 +10,12 @@ import * as admissionService from '../../src/services/admissionService.js';
 import { connect, disconnect, buildEvent, skipReason } from '../helpers/db.js';
 
 /**
- * Phase 4 — guest-list import issues admittable invites, duplicates are skipped, access
+ * Phase 4 - guest-list import issues admittable invites, duplicates are skipped, access
  * mode is enforced (public rejected for guest lists; invite_only rejected for purchase),
  * and an imported guest's QR admits exactly once end-to-end.
  *
  * Email delivery is not configured under test, so invites remain 'issued' (delivery is
- * non-fatal) — they are still admittable, which is what we assert.
+ * non-fatal) - they are still admittable, which is what we assert.
  */
 
 if (skipReason) {

@@ -6,7 +6,7 @@ import path from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Views are at backend/views/email/ — three levels up from src/shared/utils/
+// Views are at backend/views/email/ - three levels up from src/shared/utils/
 const VIEWS_DIR = path.join(__dirname, '../../../views/email');
 
 class Email {

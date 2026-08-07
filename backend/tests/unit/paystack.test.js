@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import { isValidPaystackSignature } from '../../src/shared/utils/paystack.js';
 
 /**
- * Phase 0.3 — proves the webhook signature verifier accepts genuine Paystack signatures
+ * Phase 0.3 - proves the webhook signature verifier accepts genuine Paystack signatures
  * and rejects everything else. This is what makes payment state server-authoritative
  * instead of trusting a client-reported status.
  */

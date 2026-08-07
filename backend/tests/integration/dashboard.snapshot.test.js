@@ -6,7 +6,7 @@ import * as dashboardService from '../../src/services/dashboardService.js';
 import { connect, disconnect, buildEvent, skipReason } from '../helpers/db.js';
 
 /**
- * Phase 3 — the dashboard snapshot reports capacity, sold and admitted counts correctly,
+ * Phase 3 - the dashboard snapshot reports capacity, sold and admitted counts correctly,
  * so a freshly-connected dashboard is populated before the next scan arrives.
  */
 

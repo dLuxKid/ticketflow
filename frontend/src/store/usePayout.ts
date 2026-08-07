@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 
 /**
- * Organiser payout account — the bank account ticket revenue is settled to.
+ * Organiser payout account - the bank account ticket revenue is settled to.
  *
  * The subaccount code itself is never sent to the client: it identifies the destination in
  * the money path and the account holder has no use for it, so keeping it server-side keeps

@@ -6,8 +6,8 @@ import {
 } from '../../src/services/chatbot/chatbotService.js';
 
 /**
- * Phase 8 — chatbot orchestration (routing, tool execution, fallback), tested via dependency
- * injection rather than mocking the ESM `llmProvider` module directly — `handleMessage`
+ * Phase 8 - chatbot orchestration (routing, tool execution, fallback), tested via dependency
+ * injection rather than mocking the ESM `llmProvider` module directly - `handleMessage`
  * accepts an optional `{complete}` override, defaulting to the real provider for production
  * callers. No network, no DB: only `answer_faq` (pure, no DB) is exercised here;
  * `search_events`/`get_event_details` are covered by the DB-gated integration test.
@@ -67,7 +67,7 @@ test('a tool call executes the tool and asks the model for a final answer', asyn
   const parsed = JSON.parse(toolMessage.content);
   assert.ok(Array.isArray(parsed.faqs) && parsed.faqs.length > 0);
 
-  // Second call must not offer tools again — one hop only, no chained calls.
+  // Second call must not offer tools again - one hop only, no chained calls.
   assert.deepEqual(calls[1].tools, []);
 });
 

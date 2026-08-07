@@ -12,7 +12,7 @@ import {
 } from "@/store/useAdminUsers";
 
 /**
- * Admin user directory — the one admin capability with no existing screen to reuse.
+ * Admin user directory - the one admin capability with no existing screen to reuse.
  *
  * Every other admin power is "act as owner of any event", which the ordinary event screens
  * already cover now that My Events is unscoped for admins. Users are different: nothing in
@@ -20,7 +20,7 @@ import {
  * would duplicate pages that already work.
  *
  * The role controls mirror the server's guards (userService.canChangeRole) so the UI never
- * offers an action that would be refused — but the server remains the boundary; hiding a
+ * offers an action that would be refused - but the server remains the boundary; hiding a
  * control is a courtesy, not a permission.
  */
 
@@ -79,7 +79,7 @@ export default function AdminUsersPage() {
 
   const onDelete = (user: AdminUser) => {
     // Native confirm, matching guest-manager's GDPR erase. It is keyboard-accessible and
-    // impossible to dismiss accidentally, which is what a destructive action needs — and it
+    // impossible to dismiss accidentally, which is what a destructive action needs - and it
     // names the person, so nobody deactivates the wrong row from muscle memory.
     const ok = window.confirm(
       `Deactivate ${user.name} (${user.email})?\n\n` +
@@ -255,7 +255,7 @@ export default function AdminUsersPage() {
                               title={reason}
                               className="text-xs text-sec-black/40"
                             >
-                              —
+                              -
                             </span>
                           ) : (
                             <button

@@ -8,7 +8,7 @@ import { eventTabs } from "@/utils/event-tabs";
 
 /**
  * Live arrivals dashboard. Subscribes to the same-origin SSE proxy and updates in place as
- * guests are admitted or rejected at the door — no polling, no refresh.
+ * guests are admitted or rejected at the door - no polling, no refresh.
  */
 
 type Snapshot = {
@@ -116,7 +116,7 @@ export default function LiveDashboard({ eventId }: { eventId: string }) {
         reason: r.reason,
         at: new Date().toISOString(),
       });
-      loadAnomalies(); // a rejection can flip a ticket into "flagged" — refresh
+      loadAnomalies(); // a rejection can flip a ticket into "flagged" - refresh
     });
 
     return () => source.close();
@@ -184,7 +184,7 @@ export default function LiveDashboard({ eventId }: { eventId: string }) {
           <p className="mt-1 text-amber-700">
             Average predicted no-show risk:{" "}
             {Math.round(noShow.averageProbability * 100)}%. Estimate from a model
-            trained on synthetic data pre-launch — treat as a rough guide, not a
+            trained on synthetic data pre-launch - treat as a rough guide, not a
             guarantee.
           </p>
         </div>
@@ -199,7 +199,7 @@ export default function LiveDashboard({ eventId }: { eventId: string }) {
             {flagged.map((f) => (
               <li key={f.bookingId} className="text-sm">
                 <p className="font-medium text-main-black">
-                  Ticket ending {f.bookingId.slice(-6)} — {f.scanCount} scans
+                  Ticket ending {f.bookingId.slice(-6)} - {f.scanCount} scans
                 </p>
                 <p className="text-main-black/60">
                   {f.flags.map((flag) => FLAG_LABEL[flag] ?? flag).join(", ")}
@@ -228,7 +228,7 @@ export default function LiveDashboard({ eventId }: { eventId: string }) {
                 >
                   {scan.outcome === "admitted"
                     ? "Admitted"
-                    : `Rejected — ${scan.reason ?? "unknown"}`}
+                    : `Rejected - ${scan.reason ?? "unknown"}`}
                 </span>
                 <time dateTime={scan.at} className="text-main-black/60">
                   {new Date(scan.at).toLocaleTimeString()}

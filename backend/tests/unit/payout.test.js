@@ -8,7 +8,7 @@ import {
 } from '../../src/services/payoutService.js';
 
 /**
- * Payout onboarding — the Paystack calls that connect an organiser's bank account.
+ * Payout onboarding - the Paystack calls that connect an organiser's bank account.
  *
  * Network is injected rather than mocked at the module level, matching the pattern
  * chatbotService already uses. No real Paystack call is made here.
@@ -104,7 +104,7 @@ test('a valid account resolves to the name it is registered under', async () => 
 
 test("Paystack's own refusal message is surfaced, not replaced", async () => {
   // An organiser stuck on this screen needs "Account number is invalid", not "request
-  // failed" — the provider's message is the only actionable information available.
+  // failed" - the provider's message is the only actionable information available.
   await assert.rejects(
     () =>
       resolveAccount(

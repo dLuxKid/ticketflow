@@ -12,7 +12,7 @@ import Scanner from "./scanner";
 /**
  * The capacity override is a safety control: it lets door staff exceed the venue's safe
  * occupancy, so it must be deliberate, attributable, and impossible to trigger by accident.
- * These tests pin that behaviour — that the prompt appears only for `at_capacity`, that
+ * These tests pin that behaviour - that the prompt appears only for `at_capacity`, that
  * nothing is admitted until a human confirms, and that declining admits no one.
  *
  * jsdom provides no BarcodeDetector, so the component renders in manual-entry mode, which
@@ -26,7 +26,7 @@ const enterCode = async (code: string) => {
   return user;
 };
 
-describe("Scanner — capacity override", () => {
+describe("Scanner - capacity override", () => {
   beforeEach(() => scanTicket.mockReset());
 
   it("offers an override when the venue is at capacity", async () => {
@@ -53,7 +53,7 @@ describe("Scanner — capacity override", () => {
     await enterCode("#K4M2XQ9WPR7T");
     await screen.findByRole("alertdialog");
 
-    // One call only — the refusal. Nothing was admitted by showing the prompt.
+    // One call only - the refusal. Nothing was admitted by showing the prompt.
     expect(scanTicket).toHaveBeenCalledTimes(1);
     expect(scanTicket).toHaveBeenCalledWith("#K4M2XQ9WPR7T", undefined, false);
     expect(screen.queryByText(/✓ Admitted/)).not.toBeInTheDocument();

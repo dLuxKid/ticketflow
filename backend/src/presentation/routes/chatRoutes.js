@@ -3,7 +3,7 @@ import rateLimit from 'express-rate-limit';
 import * as chatController from '../controllers/chatController.js';
 
 /**
- * Stricter than the general `/api` limiter (100/hour) in app.js — LLM calls cost money per
+ * Stricter than the general `/api` limiter (100/hour) in app.js - LLM calls cost money per
  * request, unlike everything else on this API.
  */
 const chatLimiter = rateLimit({

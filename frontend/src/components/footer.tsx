@@ -59,7 +59,7 @@ export default function Footer() {
               />
             </Link>
             <p className="max-w-xs text-sm leading-relaxed text-main-white/60">
-              Event ticketing and guest management — from the first ticket sold
+              Event ticketing and guest management - from the first ticket sold
               to the last guest through the door.
             </p>
             {/* Routes to the contact form rather than exposing mailboxes. Two `mailto:`

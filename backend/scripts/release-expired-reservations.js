@@ -2,7 +2,7 @@
  * Releases abandoned checkout reservations.
  *
  * A purchase now holds its seats (bookings written as `pending`) before the buyer is sent
- * to Paystack. Most reservations resolve within seconds — the webhook confirms the charge,
+ * to Paystack. Most reservations resolve within seconds - the webhook confirms the charge,
  * or reports it failed and the seats go straight back. What this script cleans up is the
  * remainder: the buyer who closed the tab mid-checkout, or whose webhook never arrived.
  * Without it those seats would be held forever and the event would report a phantom

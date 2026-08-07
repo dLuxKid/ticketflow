@@ -17,8 +17,8 @@ export default async function Home() {
           border line, once the page is scrolled. */}
       <Navbar showNavItems overlay />
       <main>
-        {/* Opts into a full-viewport height. Sections no longer get this by default — see
-            the `section` rule in globals.css — so the hero asks for it explicitly. */}
+        {/* Opts into a full-viewport height. Sections no longer get this by default - see
+            the `section` rule in globals.css - so the hero asks for it explicitly. */}
         <section className="flex-center relative min-h-[100svh] bg-[url('/hero-section-bg.webp')] bg-center bg-contain">
           <Container className="flex-center flex-col gap-8 md:gap-6 w-full">
             <div className="bg-black/80 absolute z-0 inset-x-0 inset-y-0" />
@@ -26,7 +26,7 @@ export default async function Home() {
               <HeroHeadline />
             </div>
             {/* The subheading now lives inside HeroHeadline so it can change with the
-                phrase being typed — a static one here would contradict it. */}
+                phrase being typed - a static one here would contradict it. */}
             <div className="flex-center relative z-10 mt-2 md:mt-4">
               <Link href={"/explore-events"}>
                 <Button title="events">Explore Events</Button>

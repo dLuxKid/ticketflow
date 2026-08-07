@@ -64,7 +64,7 @@ export default async function Tickets() {
               </div>
               <div className="h-40 w-0.5 hidden sm:block rounded bg-white/50" />
               <div className="flex-start my-auto flex-col gap-1">
-                {/* The ticket links through to the event it is for — previously the only
+                {/* The ticket links through to the event it is for - previously the only
                     route to those details was searching the public listing again. */}
                 <Link
                   href={`/explore-events/${event.slug}`}

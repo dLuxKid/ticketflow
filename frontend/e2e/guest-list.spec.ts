@@ -5,8 +5,8 @@ import { seedInviteOnlyEvent } from "./fixtures/seed";
  * Core-loop E2E (Phase 6): an organiser imports a guest and asks a question about their
  * guest list, through the real frontend against a real running backend.
  *
- * Scope note: this covers the organiser-facing web flow — signup, event creation, guest
- * import, NL query — end to end. It deliberately stops short of the physical door-scan
+ * Scope note: this covers the organiser-facing web flow - signup, event creation, guest
+ * import, NL query - end to end. It deliberately stops short of the physical door-scan
  * step (scanning a QR with a device), which is already proven at the API/service level by
  * the concurrency-focused integration tests in backend/tests/integration/admission.scan.test.js
  * (including the "two simultaneous scans -> exactly one admits" proof). Automating an

@@ -4,7 +4,7 @@ import { parseGuestCsv } from '../../src/shared/utils/parseGuestCsv.js';
 import { generateInviteToken } from '../../src/shared/utils/inviteToken.js';
 
 /**
- * Phase 4 — pure CSV parsing and invite-token generation. No DB required.
+ * Phase 4 - pure CSV parsing and invite-token generation. No DB required.
  */
 
 test('parses a CSV with a header row in any column order', () => {

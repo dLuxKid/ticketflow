@@ -3,11 +3,11 @@
  *
  * Laid out as a boarding-pass-style card: brand header, a details grid (ticket ID, holder,
  * date, time), a perforation rule, then the QR on its own light panel. Built from nested
- * tables with inline styles throughout — email clients ignore <style> blocks and modern
+ * tables with inline styles throughout - email clients ignore <style> blocks and modern
  * layout, so tables are the only geometry that renders consistently in Gmail and Outlook.
  *
  * The QR is referenced as `cid:ticket-qr` and attached by the sender (generatePdf.js).
- * Never a data: URI here — Gmail strips those from <img src>, which is exactly the bug
+ * Never a data: URI here - Gmail strips those from <img src>, which is exactly the bug
  * that made delivered tickets arrive with a blank square.
  *
  * @param {object} t - Combined event + booking fields
@@ -144,7 +144,7 @@ const pdfTemplate = async (t) => {
               <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td style="background-color:#ffffff;border:1px solid #e4e6f1;border-radius:16px;padding:14px;">
-                    <img src="cid:ticket-qr" alt="Your ticket QR code — reference ${ticketId}" width="180" height="180" style="display:block;width:180px;height:180px;" />
+                    <img src="cid:ticket-qr" alt="Your ticket QR code - reference ${ticketId}" width="180" height="180" style="display:block;width:180px;height:180px;" />
                   </td>
                 </tr>
               </table>
@@ -165,7 +165,7 @@ const pdfTemplate = async (t) => {
         </table>
 
         <p style="margin:18px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#9aa0b5;">
-          Sent by TicketFlow &bull; Keep this email — your QR code is your entry.
+          Sent by TicketFlow &bull; Keep this email - your QR code is your entry.
         </p>
       </td>
     </tr>

@@ -13,7 +13,7 @@ import { useEffect, useState, useTransition } from "react";
 
 /**
  * Guest-list manager for an invite_only / hybrid event. Two ways in: a one-guest-at-a-time
- * form (the common case) and a CSV bulk-import for large lists — both call the same
+ * form (the common case) and a CSV bulk-import for large lists - both call the same
  * backend import endpoint, just with a one-item array vs. a parsed CSV string. Each new
  * guest is emailed a single-use QR invite; the list refreshes after either path.
  */
@@ -71,7 +71,7 @@ export default function GuestManager({ eventId }: { eventId: string }) {
   const handleImport = () => {
     setError(null);
     setResult(null);
-    // startTransition's callback must be () => void — the async work runs in an inner
+    // startTransition's callback must be () => void - the async work runs in an inner
     // IIFE rather than making the callback itself async (which would return a Promise).
     startTransition(() => {
       void (async () => {
@@ -141,7 +141,7 @@ export default function GuestManager({ eventId }: { eventId: string }) {
   //   setError(null);
   //   setResult(null);
   //   try {
-  //     // Dynamically import SheetJS so it stays out of the initial page bundle — it only
+  //     // Dynamically import SheetJS so it stays out of the initial page bundle - it only
   //     // loads when someone actually picks a spreadsheet.
   //     const res = await axios.get(file.webkitRelativePath, {
   //       responseType: "arraybuffer",
@@ -363,7 +363,7 @@ export default function GuestManager({ eventId }: { eventId: string }) {
       <div className="w-full rounded-big bg-main-white shadow shadow-black/10 p-4 sm:p-6">
         <h2 className="sub-title-text text-main-black mb-1">Bulk import</h2>
         <p className="body-text text-main-black/60 mb-4">
-          For adding many guests at once — otherwise use &ldquo;Add a
+          For adding many guests at once - otherwise use &ldquo;Add a
           guest&rdquo; above.
         </p>
 
@@ -559,7 +559,7 @@ export default function GuestManager({ eventId }: { eventId: string }) {
                     <td className="py-3 pr-4 text-main-black">{g.name}</td>
                     <td className="py-3 pr-4 text-main-black/80">{g.email}</td>
                     <td className="py-3 pr-4 text-main-black/80">
-                      {g.vip ? "Yes" : "—"}
+                      {g.vip ? "Yes" : "-"}
                     </td>
                     <td className="py-3 pr-4 tabular-nums text-main-black/80">
                       {g.plusOnes}

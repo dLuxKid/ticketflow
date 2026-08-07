@@ -65,7 +65,7 @@ export default function Category() {
             display: "flex",
             alignItems: "center",
           }),
-          // The menu floats over the dark band, so it needs an opaque surface of its own —
+          // The menu floats over the dark band, so it needs an opaque surface of its own -
           // a translucent one would let the band's text show through the options.
           menu: (provided) => ({
             ...provided,

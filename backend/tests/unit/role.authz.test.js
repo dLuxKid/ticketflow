@@ -9,7 +9,7 @@ import {
 
 /**
  * Administration model: exactly one bootstrap admin (scripts/seed-admin.js), who may promote
- * others. These tests pin the two rules that keep that model intact — nobody can grant
+ * others. These tests pin the two rules that keep that model intact - nobody can grant
  * themselves admin, and the platform can never end up with no admin at all.
  */
 
@@ -46,7 +46,7 @@ test('non-admins cannot change roles at all', () => {
 });
 
 test('an admin cannot change their own role', () => {
-  // Guards against the last admin demoting themselves and locking everyone out — and, in the
+  // Guards against the last admin demoting themselves and locking everyone out - and, in the
   // same rule, against anyone self-promoting.
   const decision = canChangeRole(admin, { ...admin }, 'user');
   assert.equal(decision.ok, false);
@@ -91,7 +91,7 @@ test('every assignable role is a real schema role', () => {
 });
 
 // ── Deletion guards ─────────────────────────────────────────────────────────────
-// Deletion is deactivation, not removal — events, bookings and audit-log entries survive.
+// Deletion is deactivation, not removal - events, bookings and audit-log entries survive.
 // The guards mirror canChangeRole because the failure modes are the same: an admin removing
 // the last admin, or the root recovery account being destroyed.
 

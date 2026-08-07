@@ -3,11 +3,11 @@ import catchAsync from '../../shared/middleware/catchAsync.js';
 
 /**
  * Presentation layer for door admission.
- * HTTP concerns only — the atomic admit, audit, and events live in admissionService.
+ * HTTP concerns only - the atomic admit, audit, and events live in admissionService.
  */
 
 /**
- * Scans a ticket and admits the guest. Body: { code, deviceId?, overrideCapacity? } — the
+ * Scans a ticket and admits the guest. Body: { code, deviceId?, overrideCapacity? } - the
  * scanned QR payload (invite token or ticketId), an optional client-supplied device
  * fingerprint, and an explicit acknowledgement that the venue is already at its safe
  * occupancy. Errors surface as 403/404/409 with a clear reason.

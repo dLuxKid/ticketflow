@@ -10,7 +10,7 @@ import { connect, disconnect, buildEvent, skipReason } from '../helpers/db.js';
 
 /**
  * Proves the piece that closes the loop between "assign an usher" (this feature) and
- * "an usher can actually scan" (Phase 2's authorizeScan, which reads assignedEvents) —
+ * "an usher can actually scan" (Phase 2's authorizeScan, which reads assignedEvents) -
  * assigning someone here must be the SAME mechanism that grants real door access, not a
  * parallel permission system that looks right but does nothing.
  */

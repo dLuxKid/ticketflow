@@ -2,7 +2,7 @@
  * Held-out question → expected-intent pairs for evaluating nlQuery/intentParser.js.
  *
  * "Held-out" here means: written to cover paraphrases an organiser might actually type,
- * independent of the exact wording used while designing the regexes — the standard way to
+ * independent of the exact wording used while designing the regexes - the standard way to
  * check a rule-based (or LLM) parser generalises beyond its literal training/design
  * examples, not just repeats them back. `expected: null` cases assert the parser correctly
  * declines to answer rather than guessing.
@@ -108,7 +108,7 @@ export const NL_QUERY_EVAL_SET = [
     expected: { action: 'count', status: 'any', vipOnly: true },
   },
 
-  // unrecognised — must decline, not guess
+  // unrecognised - must decline, not guess
   { q: 'what is the weather like tonight', expected: null },
   { q: 'delete this event', expected: null },
   { q: '', expected: null },

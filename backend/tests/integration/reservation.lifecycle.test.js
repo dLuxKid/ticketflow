@@ -17,7 +17,7 @@ import {
  * The failure this closes: the client used to pay first and create the booking afterwards,
  * so a dropped callback took the buyer's money and left no booking, and inventory was only
  * decremented after payment, so two buyers could both pay for the last seat. Seats are now
- * held before checkout, and every exit from that hold — confirmed, failed, or abandoned —
+ * held before checkout, and every exit from that hold - confirmed, failed, or abandoned -
  * has to leave the inventory correct.
  */
 

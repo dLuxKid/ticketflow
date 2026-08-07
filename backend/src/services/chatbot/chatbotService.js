@@ -7,15 +7,15 @@ import { faqs } from '../../assets/faqs.js';
  * AI concierge chatbot (Phase 8): natural-language event discovery, per-event Q&A, and
  * general site help, backed by a hosted LLM through llmProvider's OpenAI/Gemini split.
  *
- * The model is never the source of truth for event data — it picks a tool via
+ * The model is never the source of truth for event data - it picks a tool via
  * function-calling, this service executes it against the real repositories/services, and
  * the model only phrases the final answer from real results. One function-calling round
- * trip (route -> execute -> final answer), not a multi-hop agent loop — enough for three
+ * trip (route -> execute -> final answer), not a multi-hop agent loop - enough for three
  * narrow tools, and keeps latency/cost bounded.
  */
 
 // Exported so scripts/eval-chatbot.js routes against the exact same prompt/tool schema
-// production uses — an eval against a slightly different config wouldn't mean anything.
+// production uses - an eval against a slightly different config wouldn't mean anything.
 export const SYSTEM_PROMPT = `You are the TicketFlow concierge, a helpful assistant for an event
 ticketing platform. You can search for public events, look up details on one specific
 event by its slug, check the weather and practical advice for an event, and answer
@@ -27,7 +27,7 @@ If the user names an event, search for it first, then use its slug with the deta
 For anything about weather, temperature, what to wear, dress code, parking, accessibility,
 age limits, or whether an event is safe to attend, you MUST call get_event_conditions and
 answer only from what it returns. Never guess a forecast, a dress code, or parking
-arrangements — if the tool says no forecast is available, say exactly that. When you pass on
+arrangements - if the tool says no forecast is available, say exactly that. When you pass on
 safety notes, present them as practical attendance advice; never imply they are a crime or
 neighbourhood-safety rating, because TicketFlow has no such data.
 
@@ -55,7 +55,7 @@ export const TOOLS = [
   {
     name: 'get_event_details',
     description:
-      'Get venue, dates, ticket tiers/prices, dress code, parking, accessibility and refund policy for one specific event. Give its name directly — you do not need to search first.',
+      'Get venue, dates, ticket tiers/prices, dress code, parking, accessibility and refund policy for one specific event. Give its name directly - you do not need to search first.',
     parameters: {
       type: 'object',
       properties: {
@@ -71,7 +71,7 @@ export const TOOLS = [
   {
     name: 'get_event_conditions',
     description:
-      "Weather forecast for an event's location and date, plus what to wear and practical safety notes. Use when asked about weather, temperature, what to wear, dress code, parking, accessibility, or whether an event is safe to attend. Give the event name directly — you do not need to search first.",
+      "Weather forecast for an event's location and date, plus what to wear and practical safety notes. Use when asked about weather, temperature, what to wear, dress code, parking, accessibility, or whether an event is safe to attend. Give the event name directly - you do not need to search first.",
     parameters: {
       type: 'object',
       properties: {
@@ -92,7 +92,7 @@ export const TOOLS = [
   },
 ];
 
-/** Compact projection — small enough for a chat reply, no internal/organiser-only fields. */
+/** Compact projection - small enough for a chat reply, no internal/organiser-only fields. */
 const summarizeEvent = (event) => ({
   name: event.eventName,
   slug: event.slug,
@@ -104,7 +104,7 @@ const summarizeEvent = (event) => ({
  * Resolves whichever identifier the model supplied to a single event.
  *
  * Both detail tools accept a name as well as a slug. Requiring a slug meant the model had to
- * call search_events first and use the result in a second call — but the loop runs one
+ * call search_events first and use the result in a second call - but the loop runs one
  * function-calling round, so those questions stalled at "let me check…" and never produced
  * an answer. Resolving the name here keeps it to one round.
  */
@@ -157,7 +157,7 @@ const executeTool = async (name, args = {}) => {
 };
 
 export const FALLBACK_REPLY =
-  "Sorry, I'm having trouble answering that right now — please try again in a moment.";
+  "Sorry, I'm having trouble answering that right now - please try again in a moment.";
 
 /**
  * @param {{message: string, history?: Array<{role:'user'|'assistant', content:string}>}} input
@@ -181,7 +181,7 @@ export const handleMessage = async ({ message, history = [] }, deps = {}) => {
   try {
     first = await complete({ system: SYSTEM_PROMPT, messages, tools: TOOLS });
   } catch (err) {
-    // The client only ever sees the graceful FALLBACK_REPLY — this is the one place that
+    // The client only ever sees the graceful FALLBACK_REPLY - this is the one place that
     // says why, so a string of these in the logs is diagnosable (quota exhausted, both
     // providers down, a bad key) instead of just "the chatbot doesn't work" with no lead.
     console.error(
@@ -197,7 +197,7 @@ export const handleMessage = async ({ message, history = [] }, deps = {}) => {
 
   // A tool failing (bad/hallucinated argument, a 404 on a slug that doesn't exist, a DB
   // hiccup) is still information the model can phrase gracefully ("I couldn't find that
-  // event") — it must not crash the whole request. catchAsync/the controller never see this
+  // event") - it must not crash the whole request. catchAsync/the controller never see this
   // error; it's folded into the tool result instead of thrown.
   let result;
   try {
@@ -220,7 +220,7 @@ export const handleMessage = async ({ message, history = [] }, deps = {}) => {
           content: JSON.stringify(result),
         },
       ],
-      tools: [], // one hop only — no chained tool calls off the tool result
+      tools: [], // one hop only - no chained tool calls off the tool result
     });
   } catch (err) {
     console.error(

@@ -12,7 +12,7 @@ export default async function Navbar({
   overlay = false,
 }: {
   showNavItems: boolean;
-  /** Float transparently over the page until scrolled — used by the home hero. */
+  /** Float transparently over the page until scrolled - used by the home hero. */
   overlay?: boolean;
 }) {
   const data = await getUser();

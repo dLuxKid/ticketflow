@@ -142,7 +142,7 @@ test('the split routes to the organiser and charges the platform fee explicitly'
 test('the split always sends an explicit charge, never relying on percentage_charge', () => {
   // The stored subaccount `percentage_charge` has ambiguous direction in Paystack's docs.
   // Sending transaction_charge on every transaction means that field never decides the
-  // money — this test pins that intent so it is not "simplified" away later.
+  // money - this test pins that intent so it is not "simplified" away later.
   const split = buildSplit(250_000, 'ACCT_x');
   assert.equal(typeof split.transaction_charge, 'number');
   assert.ok(Object.hasOwn(split, 'transaction_charge'));

@@ -3,7 +3,7 @@ import catchAsync from '../../shared/middleware/catchAsync.js';
 
 /**
  * Presentation layer for bookings.
- * Handles HTTP concerns only — delegates all business logic to bookingService.
+ * Handles HTTP concerns only - delegates all business logic to bookingService.
  */
 
 /**
@@ -23,7 +23,7 @@ export const createBooking = catchAsync(async (req, res) => {
   res.status(201).json({
     status: 'success',
     message: requiresPayment
-      ? 'Your tickets are reserved — complete payment to confirm'
+      ? 'Your tickets are reserved - complete payment to confirm'
       : 'You have successfully registered for this event',
     data: { booking: bookings, reference, requiresPayment },
   });

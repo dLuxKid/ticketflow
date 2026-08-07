@@ -1,12 +1,12 @@
 # Running TicketFlow with Docker Compose
 
-For local development and recording the demo video — brings up Mongo (as the single-node
+For local development and recording the demo video - brings up Mongo (as the single-node
 replica set the app's transactions require), the backend, and the frontend with one command.
 
 ## Prerequisites
 
 Docker and Docker Compose installed and running. **This repository provides the compose
-file and Dockerfiles; actually installing/running Docker is up to whoever runs this** — it
+file and Dockerfiles; actually installing/running Docker is up to whoever runs this** - it
 was not installed or run as part of authoring these files.
 
 ## Setup
@@ -17,7 +17,7 @@ cp backend/.env.docker.example backend/.env.docker
 #   JWT_SECRET, GMAIL_* (email delivery), CLOUDINARY_* (image upload), PAYSTACK_SECRET_KEY
 ```
 
-`backend/.env.docker` is gitignored — never commit it with real values filled in.
+`backend/.env.docker` is gitignored - never commit it with real values filled in.
 
 ## Run
 
@@ -63,9 +63,9 @@ docker compose exec backend node scripts/gdpr-retention-sweep.js
 
 ## Notes on the images
 
-- **Backend**: single-stage (`node:22-alpine`, `npm ci --omit=dev`) — there's no build
+- **Backend**: single-stage (`node:22-alpine`, `npm ci --omit=dev`) - there's no build
   step for a plain Express app.
 - **Frontend**: three-stage (deps → build → run) so an app-code-only change doesn't
   reinstall dependencies on rebuild. `NEXT_PUBLIC_BASE_URL` is a **build** arg, not just a
-  runtime env var — Next.js inlines `NEXT_PUBLIC_*` values into the client bundle at build
+  runtime env var - Next.js inlines `NEXT_PUBLIC_*` values into the client bundle at build
   time, so it must be set before `npm run build` runs, not just when the container starts.

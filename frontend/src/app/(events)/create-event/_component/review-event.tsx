@@ -87,7 +87,7 @@ export default function ReviewEvent({
       isSocialsAvailable();
 
     // Invite-only events carry no ticket tiers (the backend rejects tiers on one
-    // outright), so ticket/sales fields simply don't apply — mirrors ticket-details.tsx.
+    // outright), so ticket/sales fields simply don't apply - mirrors ticket-details.tsx.
     if (eventData.accessMode === "invite_only") return base;
 
     return (

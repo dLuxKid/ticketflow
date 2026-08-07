@@ -12,8 +12,8 @@ import { truncate } from "@/utils/utils";
  * Event card.
  *
  * The date moves onto the cover image as a calendar chip rather than sitting as a third line
- * of grey text in the body. Cover images are user-uploaded and wildly inconsistent — logos,
- * screenshots, photos — so a fixed aspect ratio with `object-cover` and a neutral backdrop
+ * of grey text in the body. Cover images are user-uploaded and wildly inconsistent - logos,
+ * screenshots, photos - so a fixed aspect ratio with `object-cover` and a neutral backdrop
  * keeps a row of cards aligned regardless of what was uploaded, and the scrim underneath the
  * chip keeps it legible on a light image.
  */

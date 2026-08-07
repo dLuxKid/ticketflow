@@ -33,7 +33,7 @@ const generateReference = () =>
  * This ordering is the point of the function. Previously the client paid first and then
  * asked the API to create the booking, which meant a closed tab, a dropped connection or a
  * sold-out tier between payment and callback left the buyer charged with no booking and no
- * ticket — and because inventory was only decremented after payment, two buyers could both
+ * ticket - and because inventory was only decremented after payment, two buyers could both
  * pay for the last seat. Holding the seats first makes "charged" strictly imply "reserved".
  *
  * Nothing is emailed here: tickets go out from confirmReservation once the charge is
@@ -71,7 +71,7 @@ export const reserveBooking = async (ticketBuyers, eventId, userId) => {
 
   // Price and currency come from the event's own tiers, discarding whatever the client
   // sent. Until this existed `price` was spread straight in from the request and never
-  // checked — and the Paystack amount was computed in the browser too — so a buyer could
+  // checked - and the Paystack amount was computed in the browser too - so a buyer could
   // name their own price. See pricingService: this is a prerequisite of the platform fee,
   // since a percentage of an attacker-chosen number is not a fee.
   const { buyers: pricedBuyers, totalMinor } = priceBuyers(
@@ -86,13 +86,13 @@ export const reserveBooking = async (ticketBuyers, eventId, userId) => {
   // `ticketId` is issued here for the same reason, and is listed after the spread so a
   // client-supplied value is discarded rather than trusted. It used to be minted in the
   // browser, which meant the caller chose the very code the door scanner admits on
-  // (bookingRepository.findByInviteTokenOrTicketId matches inviteToken OR ticketId) — a
+  // (bookingRepository.findByInviteTokenOrTicketId matches inviteToken OR ticketId) - a
   // buyer could have set it to a value already issued to someone else, or simply picked
   // a guessable one. Uniqueness is enforced by the unique index on Booking.ticketId.
   //
   // `event` is stamped from the eventId argument for the same reason. It used to be taken
   // from each buyer object, so the event whose inventory was reserved and the event the
-  // bookings were written against came from two separate client-supplied values — a caller
+  // bookings were written against came from two separate client-supplied values - a caller
   // could hold a seat on a cheap event while issuing itself tickets to a sold-out one.
   const buyers = pricedBuyers.map((buyer) => ({
     ...buyer,
@@ -149,7 +149,7 @@ export const reserveBooking = async (ticketBuyers, eventId, userId) => {
 
   // The whole checkout configuration is built here rather than in the browser. The amount,
   // the destination subaccount and the platform's cut all decide who receives money, so
-  // none of them can be a client-side value — the previous code opened Paystack with a
+  // none of them can be a client-side value - the previous code opened Paystack with a
   // browser-computed amount and a public key hard-coded into the bundle.
   return {
     reference,
@@ -169,7 +169,7 @@ export const reserveBooking = async (ticketBuyers, eventId, userId) => {
  * Assembles the Paystack parameters the browser needs, including the split.
  *
  * Refusing outright when the organiser has no payout account is deliberate. The alternative
- * — charging the buyer anyway and settling the whole amount into the platform account — is
+ * - charging the buyer anyway and settling the whole amount into the platform account - is
  * exactly the silent revenue retention this feature exists to remove, and it would be
  * invisible to both the organiser and the buyer. A clear refusal at checkout is recoverable
  * in minutes through the payout settings page; money quietly landing in the wrong account
@@ -213,7 +213,7 @@ const buildCheckoutConfig = ({
  * Read back from the persisted bookings rather than recomputed from the request, so the
  * figure being verified against is the one the server itself wrote at reservation time.
  * Returns 0 when the reference is unknown, which callers treat as "nothing to check"
- * rather than "nothing owed" — an unknown reference cannot confirm anything anyway.
+ * rather than "nothing owed" - an unknown reference cannot confirm anything anyway.
  *
  * @param {number|string} reference
  * @returns {Promise<number>}
@@ -232,7 +232,7 @@ export const expectedAmountMinor = async (reference) => {
  * Idempotent by construction. Both the Paystack webhook and the client's post-checkout
  * verify call land here, and Paystack retries webhooks, so this runs repeatedly for one
  * checkout. The guarded update in confirmByReference means exactly one call transitions the
- * bookings, and only that call sends email — the rest are no-ops that still return success.
+ * bookings, and only that call sends email - the rest are no-ops that still return success.
  *
  * @param {number|string} reference
  * @param {{transactionNumber?:number, message?:string}} [details] - provider details, if known
@@ -246,7 +246,7 @@ export const confirmReservation = async (reference, details = {}) => {
 
   const result = await bookingRepository.confirmByReference(reference, fields);
   if (!result.modifiedCount) {
-    // Already confirmed (webhook retry, or the client beat us to it) — or never existed.
+    // Already confirmed (webhook retry, or the client beat us to it) - or never existed.
     return { confirmed: false, ticketsSent: 0 };
   }
 
@@ -261,7 +261,7 @@ export const confirmReservation = async (reference, details = {}) => {
   await Promise.all(
     bookings.map(async (booking) => {
       try {
-        // sendPdf generates and attaches the QR itself (inline cid: attachment — a data
+        // sendPdf generates and attaches the QR itself (inline cid: attachment - a data
         // URL here would be stripped by Gmail and arrive as a blank square).
         await sendPdf({
           ...event._doc,
@@ -351,12 +351,12 @@ export const getMyBookings = async (userId) => {
 };
 
 /**
- * Returns all bookings and summary data for a specific event — the organiser's sales view
+ * Returns all bookings and summary data for a specific event - the organiser's sales view
  * (booker names, emails, ticket IDs, prices and gross sales).
  *
  * **Authorisation is the load-bearing part.** This previously took only an event ID and
  * performed no ownership check at all, so any authenticated account could read any event's
- * booker list: every attendee's name and email, the event's revenue, and `ticketId` — the
+ * booker list: every attendee's name and email, the event's revenue, and `ticketId` - the
  * credential the door scanner admits on. That is Broken Access Control (OWASP A01), and a
  * personal-data disclosure independent of any admission risk.
  *
@@ -384,7 +384,7 @@ export const getBookingsForEvent = async (eventId, user) => {
 };
 
 /**
- * Manually sets the check-in status of a single booking — the fallback for when a QR cannot
+ * Manually sets the check-in status of a single booking - the fallback for when a QR cannot
  * be scanned (cracked screen, flat battery, damaged printout).
  *
  * Authorisation reuses `admissionService.authorizeScan`, the same rule the scanner uses, so

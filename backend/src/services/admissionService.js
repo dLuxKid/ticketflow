@@ -8,12 +8,12 @@ import {
 import AppError from '../shared/errors/AppError.js';
 
 /**
- * Door admission — the single check-in path for every guest type.
+ * Door admission - the single check-in path for every guest type.
  *
  * A scan carries a code (an invite token for invited guests, a ticketId for purchased
  * ones). We resolve the booking, authorize the scanner, then flip status to `admitted`
- * atomically so the same ticket can never be admitted twice. Every decision — admit or
- * reject — is written to the audit log and published on the admission bus (Phase 3 pushes
+ * atomically so the same ticket can never be admitted twice. Every decision - admit or
+ * reject - is written to the audit log and published on the admission bus (Phase 3 pushes
  * these to the live dashboard).
  */
 
@@ -21,7 +21,7 @@ const equalsId = (a, b) => Boolean(a && b && a.equals?.(b));
 
 /**
  * Statuses from which a booking can still be admitted. Mirrors the guard in
- * `bookingRepository.admitById`, which is what actually enforces single use — this copy is
+ * `bookingRepository.admitById`, which is what actually enforces single use - this copy is
  * only used to decide whether the capacity limit is even relevant to a given scan.
  */
 const ADMITTABLE_STATUSES = ['issued', 'delivered', 'scanned'];
@@ -77,7 +77,7 @@ const REJECTION_MESSAGE = {
  * Pure: may one more person be admitted right now? Exported for unit testing.
  *
  * Venue occupancy limits are a fire-safety obligation, not a commercial one, so the door
- * enforces them rather than trusting ticket inventory — organisers deliberately oversell
+ * enforces them rather than trusting ticket inventory - organisers deliberately oversell
  * against expected no-shows, which would make totalQuantity the wrong number to stop on if a
  * venueCapacity has been set.
  *
@@ -90,7 +90,7 @@ const REJECTION_MESSAGE = {
  * @returns {{allow:boolean, reason?:string}}
  */
 export const capacityDecision = ({ admitted, capacity, override = false }) => {
-  // No capacity configured — an invite-only event carries no ticket inventory, and blocking
+  // No capacity configured - an invite-only event carries no ticket inventory, and blocking
   // admission because a number is absent would be worse than not enforcing one.
   if (!capacity || capacity <= 0) return { allow: true };
   if (admitted < capacity) return { allow: true };
@@ -104,7 +104,7 @@ export const capacityDecision = ({ admitted, capacity, override = false }) => {
  * @param {string} code - scanned QR payload (inviteToken or ticketId)
  * @param {object} actor - req.user (the usher/organiser/admin scanning)
  * @param {{deviceId?: string, ip?: string}} [context] - best-effort scanner fingerprint,
- *   recorded on the audit row only as a Phase 5 anomaly-detection signal — never used for
+ *   recorded on the audit row only as a Phase 5 anomaly-detection signal - never used for
  *   authorization.
  * @returns {Promise<{outcome: 'admitted', booking: object}>}
  * @throws {AppError} 400/403/404/409 on invalid, unauthorized, unknown, or non-admittable
@@ -159,13 +159,13 @@ export const checkInByScan = async (code, actor, context = {}) => {
       // A ticket that is already admitted, revoked or otherwise unusable adds nobody, so
       // testing it against the limit produces a wrong and actively confusing answer at the
       // door: re-scanning a guest who is already inside a full venue would report "the venue
-      // is full" and offer a supervisor override, when the correct — and reassuring — answer
+      // is full" and offer a supervisor override, when the correct - and reassuring - answer
       // is "this ticket has already been admitted". Admissibility is therefore established
       // first, and the limit applied only to a scan that would genuinely add someone.
       //
       // This ordering does not weaken the limit under concurrency. Two simultaneous scans of
       // one ticket both pass this pre-check, both evaluate capacity, and are then separated
-      // by the atomic claim below, exactly as before — the claim, not this read, is what
+      // by the atomic claim below, exactly as before - the claim, not this read, is what
       // guarantees single use.
       if (ADMITTABLE_STATUSES.includes(booking.status)) {
         // Counted inside the transaction, not before it: two scanners working the same door

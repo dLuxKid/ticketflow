@@ -9,7 +9,7 @@ import * as bookingService from '../../src/services/bookingService.js';
 import { connect, disconnect, buildEvent, skipReason } from '../helpers/db.js';
 
 /**
- * Phase 0.2 — proves ownership is enforced on event update and ticket check-in.
+ * Phase 0.2 - proves ownership is enforced on event update and ticket check-in.
  *
  * Before this change any authenticated user could edit any event or check in any ticket
  * (broken access control / IDOR). These tests assert a non-owner is rejected with 403
@@ -126,7 +126,7 @@ if (skipReason) {
   // ─── Sales view (booker list + gross sales) ──────────────────────────────────
   // This endpoint took only an event ID and checked nothing, so any authenticated account
   // could read any event's bookers: every attendee's name and email, the event's revenue,
-  // and `ticketId` — the credential the door scanner admits on. Same defect class as the
+  // and `ticketId` - the credential the door scanner admits on. Same defect class as the
   // event-update IDOR above, and the reason these tests sit in the same file.
 
   test('non-owner cannot read another user’s event sales/booker list (403)', async () => {

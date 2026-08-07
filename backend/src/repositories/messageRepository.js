@@ -2,7 +2,7 @@ import Message from '../models/messageModel.js';
 
 /**
  * Persistence layer for Message documents (Phase 7 networking).
- * No business logic — only database operations.
+ * No business logic - only database operations.
  */
 
 export const create = (data) => Message.create(data);

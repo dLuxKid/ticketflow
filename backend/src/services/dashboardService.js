@@ -12,7 +12,7 @@ import AppError from '../shared/errors/AppError.js';
  * Read model for the live arrivals dashboard.
  *
  * The organiser who owns an event (or an admin) may watch it. This is also the gate that
- * stops anyone subscribing to another event's live stream — the SSE controller authorizes
+ * stops anyone subscribing to another event's live stream - the SSE controller authorizes
  * through here before opening the connection.
  */
 
@@ -48,7 +48,7 @@ export const getSnapshot = async (eventId) => {
     getNoShowPrediction(eventId),
   ]);
 
-  // Safe occupancy if the organiser set one, otherwise ticket inventory — the same
+  // Safe occupancy if the organiser set one, otherwise ticket inventory - the same
   // precedence the door enforces (admissionService.capacityDecision).
   const capacity = event?.venueCapacity ?? event?.totalQuantity ?? 0;
 
@@ -77,7 +77,7 @@ export const getSnapshot = async (eventId) => {
  *
  * Scores every pending booking with noShowService (a logistic model trained offline in
  * Python; see ml/no_show/train.py) and aggregates into a confidence band the dashboard can
- * render alongside the live arrivals feed — "expect ~6 of these 20 remaining guests not to
+ * render alongside the live arrivals feed - "expect ~6 of these 20 remaining guests not to
  * show" is more decision-useful to an organiser than a single number with no context.
  */
 export const getNoShowPrediction = async (eventId) => {
@@ -111,7 +111,7 @@ export const getNoShowPrediction = async (eventId) => {
 
   return {
     pendingCount: pending.length,
-    // Sum of individual probabilities, not count * average — same value here, but this is
+    // Sum of individual probabilities, not count * average - same value here, but this is
     // the form that stays correct if probabilities are ever computed per-guest with
     // meaningfully different inputs (which they already are).
     expectedNoShows: Math.round(probabilities.reduce((sum, p) => sum + p, 0)),

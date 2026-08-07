@@ -7,7 +7,7 @@ import {
 } from '../../src/services/admissionService.js';
 
 /**
- * Phase 2 — pure authorization and reason logic for door admission. No DB required.
+ * Phase 2 - pure authorization and reason logic for door admission. No DB required.
  */
 
 const oid = () => new mongoose.Types.ObjectId();

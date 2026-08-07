@@ -9,7 +9,7 @@ import * as retentionService from '../../src/services/retentionService.js';
 import { connect, disconnect, buildEvent, skipReason } from '../helpers/db.js';
 
 /**
- * Phase 6 — GDPR retention. Proves both erasure paths anonymize PII while preserving
+ * Phase 6 - GDPR retention. Proves both erasure paths anonymize PII while preserving
  * analytics-relevant fields, and that the sweep only touches events past their window.
  */
 

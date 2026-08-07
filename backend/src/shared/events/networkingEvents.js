@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 
 /**
- * In-process networking event bus — same shape as admissionEvents.js (Phase 3). The
+ * In-process networking event bus - same shape as admissionEvents.js (Phase 3). The
  * networking service publishes every group/DM message here; it doesn't know or care how it
  * reaches a client. The SSE controller subscribes and filters per-viewer.
  */

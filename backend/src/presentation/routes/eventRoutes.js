@@ -18,8 +18,8 @@ router.get('/upcoming', eventController.getUpcomingEvents);
 router.get('/:slug', eventController.getEvent);
 
 // ─── Guest networking access (public by necessity) ──────────────────────────────
-// Most attendees never create an account — a guest checkout or an emailed invite captures
-// only a name and an email — so these two sit ahead of `protect`. Authorisation is proof of
+// Most attendees never create an account - a guest checkout or an emailed invite captures
+// only a name and an email - so these two sit ahead of `protect`. Authorisation is proof of
 // control over the email address on the booking: request a code, then submit it. Registered
 // before the router mounts `protect`, and multi-segment so '/:slug' above cannot swallow it.
 router.post(
@@ -41,13 +41,13 @@ router.get('/my/events', eventController.getMyEvents);
 // none simply gets an empty list.
 router.get('/my/assigned-events', eventController.getAssignedEvents);
 // Two segments, so the public single-segment '/:slug' above cannot swallow it. No role gate:
-// scope is decided inside revenueService from the caller's role — an organiser sees their own
+// scope is decided inside revenueService from the caller's role - an organiser sees their own
 // events, an admin sees the whole platform.
 router.get('/revenue/summary', eventController.getRevenueSummary);
 // Ownership is enforced in eventService.updateEvent; the service allows the event's
 // own creator or an admin. No role gate here so any user who owns an event can edit it.
 router.patch('/update/:eventId', eventController.updateEvent);
-// Archives rather than removes — an event is referenced by paid bookings and the admission
+// Archives rather than removes - an event is referenced by paid bookings and the admission
 // audit log. Admin-only; enforced in eventService.deleteEvent.
 router.delete('/:eventId', eventController.deleteEvent);
 
@@ -75,7 +75,7 @@ router.post('/:eventId/guests/query', nlQueryController.query);
 router.delete('/:eventId/guests/:guestId/erase', guestController.eraseGuest);
 
 // ─── Door staff (organiser / admin) ─────────────────────────────────────────────
-// Assigning someone here is what actually grants them scan-and-admit access — it sets the
+// Assigning someone here is what actually grants them scan-and-admit access - it sets the
 // same assignedEvents field admissionService.authorizeScan checks (Phase 2).
 router
   .route('/:eventId/ushers')

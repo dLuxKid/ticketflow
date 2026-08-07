@@ -8,7 +8,7 @@ import AppError from '../shared/errors/AppError.js';
 /**
  * Answers a plain-English question about an event's guest list.
  *
- * Reuses the dashboard's access rule (owner/admin) — asking "who hasn't arrived" requires
+ * Reuses the dashboard's access rule (owner/admin) - asking "who hasn't arrived" requires
  * the same visibility as watching arrivals live. See nlQuery/intentParser.js for why this
  * uses a rule-based parser rather than a hosted LLM in this environment, and how a hosted
  * LLM would slot in later without touching this function or the API route.

@@ -62,7 +62,7 @@ export const sendNetworkingOtp = async ({
         <tr>
           <td align="center" style="padding:18px 28px 26px 28px;">
             <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#9aa0b5;">
-              If you didn't ask to join, you can ignore this email — nothing has changed.
+              If you didn't ask to join, you can ignore this email - nothing has changed.
             </p>
           </td>
         </tr>

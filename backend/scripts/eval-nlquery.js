@@ -1,7 +1,7 @@
 /**
  * Evaluates nlQuery/intentParser.js against the held-out set in
  * tests/fixtures/nlQueryEvalSet.js and prints exact-match accuracy on the structured
- * intent (action/status/vipOnly) — the deterministic, offline-checkable analogue of what a
+ * intent (action/status/vipOnly) - the deterministic, offline-checkable analogue of what a
  * hosted-LLM parser would be graded on for this feature.
  *
  * Run: node scripts/eval-nlquery.js

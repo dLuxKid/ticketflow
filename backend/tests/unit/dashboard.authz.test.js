@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
 import { canViewDashboard } from '../../src/services/dashboardService.js';
 
 /**
- * Phase 3 — proves only an event's owner (or an admin) may watch its live dashboard.
+ * Phase 3 - proves only an event's owner (or an admin) may watch its live dashboard.
  * This is the gate that stops anyone subscribing to another event's stream.
  */
 

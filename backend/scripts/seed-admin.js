@@ -3,7 +3,7 @@
  *
  * Admin cannot be self-granted: signup whitelists only 'user' and 'creator' (see
  * authService.SIGNUP_ROLES), and the role endpoint requires an existing admin to promote
- * anyone. That leaves a bootstrap problem — the first admin has to come from outside the
+ * anyone. That leaves a bootstrap problem - the first admin has to come from outside the
  * API, which is what this script is for. Run it once, from a trusted machine with database
  * access.
  *
@@ -62,7 +62,7 @@ const run = async () => {
   if (user) {
     user.role = 'admin';
     user.isRootAdmin = true;
-    // validateBeforeSave: false — the document has no passwordConfirm in memory, and the
+    // validateBeforeSave: false - the document has no passwordConfirm in memory, and the
     // schema requires it on save. Nothing here touches the password.
     await user.save({ validateBeforeSave: false });
     console.warn(`Promoted existing account to root admin: ${email}`);
@@ -70,7 +70,7 @@ const run = async () => {
     const password = process.env.ADMIN_PASSWORD;
     if (!password || password.length < 8) {
       throw new Error(
-        'No account with that email exists, so one must be created — set ADMIN_PASSWORD ' +
+        'No account with that email exists, so one must be created - set ADMIN_PASSWORD ' +
           '(at least 8 characters) and re-run.',
       );
     }
@@ -96,7 +96,7 @@ const run = async () => {
     );
   }
 
-  console.warn('Done. Sign in normally — the role takes effect on next login.');
+  console.warn('Done. Sign in normally - the role takes effect on next login.');
   await mongoose.disconnect();
 };
 

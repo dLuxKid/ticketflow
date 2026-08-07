@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 /**
  * Immutable record of every admission attempt at the door.
  *
- * One document per scan — success or rejection. Rejections are kept deliberately: they are
+ * One document per scan - success or rejection. Rejections are kept deliberately: they are
  * the signal the Phase 5 anomaly/fraud detection reads from. Reading the log is role-gated
  * (organiser/admin) in the presentation layer.
  */
@@ -43,7 +43,7 @@ const auditLogSchema = new mongoose.Schema(
       default: false,
     },
     // Best-effort fingerprint of the scanning device, used only as an anomaly-detection
-    // signal (Phase 5) — never for authorization. Optional: older rows and non-web
+    // signal (Phase 5) - never for authorization. Optional: older rows and non-web
     // scanners may not have one.
     deviceId: {
       type: String,

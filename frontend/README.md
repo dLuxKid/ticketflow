@@ -1,6 +1,6 @@
 # TicketFlow Frontend
 
-Event ticketing and discovery platform — Next.js 15 frontend.
+Event ticketing and discovery platform - Next.js 15 frontend.
 
 ## Tech Stack
 

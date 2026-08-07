@@ -1,4 +1,4 @@
-# Frontend runtime image (Next.js). Three stages: install deps once, build, then run —
+# Frontend runtime image (Next.js). Three stages: install deps once, build, then run -
 # so a rebuild after an app-code-only change doesn't reinstall dependencies.
 #
 # NEXT_PUBLIC_* variables are inlined into the client bundle at BUILD time, not read at

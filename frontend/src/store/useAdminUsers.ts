@@ -15,7 +15,7 @@ export type AdminUser = {
 
 /**
  * The admin user directory. `GET /users` is admin-gated server-side, so a non-admin calling
- * this simply receives 403 — the UI hides it as a courtesy, not as the security boundary.
+ * this simply receives 403 - the UI hides it as a courtesy, not as the security boundary.
  */
 export const useAdminUsers = () => {
   const jwt = getCookie("jwt");
@@ -50,7 +50,7 @@ export const useChangeRole = () => {
 };
 
 /**
- * Deactivates a user. Soft delete server-side — the account and everything it owns survive,
+ * Deactivates a user. Soft delete server-side - the account and everything it owns survive,
  * it simply can no longer sign in and disappears from the directory.
  */
 export const useDeleteUser = () => {

@@ -19,7 +19,7 @@ const DB = process.env.DB;
 
 mongoose.connect(DB).then(() => {
   console.warn('DB connection successful ✅');
-  // Started only after the connection resolves — the sweep queries immediately on its first
+  // Started only after the connection resolves - the sweep queries immediately on its first
   // tick and would otherwise race the handshake.
   startReservationSweep();
 });

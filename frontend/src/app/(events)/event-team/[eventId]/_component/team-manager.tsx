@@ -8,7 +8,7 @@ import { eventTabs } from "@/utils/event-tabs";
 
 /**
  * Door-staff (usher) management. Assigning someone here is what actually grants them
- * access to /scan/[eventId] — it sets the same assignedEvents field
+ * access to /scan/[eventId] - it sets the same assignedEvents field
  * admissionService.authorizeScan checks, not a separate permission list.
  */
 
@@ -76,7 +76,7 @@ export default function TeamManager({ eventId }: { eventId: string }) {
       <PageHeader
         eyebrow="TicketFlow"
         title="Door staff"
-        subtitle="Add anyone with a TicketFlow account by email — they can scan and admit guests for this event only, without access to edit it or see your other events."
+        subtitle="Add anyone with a TicketFlow account by email - they can scan and admit guests for this event only, without access to edit it or see your other events."
         tabs={eventTabs(eventId, "team")}
       />
 
@@ -113,7 +113,7 @@ export default function TeamManager({ eventId }: { eventId: string }) {
         </h2>
         {ushers.length === 0 ? (
           <p className="body-text text-main-black/60">
-            No door staff assigned yet — only you (and admins) can scan tickets for this
+            No door staff assigned yet - only you (and admins) can scan tickets for this
             event.
           </p>
         ) : (

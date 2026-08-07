@@ -59,6 +59,6 @@ test('missing inputs are rejected rather than throwing', () => {
 });
 
 test('a malformed stored hash cannot crash the comparison', () => {
-  // timingSafeEqual throws on length mismatch — guarded before it is reached.
+  // timingSafeEqual throws on length mismatch - guarded before it is reached.
   assert.equal(verifyOtp('123456', 'deadbeef', future()), false);
 });

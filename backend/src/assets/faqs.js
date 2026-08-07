@@ -3,7 +3,7 @@
  *
  * Duplicated, not imported: frontend/ and backend/ are two separate npm projects with no
  * shared workspace, so importing the frontend's TS asset into this backend ESM module isn't
- * a one-line fix. Five entries, low churn — duplicating a list this small is the honest
+ * a one-line fix. Five entries, low churn - duplicating a list this small is the honest
  * tradeoff, not a DRY violation worth cross-package tooling for. Keep in sync manually if
  * either copy changes.
  */

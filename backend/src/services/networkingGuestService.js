@@ -17,14 +17,14 @@ import AppError from '../shared/errors/AppError.js';
 /**
  * Guest access to an event's networking channel.
  *
- * Most attendees never create an account — a guest checkout or an emailed invite only ever
+ * Most attendees never create an account - a guest checkout or an emailed invite only ever
  * captures a name and an email. Networking sat behind `protect`, so those people, who are
  * the majority of any guest list, could not reach the channel for the event they are
  * actually attending.
  *
  * The flow is email-ownership proof: request a code, receive it at the address on the
  * booking, submit it. Verification then **mints an ordinary session** rather than inventing a
- * parallel guest identity — messages reference a User, the directory lists Users, and DMs
+ * parallel guest identity - messages reference a User, the directory lists Users, and DMs
  * address Users, so a second kind of principal would mean touching every one of those. The
  * account is created from the booking's own name and email if it does not already exist;
  * networkingService.resolveViewer then claims the booking on first access, which it was
@@ -112,7 +112,7 @@ export const verifyAccessCode = async (eventId, email, code) => {
   if (!user) {
     // The password is random and never disclosed: this account exists so the attendee has a
     // User identity to post and be messaged as. They can take ownership any time through the
-    // ordinary forgot-password flow, which is why the address must already be verified —
+    // ordinary forgot-password flow, which is why the address must already be verified -
     // and it is, by the code they just submitted.
     const password = crypto.randomBytes(24).toString('base64url');
     user = await userRepository.create({

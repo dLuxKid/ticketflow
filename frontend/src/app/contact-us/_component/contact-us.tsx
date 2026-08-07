@@ -16,7 +16,7 @@ import { toast } from "sonner";
  *
  * The submit handler now awaits the send and clears `loading` in a `finally`. It previously
  * fired the request without awaiting it and cleared the flag on a fixed 1s timer, so the
- * button could return to its idle state while the request was still in flight — and a send
+ * button could return to its idle state while the request was still in flight - and a send
  * that failed after that second showed an error against an apparently-idle form.
  */
 

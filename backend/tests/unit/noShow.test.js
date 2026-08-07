@@ -7,7 +7,7 @@ import {
 } from '../../src/services/noShowService.js';
 
 /**
- * Phase 5 — no-show prediction. Training happens offline in Python (ml/no_show/train.py);
+ * Phase 5 - no-show prediction. Training happens offline in Python (ml/no_show/train.py);
  * this is the parity test proving the pure-JS runtime scorer reimplements scikit-learn's
  * predict_proba faithfully on the exported weights, so the running app never needs Python.
  *

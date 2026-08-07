@@ -7,7 +7,7 @@ import { useState } from "react";
  * FAQ accordion.
  *
  * Expansion animates via a `grid-rows-[0fr] → [1fr]` transition rather than mounting and
- * unmounting the answer, so the panel grows smoothly at its natural height — no measuring,
+ * unmounting the answer, so the panel grows smoothly at its natural height - no measuring,
  * no fixed max-height guess that clips longer answers.
  *
  * Each row is a real `<button>` with `aria-expanded`/`aria-controls` instead of a `div` with

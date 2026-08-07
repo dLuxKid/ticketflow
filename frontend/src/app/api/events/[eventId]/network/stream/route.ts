@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { API_URLS } from "@/utils/urls";
 
 /**
- * Same-origin proxy for the backend networking SSE stream — same reasoning as the live
+ * Same-origin proxy for the backend networking SSE stream - same reasoning as the live
  * dashboard's stream proxy: `EventSource` cannot set an Authorization header, and the JWT
  * lives in an httpOnly cookie that would not travel cross-origin to the API, so the browser
  * connects here and this route forwards the cookie server-side as a Bearer token.

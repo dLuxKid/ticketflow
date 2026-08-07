@@ -1,4 +1,4 @@
-# TicketFlow — Data Flow Diagram (DFD)
+# TicketFlow - Data Flow Diagram (DFD)
 
 > **Diagram set:** [Architecture](architecture-diagram.md) · [Use cases](use-case-diagram.md) · [Data flow](data-flow-diagram.md)
 
@@ -21,7 +21,7 @@ the other two documents.
 
 ---
 
-## Level 0 — Context diagram
+## Level 0 - Context diagram
 
 ```mermaid
 graph LR
@@ -69,7 +69,7 @@ graph LR
 
 ---
 
-## Level 1 — Processes and data stores
+## Level 1 - Processes and data stores
 
 ```mermaid
 graph TB
@@ -214,7 +214,7 @@ graph TB
 **Two boundaries in this level are deliberate and worth defending.**
 
 **9.0 reads D3 but never returns it.** The access-code request asks D3 whether a booking
-exists for `(event, email)` and answers the *caller* identically either way — a differentiated
+exists for `(event, email)` and answers the *caller* identically either way - a differentiated
 response would turn the endpoint into a way to test whether any named person is attending.
 The store is consulted; its contents do not cross the boundary.
 
@@ -225,7 +225,7 @@ diagram, not by prompt instructions asking a model to behave.
 
 ---
 
-## Level 2 — Process 5.0, Admit at the door
+## Level 2 - Process 5.0, Admit at the door
 
 ```mermaid
 graph TB
@@ -267,7 +267,7 @@ graph TB
 update, not a read-then-write: concurrent scans of one code both reach MongoDB, exactly one
 matches the status guard, and the loser is recorded in D5 as a rejection with an accurate
 reason. The audit write for a successful admission shares the admission transaction, so an
-admitted booking cannot exist without its audit row. Both facts depend on a replica set —
+admitted booking cannot exist without its audit row. Both facts depend on a replica set -
 `withTransaction` throws on a standalone `mongod`.
 
 ---
@@ -288,7 +288,7 @@ admitted booking cannot exist without its audit row. Both facts depend on a repl
 
 - **D3 and D4 are the PII stores.** Every booking carries a name and email regardless of
   `source`, which is why `piiErasedAt` lives on Booking rather than being reached only
-  through Guest — a purchase booking has no Guest record at all.
+  through Guest - a purchase booking has no Guest record at all.
 - **Erasure anonymises in place.** 8.0 overwrites `name` to `'Erased Guest'` and `email` to a
   per-document-unique `erased-<id>@erased.invalid`, then stamps the flag. `vip`, `plusOnes`,
   `price`, `ticketType`, `source` and `status` survive, so arrival statistics in 6.0 and the
@@ -299,7 +299,7 @@ admitted booking cannot exist without its audit row. Both facts depend on a repl
   `piiErasedAt: null`, and both collections carry a compound index on `(event, <flag>)` for
   exactly that query, so it is safe to run on a repeating schedule.
 - **D5 retains device fingerprints and IPs and is never swept.** It references bookings by
-  id, so erasure never has to rewrite audit history — but note this means IP and deviceId
+  id, so erasure never has to rewrite audit history - but note this means IP and deviceId
   outlive the erasure of the names they were collected alongside.
 - **Both erasure entry points converge on `eraseGuest`.** The manual path adds a
   `canViewDashboard` check, the same owner/admin rule as 6.0.
@@ -310,7 +310,7 @@ admitted booking cannot exist without its audit row. Both facts depend on a repl
   `crypto.timingSafeEqual`. The plaintext exists only in the email.
 - **D7 is a PII store that the retention sweep does not currently reach.** Chat messages are
   attendee-authored free text attached to a named sender, so they can contain anything a
-  person chose to type. 8.0 anonymises D3 and D4 but not D7 — a real gap to state rather than
+  person chose to type. 8.0 anonymises D3 and D4 but not D7 - a real gap to state rather than
   omit, and the natural next step for the retention design.
 - **Archival (`isActive: false` on D1/D2) is not erasure and must not be described as such.**
   It hides records from queries while every byte remains; only 8.0 overwrites data. Conflating

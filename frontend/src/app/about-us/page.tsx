@@ -29,7 +29,7 @@ const features = [
   {
     step: "01",
     title: "Discovering events",
-    body: "Through event discovery, we are at the forefront of events — keeping you up to speed with the latest happenings and offering more personalised options to choose from.",
+    body: "Through event discovery, we are at the forefront of events - keeping you up to speed with the latest happenings and offering more personalised options to choose from.",
     image: LocationGraphic,
     alt: "",
   },
@@ -67,7 +67,7 @@ const values = [
   },
 ];
 
-/** Local initial avatar — no network request, and it uses the live brand token. */
+/** Local initial avatar - no network request, and it uses the live brand token. */
 const initials = (name: string) =>
   name
     .split(" ")
@@ -80,11 +80,11 @@ export default function AboutUs() {
   return (
     <main>
       {/* Alternating bands separate the sections. The two surface tokens are close by design
-          (#f5f6fb against #fff), so a hairline border does the actual separating — without
+          (#f5f6fb against #fff), so a hairline border does the actual separating - without
           it the change in fill reads as a rendering artefact rather than a deliberate edge.
           Bands are full-bleed; the inner Container keeps content within the page measure. */}
 
-      {/* Hero — tinted */}
+      {/* Hero - tinted */}
       <div className="relative overflow-hidden border-b border-main-light-grey/60">
         <div
           aria-hidden="true"
@@ -104,7 +104,7 @@ export default function AboutUs() {
               <p className="max-w-xl text-base leading-relaxed text-sec-black/75">
                 TicketFlow is an event ticketing and discovery platform built to
                 transform the event space. We connect attendees with a wide
-                range of events, and give organisers the tools to run them —
+                range of events, and give organisers the tools to run them -
                 from the first ticket sold to the last guest through the door.
               </p>
             </div>
@@ -121,7 +121,7 @@ export default function AboutUs() {
         </Container>
       </div>
 
-      {/* Values — white */}
+      {/* Values - white */}
       <div className="border-b border-main-light-grey/60 bg-main-white px-[5%] py-14 md:py-16">
         <Container>
           <div className="grid gap-4 sm:grid-cols-3">
@@ -156,7 +156,7 @@ export default function AboutUs() {
         </Container>
       </div>
 
-      {/* Core features — page surface */}
+      {/* Core features - page surface */}
       <div className="px-[5%] py-16 md:py-20">
         <Container>
           <div className="mb-12 flex flex-col items-center gap-3 text-center md:mb-16">
@@ -200,7 +200,7 @@ export default function AboutUs() {
         </Container>
       </div>
 
-      {/* Team — white */}
+      {/* Team - white */}
       <div className="border-y border-main-light-grey/60 bg-main-white px-[5%] py-16 md:py-20">
         <Container>
           <div className="mb-10 flex flex-col items-center gap-3 text-center md:mb-14">
@@ -247,7 +247,7 @@ export default function AboutUs() {
         </Container>
       </div>
 
-      {/* Call to action — page surface */}
+      {/* Call to action - page surface */}
       <div className="px-[5%] py-16 md:py-20">
         <Container>
           <SignupSection />

@@ -13,7 +13,7 @@ import { deleteToken } from "@/utils/cookies";
  * Desktop navigation.
  *
  * The dropdowns open on hover *and* on keyboard focus (`group-focus-within`), rather than
- * hover alone as before — a hover-only menu is unreachable by keyboard, which fails WCAG 2.2
+ * hover alone as before - a hover-only menu is unreachable by keyboard, which fails WCAG 2.2
  * 2.1.1 Keyboard. They animate rather than snapping into place with `hidden`/`block`, and
  * the panel is centred on its trigger instead of nudged with a magic pixel offset.
  *

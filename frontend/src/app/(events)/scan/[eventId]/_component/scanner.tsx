@@ -7,14 +7,14 @@ import PageHeader from "@/components/ui/page-header";
 import { eventTabs } from "@/utils/event-tabs";
 
 /**
- * Door scanner — the usher-facing UI for Phase 2's atomic scan-and-admit endpoint.
+ * Door scanner - the usher-facing UI for Phase 2's atomic scan-and-admit endpoint.
  *
  * Uses the browser's native BarcodeDetector API when available (Chrome/Edge/Android) to
- * read a QR code straight from the camera feed — no extra dependency, since installing one
+ * read a QR code straight from the camera feed - no extra dependency, since installing one
  * on this project's shared node_modules has twice caused real corruption this session (see
  * IMPLEMENTATION_PROMPT.md / commit history). Manual code entry is ALWAYS available
  * alongside the camera, not just as a fallback for unsupported browsers (Safari/Firefox
- * don't implement BarcodeDetector yet) — it's also how you'd demo this without a printed
+ * don't implement BarcodeDetector yet) - it's also how you'd demo this without a printed
  * QR in front of a camera.
  */
 
@@ -31,7 +31,7 @@ type ScanError = { message: string } | null;
 /**
  * A refusal the usher can act on rather than just read: the venue is at its safe occupancy,
  * and a supervisor may admit anyway. Held separately from `error` because it must NOT clear
- * on the usual timer — the guest is standing there and the decision belongs to a person.
+ * on the usual timer - the guest is standing there and the decision belongs to a person.
  */
 type CapacityPrompt = { code: string } | null;
 
@@ -236,7 +236,7 @@ export default function Scanner({ eventId }: { eventId: string }) {
           </p>
           <p id="capacity-desc" className="mt-2 body-text text-amber-900/80">
             This event has reached its safe occupancy limit. Admitting another
-            person exceeds it. Only continue if a supervisor authorises it —
+            person exceeds it. Only continue if a supervisor authorises it -
             the override is recorded against your account.
           </p>
           <div className="mt-5 flex flex-col sm:flex-row gap-3 justify-center">
@@ -282,7 +282,7 @@ export default function Scanner({ eventId }: { eventId: string }) {
                 }`}
               >
                 {result.name}
-                {result.ticketType ? ` — ${result.ticketType}` : ""}
+                {result.ticketType ? ` - ${result.ticketType}` : ""}
               </p>
             )}
             {result.overridden && (

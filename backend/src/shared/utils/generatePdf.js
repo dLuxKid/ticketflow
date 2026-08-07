@@ -5,7 +5,7 @@ import { generateQRCodeBuffer } from './generateQrCode.js';
 /**
  * Sends a digital ticket as an HTML email to the booking recipient.
  *
- * The QR is generated here as a PNG buffer and attached inline with a `cid:` — the
+ * The QR is generated here as a PNG buffer and attached inline with a `cid:` - the
  * template references `cid:ticket-qr`. It used to be inlined as a base64 data URL, which
  * Gmail strips from <img src>, so tickets were delivered with an empty square where the
  * QR belonged. A CID attachment renders in Gmail, Outlook and Apple Mail alike.

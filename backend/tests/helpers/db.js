@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 /**
  * Shared helpers for DB-backed integration tests.
  *
- * These tests run only when MONGO_TEST_URI is set (a throwaway test database — in CI a
+ * These tests run only when MONGO_TEST_URI is set (a throwaway test database - in CI a
  * single-node replica set; see the Phase 0 note on transactions). When it is unset the
  * test files register a single skipped test so the suite stays green locally without a
  * database, and exercises the real invariants in CI.
@@ -23,7 +23,7 @@ export const disconnect = () => mongoose.disconnect();
  * Selling a paid ticket now requires two things that used to be implicit: a configured
  * Paystack public key, and an organiser with a connected payout account for the revenue to
  * be split to. Any integration test that reserves a *paid* booking therefore needs a
- * payable organiser — not because the test is about payouts, but because a paid event with
+ * payable organiser - not because the test is about payouts, but because a paid event with
  * nowhere to send the money is refused by design (bookingService.buildCheckoutConfig).
  *
  * Kept here rather than repeated per file so the fixture tracks the requirement in one

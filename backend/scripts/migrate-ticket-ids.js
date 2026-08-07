@@ -11,7 +11,7 @@
  *      the door at all.
  *
  * Every affected booking gets a fresh id from the same generator the API now uses. Note that
- * a re-issued id invalidates any ticket already emailed for that booking — the QR in the old
+ * a re-issued id invalidates any ticket already emailed for that booking - the QR in the old
  * email encodes the old code. Re-send tickets for anything reported below as re-issued, or
  * admit those guests by name against the attendee list.
  *

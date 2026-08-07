@@ -1,9 +1,9 @@
-# TicketFlow — Use Case Diagram
+# TicketFlow - Use Case Diagram
 
 > **Diagram set:** [Architecture](architecture-diagram.md) · [Use cases](use-case-diagram.md) · [Data flow](data-flow-diagram.md)
 
 Actors are the four roles in `backend/src/models/userModel.js` (`user`, `creator`, `admin`,
-`usher`) — with **root admin** as a specialisation of `admin` — plus unauthenticated visitors
+`usher`) - with **root admin** as a specialisation of `admin` - plus unauthenticated visitors
 and five external systems. Dashed arrows are `<<include>>` / `<<extend>>` relationships;
 solid lines are actor associations.
 
@@ -192,7 +192,7 @@ graph LR
 | 4 | Reset password | Visitor | `POST /forgot-password`, `PATCH /reset-password/:token` | `authService` |
 | 5 | Buy ticket | Visitor, Attendee | `POST /api/bookings/create` (`isLoggedIn`) | `bookingService` |
 | 6 | Pay for booking | Attendee → Paystack | `POST /api/bookings/webhook/paystack` | `paymentService` |
-| 7 | Receive QR ticket by email | Attendee | — (side effect of 5, post-commit) | `bookingService` + `email` |
+| 7 | Receive QR ticket by email | Attendee | - (side effect of 5, post-commit) | `bookingService` + `email` |
 | 8 | View my tickets | Attendee | `GET /api/bookings/my-tickets` | `bookingService` |
 | 9 | Manage profile | Attendee | `GET /me`, `PATCH /update-my-details`, `/update-my-password` | `userService`, `authService` |
 | 10 | Delete account | Attendee | `DELETE /api/users/delete-me` | `userService` |
@@ -200,19 +200,19 @@ graph LR
 | 12 | Update event | Owner, Admin | `PATCH /api/events/update/:eventId` | `eventService` |
 | 13 | View my events | Organiser | `GET /api/events/my/events` (returns **all** events for an admin) | `eventService.getMyEvents` |
 | 14 | Import guest list | Organiser, Admin | `POST /api/events/:eventId/guests` | `guestService.importGuests` |
-| 15 | Issue single-use QR invite | (system, within 14) | — | `guestService` + `generateQrCode` |
+| 15 | Issue single-use QR invite | (system, within 14) | - | `guestService` + `generateQrCode` |
 | 16 | View guest list | Organiser, Admin | `GET /api/events/:eventId/guests` | `guestService.getGuests` |
 | 17 | NL guest query | Organiser, Admin | `POST /:eventId/guests/query` | `nlGuestQueryService` |
 | 18 | Watch live arrivals | Organiser, Admin | `GET /:eventId/dashboard`, `GET /:eventId/stream` | `dashboardService` + `admissionBus` |
 | 19 | Review scan anomalies | Organiser, Admin | `GET /:eventId/anomalies` | `anomalyReportService` → `anomalyService` |
-| 20 | See no-show predictions | Organiser, Admin | — (within the dashboard) | `dashboardService.getNoShowPrediction` → `noShowService` |
+| 20 | See no-show predictions | Organiser, Admin | - (within the dashboard) | `dashboardService.getNoShowPrediction` → `noShowService` |
 | 21 | Assign / unassign door staff | Organiser, Admin | `GET/POST /:eventId/ushers`, `DELETE /:eventId/ushers/:userId` | `usherService` |
 | 22 | Erase one guest's PII | Organiser, Admin | `DELETE /:eventId/guests/:guestId/erase` | `retentionService.requestErasure` |
 | 23 | Scan QR at the door | Usher, Organiser, Admin | `POST /api/bookings/scan` | `admissionService.checkInByScan` |
-| 24 | Admit / reject atomically | (system, within 23) | — | `bookingRepository.admitById` |
+| 24 | Admit / reject atomically | (system, within 23) | - | `bookingRepository.admitById` |
 | 25 | Manually set check-in status | Usher, Organiser | `PATCH /api/bookings/check-in/:id` | `bookingService.checkInAttendee` |
 | 26 | Administer users | Admin | `GET /api/users`, `GET /api/users/:id` | `userService` |
-| 27 | Record audit entry | (system, within 24) | — | `auditLogRepository.record` |
+| 27 | Record audit entry | (system, within 24) | - | `auditLogRepository.record` |
 | 28 | Run retention sweep | Scheduler | `npm run gdpr:sweep` | `retentionService.sweepExpiredEvents` |
 | 29 | Change a user's role | **Root admin** | `PATCH /api/users/:id/role` | `userService.canChangeRole` → `changeUserRole` |
 | 30 | Deactivate a user | Admin | `DELETE /api/users/:id` | `userService.canDeleteUser` → `deleteUser` |
@@ -223,16 +223,16 @@ graph LR
 | 35 | Post to Event Chat (Public) | Attendee | `POST /:eventId/network/messages` | `networkingService` |
 | 36 | Send a direct message | Attendee | `GET/POST /:eventId/network/dms/:userId` | `networkingService` |
 | 37 | Ask the chatbot | Visitor, Attendee | `POST /api/v1/chat` | `chatbotService` → `llmProvider` |
-| 38 | Search events by description | Visitor | — (chatbot tool within 37) | `chatbotService` tool `search_events` |
-| 39 | Ask about a named event | Visitor | — (chatbot tool within 37) | `chatbotService.resolveEvent` |
-| 40 | Get weather / dress-code advice | Visitor, Attendee | — (chatbot tool within 37) | `weatherService` (Open-Meteo) |
+| 38 | Search events by description | Visitor | - (chatbot tool within 37) | `chatbotService` tool `search_events` |
+| 39 | Ask about a named event | Visitor | - (chatbot tool within 37) | `chatbotService.resolveEvent` |
+| 40 | Get weather / dress-code advice | Visitor, Attendee | - (chatbot tool within 37) | `weatherService` (Open-Meteo) |
 | 41 | Work an assigned door | Usher | `GET /api/events/my/assigned-events` | `eventService.getAssignedEvents` |
 | 42 | Connect a payout account | Organiser | `GET /users/payout/banks`, `POST /users/payout/resolve-account`, `POST /users/me/payout` | `payoutService` (Paystack subaccounts) |
 
 ## 3. Preconditions and business rules worth stating
 
 - **Guest checkout is supported.** Use case 5 sits on `isLoggedIn`, not `protect`, so a
-  Visitor can buy without an account — the booking carries a name and email rather than a
+  Visitor can buy without an account - the booking carries a name and email rather than a
   user reference.
 - **Invite-only events cannot be purchased into.** `bookingService.createBooking` rejects
   with 403 when `event.accessMode === 'invite_only'`; those events admit only from the
@@ -248,13 +248,13 @@ graph LR
 - **Use cases 25 and 23 are different mechanisms.** 23 is the atomic single-use claim; 25 is
   the fallback for a QR that will not scan, setting `status` to `admitted` or back to
   `issued`. Both are audited, but 25's rows carry `manual: true` and are excluded from
-  anomaly detection — a manual entry has no device fingerprint or scan timing, so feeding it
+  anomaly detection - a manual entry has no device fingerprint or scan timing, so feeding it
   to the detector would only manufacture flags.
 - **Use cases 16–22 share one authorisation rule.** All call `canViewDashboard` (event owner
   or admin), enforced in the service layer so it holds regardless of the route.
 - **No actor can promote itself.** Use case 3 filters the submitted role through
   `SIGNUP_ROLES`, so only `user` and `creator` are self-assignable. `usher` is acquired
-  implicitly by use case 21, and `admin` only through use case 29 — which is restricted to
+  implicitly by use case 21, and `admin` only through use case 29 - which is restricted to
   the root admin, cannot be applied to oneself, and cannot demote the root admin. The first
   administrator therefore has no in-application origin at all: it is seeded from the CLI.
 - **Use cases 30 and 31 archive rather than destroy.** Both set `isActive: false`; bookings
@@ -265,9 +265,9 @@ graph LR
   non-revoked, non-rejected booking for that event (or being its organiser/admin); posting
   additionally requires the event to be live. Use case 33 exists because most attendees never
   create an account, and it deliberately returns an identical response whether or not the
-  address holds a ticket — otherwise it would be an attendee-enumeration oracle.
+  address holds a ticket - otherwise it would be an attendee-enumeration oracle.
 - **The chatbot is the only external-LLM path in the system.** Use cases 37–40 call OpenAI
-  (Gemini on failure); everything else described as "AI" here — anomaly detection (19),
-  NL guest queries (17) and no-show prediction (20) — is local rule or model code with no
+  (Gemini on failure); everything else described as "AI" here - anomaly detection (19),
+  NL guest queries (17) and no-show prediction (20) - is local rule or model code with no
   third-party inference. Use case 17 in particular is a **regex intent parser, not an LLM**,
   a distinction worth being precise about in the report.

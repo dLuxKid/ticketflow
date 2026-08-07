@@ -1,6 +1,6 @@
 name: ticketflow
 
-# Local dev / demo-recording stack: Mongo (as a single-node replica set — transactions used
+# Local dev / demo-recording stack: Mongo (as a single-node replica set - transactions used
 # by the atomic booking-reservation and door-check-in paths require one; a standalone
 # mongod throws), backend, frontend.
 #

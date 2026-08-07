@@ -23,7 +23,7 @@ interface Props {
  * Paystack parameters built by the server at reservation time.
  *
  * `amount` and `transaction_charge` are in the currency's minor unit (kobo). Nothing here
- * is derived in the browser — see the comment on `reservation` below for why.
+ * is derived in the browser - see the comment on `reservation` below for why.
  */
 type PaystackCurrency = "NGN" | "GHS" | "USD" | "ZAR" | "KES" | "XOF";
 
@@ -32,12 +32,12 @@ interface CheckoutConfig {
   amount: number;
   // The event's currency, which react-paystack types as a closed union. It originates from
   // the event document rather than this component, so it is narrowed here rather than
-  // validated — an unsupported currency is a data problem the server should reject.
+  // validated - an unsupported currency is a data problem the server should reject.
   currency: PaystackCurrency;
   publicKey: string;
   subaccount: string;
   transaction_charge: number;
-  // Who pays Paystack's own processing fee. Always "subaccount" here — the organiser bears
+  // Who pays Paystack's own processing fee. Always "subaccount" here - the organiser bears
   // it, so the platform's margin is exactly transaction_charge.
   bearer: "account" | "subaccount";
 }
@@ -46,8 +46,8 @@ interface CheckoutConfig {
  * Checkout flow: reserve → pay → confirm.
  *
  * The order matters. This used to charge the buyer first and only then ask the API to
- * create the booking, so anything that interrupted the callback — a closed tab, a dropped
- * connection, a tier selling out in the meantime — took the money and left no booking
+ * create the booking, so anything that interrupted the callback - a closed tab, a dropped
+ * connection, a tier selling out in the meantime - took the money and left no booking
  * behind. Seats are now held server-side before Paystack opens, and the reference we pay
  * against is issued by the server, so a charge always has a reservation behind it.
  *
@@ -106,7 +106,7 @@ export const usePaystack = (props: Props) => {
         headers: { Authorization: `Bearer ${getCookie("jwt")}` },
       });
       setSuccess(true);
-      toast.success("Payment confirmed — your tickets are on the way");
+      toast.success("Payment confirmed - your tickets are on the way");
     } catch (error: any) {
       setSuccess(false);
       // The charge may still be valid: Paystack's webhook confirms independently, so the
@@ -131,12 +131,12 @@ export const usePaystack = (props: Props) => {
   }, []);
 
   // Paystack's config is captured at render, so the popup can only open on the render that
-  // already has the server-issued reference — hence the effect rather than an inline call.
+  // already has the server-issued reference - hence the effect rather than an inline call.
   useEffect(() => {
     if (!reservation) return;
     if (openedFor.current === reservation.reference) return;
     openedFor.current = reservation.reference;
-    // @ts-ignore — react-paystack's callback types are looser than its runtime contract
+    // @ts-ignore - react-paystack's callback types are looser than its runtime contract
     initializePayment(onSuccess, onClose);
   }, [reservation, initializePayment, onSuccess, onClose]);
 
@@ -179,7 +179,7 @@ export const usePaystack = (props: Props) => {
         )
       );
 
-      // A free event is confirmed by the server during reservation — there is no charge.
+      // A free event is confirmed by the server during reservation - there is no charge.
       if (!data.data.requiresPayment) {
         setSuccess(true);
         toast.success("Registered all user(s) for the event");

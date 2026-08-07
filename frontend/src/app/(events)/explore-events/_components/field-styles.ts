@@ -2,7 +2,7 @@
  * Shared appearance for the four filters in the Explore Events header.
  *
  * They previously used `bg-main-black` (and `#1f1f1f` inside react-select) sitting on a
- * `bg-main-black` band with `border: 0` — the fields were the same colour as the surface
+ * `bg-main-black` band with `border: 0` - the fields were the same colour as the surface
  * behind them, so nothing signalled they were inputs at all.
  *
  * The fix is a translucent white surface with a visible edge: readable on the dark band,

@@ -4,7 +4,7 @@
  * Anonymizes guest/buyer PII (name, email) for every event that ended more than
  * RETENTION_DAYS ago and hasn't been processed yet. Anonymizes in place rather than
  * deleting the record outright, so status/vip/plusOnes/ticketType remain available for
- * post-event analytics and the no-show model's training data — only personally
+ * post-event analytics and the no-show model's training data - only personally
  * identifying fields are overwritten.
  *
  * Idempotent: already-erased documents are excluded by the underlying queries

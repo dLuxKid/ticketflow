@@ -5,7 +5,7 @@ import nodemailer from 'nodemailer';
  * chat / directory / DMs. Mirrors sendInvite.js's shape (own transport, inline HTML) rather
  * than the pug-templated Email class, since this is a bulk best-effort broadcast to every
  * attendee of an event, not a one-off transactional account email. Callers should treat
- * failure as non-fatal — the networking space already exists and is reachable by URL either
+ * failure as non-fatal - the networking space already exists and is reachable by URL either
  * way.
  *
  * @param {object} args
@@ -39,7 +39,7 @@ export const sendNetworkingLive = async ({ to, name, eventName, link }) => {
   await transport.sendMail({
     from: `Ticketflow <${process.env.GMAIL_EMAIL}>`,
     to,
-    subject: `${eventName} is live — join the networking group`,
+    subject: `${eventName} is live - join the networking group`,
     html,
   });
 };

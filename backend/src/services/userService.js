@@ -20,7 +20,7 @@ const ALLOWED_UPDATE_FIELDS = [
 export const getAllUsers = () => userRepository.findAll();
 
 /**
- * Returns a single user by ID, including role — this backs the admin directory as well as
+ * Returns a single user by ID, including role - this backs the admin directory as well as
  * `/me`, and `role` is `select: false`, so a plain findById would report it as undefined.
  */
 export const getUserById = (id) => userRepository.findByIdWithRole(id);
@@ -147,7 +147,7 @@ export const canDeleteUser = (actor, target) => {
  *
  * Soft delete, reusing the same `isActive` flag as self-deletion. The account stops being
  * able to sign in and disappears from every query, but its events, bookings and audit-log
- * entries stay intact — hard-deleting the document would orphan the record of who admitted
+ * entries stay intact - hard-deleting the document would orphan the record of who admitted
  * whom, which is exactly the evidence an audit log exists to preserve.
  */
 export const deleteUser = async (actor, targetId) => {

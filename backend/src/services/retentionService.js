@@ -7,7 +7,7 @@ import AppError from '../shared/errors/AppError.js';
 /**
  * GDPR data retention and erasure.
  *
- * Guest and buyer personal data (name, email) is anonymized — not the whole record
+ * Guest and buyer personal data (name, email) is anonymized - not the whole record
  * deleted, since status/vip/plusOnes/ticketType remain useful for post-event analytics and
  * the no-show model's training data. Two paths:
  *  - a scheduled sweep (scripts/gdpr-retention-sweep.js) that anonymizes anyone on an
@@ -58,7 +58,7 @@ export const requestErasure = async (eventId, guestId, user) => {
 
 /**
  * Scheduled sweep: anonymizes every not-yet-erased guest and booking on any event that
- * ended more than `retentionDays` ago. Idempotent — safe to run on a repeating schedule
+ * ended more than `retentionDays` ago. Idempotent - safe to run on a repeating schedule
  * (see scripts/gdpr-retention-sweep.js); already-erased documents are excluded by the
  * repository queries themselves ({ erasedAt: null } / { piiErasedAt: null }).
  *

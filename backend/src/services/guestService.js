@@ -10,7 +10,7 @@ import AppError from '../shared/errors/AppError.js';
  *
  * Adding a guest issues an invite: it creates a Guest entry and a linked admission Booking
  * (source: 'invite') carrying a single-use token, then emails the guest a scannable QR.
- * This is the "a guest-list entry becomes one admission document" rule — the same document
+ * This is the "a guest-list entry becomes one admission document" rule - the same document
  * the door scanner admits in Phase 2.
  */
 
@@ -123,7 +123,7 @@ const issueInvite = async (event, guest) => {
 
   await guestRepository.linkBooking(created._id, booking._id);
 
-  // Delivery must not fail the import — the invite exists and can be resent.
+  // Delivery must not fail the import - the invite exists and can be resent.
   try {
     await sendInvite({
       to: guest.email,

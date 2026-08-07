@@ -9,7 +9,7 @@ import * as networkingService from '../../src/services/networkingService.js';
 import { connect, disconnect, buildEvent, skipReason } from '../helpers/db.js';
 
 /**
- * Phase 7 — guest networking: eligibility (and lazy account-linking), the live-only
+ * Phase 7 - guest networking: eligibility (and lazy account-linking), the live-only
  * posting gate, group chat, DMs, and the opt-in directory.
  */
 

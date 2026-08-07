@@ -32,7 +32,7 @@ export const getAllEventsCount = async () => {
 };
 
 /**
- * The caller's events — or every event on the platform, for an admin.
+ * The caller's events - or every event on the platform, for an admin.
  *
  * An admin can already act on any event; scoping their list to what they personally created
  * meant a freshly-seeded admin logged in to an empty page and could not reach a single one.
@@ -48,8 +48,8 @@ export const getMyEvents = (user, queryParams) =>
 /**
  * Events the caller works as door staff.
  *
- * Reads straight off the authenticated user's `assignedEvents` — the same field
- * admissionService.authorizeScan checks — so the list can never show an event the holder
+ * Reads straight off the authenticated user's `assignedEvents` - the same field
+ * admissionService.authorizeScan checks - so the list can never show an event the holder
  * would then be refused at the door.
  *
  * @param {object} user - req.user
@@ -94,7 +94,7 @@ export const getUpcomingEvents = () => eventRepository.findUpcoming();
 
 /**
  * Thin translation from a small, LLM-friendly filter set (Phase 8's chatbot search_events
- * tool) to the query-string shape APIFeatures already expects — reuses the exact same
+ * tool) to the query-string shape APIFeatures already expects - reuses the exact same
  * search behind public event discovery rather than a second implementation. Only
  * category/city/name are exposed: APIFeatures' `startDate` handling is an exact-match
  * equality check, not a range, so it isn't useful for "events next month"-style queries and
@@ -132,7 +132,7 @@ export const deleteEvent = async (eventId, user) => {
   const event = await eventRepository.findById(eventId);
   if (!event) throw new AppError('No event found with that ID', 404);
 
-  // Reported back so the caller can tell an admin what they just affected — archiving an
+  // Reported back so the caller can tell an admin what they just affected - archiving an
   // event with paid attendees is legitimate (a cancellation) but should never be silent.
   const affected = await eventRepository.countReferences(eventId);
 

@@ -17,7 +17,7 @@ import {
  * Emails a one-time code to a guest holding a booking for this event. Public: the caller has
  * no account yet, which is the entire point.
  *
- * Responds identically whether or not the address matches a booking — a distinguishable
+ * Responds identically whether or not the address matches a booking - a distinguishable
  * response would reveal who is on a private event's guest list.
  */
 export const requestGuestAccess = catchAsync(async (req, res) => {
@@ -100,7 +100,7 @@ export const postDm = catchAsync(async (req, res) => {
  */
 export const streamNetwork = catchAsync(async (req, res) => {
   // Authorize BEFORE switching to the event-stream protocol, so a 403/404 is returned as
-  // normal JSON by the error handler — same ordering as the dashboard stream.
+  // normal JSON by the error handler - same ordering as the dashboard stream.
   const { event } = await networkingService.resolveViewer(
     req.params.eventId,
     req.user,
@@ -124,7 +124,7 @@ export const streamNetwork = catchAsync(async (req, res) => {
     networkingService.getDirectory(eventId, req.user),
   ]);
   // startDate/endDate travel alongside isLive so the client can keep recomputing liveness
-  // itself as time passes, rather than trusting a string snapshotted once at connect time —
+  // itself as time passes, rather than trusting a string snapshotted once at connect time -
   // a long-open tab would otherwise show a stale "Live" long after the window actually
   // closed (or opened), silently disagreeing with what a send attempt gets rejected for.
   send('snapshot', {

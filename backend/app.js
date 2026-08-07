@@ -47,7 +47,7 @@ app.use(
 //      opening a few detail pages and completing a checkout can spend a large share of that
 //      in one sitting, and anyone behind shared NAT (a venue's wifi, a corporate network,
 //      a mobile carrier) shares the budget with everyone else on that address.
-//   2. It made the API impossible to load test — every run flatlined at 429 after 100
+//   2. It made the API impossible to load test - every run flatlined at 429 after 100
 //      requests, so no throughput or latency figure could ever be gathered.
 const limiter = rateLimit({
   max: Number(process.env.RATE_LIMIT_MAX) || 100,

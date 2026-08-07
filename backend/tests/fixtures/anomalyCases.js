@@ -2,7 +2,7 @@
  * Deterministic, labelled synthetic scan sequences for evaluating anomalyService.
  *
  * Ground truth is assigned by domain judgment (what a human reviewing door logs would
- * call suspicious), NOT by re-running the detector — otherwise "evaluating" the detector
+ * call suspicious), NOT by re-running the detector - otherwise "evaluating" the detector
  * against its own rule would trivially score 100% and prove nothing. A few templates are
  * deliberately chosen to sit outside what the current thresholds catch, so the eval report
  * shows real, non-trivial precision/recall (see scripts/eval-anomaly.js's printed
@@ -87,7 +87,7 @@ const TEMPLATES = [
       const base = T0 + i * 10000;
       return [
         row('rejected', base, 'dev-A'),
-        row('rejected', base + jitter(200, 800), 'dev-A'), // <1s apart — implausible for a human
+        row('rejected', base + jitter(200, 800), 'dev-A'), // <1s apart - implausible for a human
       ];
     },
   },
@@ -123,7 +123,7 @@ const TEMPLATES = [
     // Intentionally NOT caught by either signal: only 2 rejects (below the
     // repeated_rejects threshold of 3) and the 3rd device falls outside the 5-minute
     // multi-device window anchored to the first scan. Ground truth still calls this
-    // suspicious (a ticket forwarded to 3 people over ~9 minutes) — a documented known
+    // suspicious (a ticket forwarded to 3 people over ~9 minutes) - a documented known
     // limitation, not a bug to silently "fix" by widening the window (which would raise
     // false positives on legitimate late staff re-checks, see late_staff_recheck above).
     name: 'slow_drip_sharing_known_limitation',

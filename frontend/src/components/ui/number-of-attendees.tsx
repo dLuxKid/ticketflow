@@ -3,13 +3,13 @@ import { formatNumber } from "@/utils/utils";
 /**
  * Attendee count.
  *
- * This previously rendered three overlapping `Eclipse` avatars — which were not avatars at
+ * This previously rendered three overlapping `Eclipse` avatars - which were not avatars at
  * all: the SVG embedded a base64 PNG of a transparency checkerboard, a Figma placeholder
  * that shipped. It showed a fake crowd for every event regardless of who was going, and
  * `AllEventData` carries no attendee photos to replace it with.
  *
  * Renders nothing at zero. "0 going" on an event that has not sold yet is worse than
- * silence — it advertises emptiness on the card most likely to need the sale.
+ * silence - it advertises emptiness on the card most likely to need the sale.
  */
 export default function NumberOfAttendees({ number }: { number: number }) {
   if (!number || number <= 0) return null;

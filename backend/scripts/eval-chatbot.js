@@ -1,14 +1,14 @@
 /**
  * Evaluates the chatbot's tool-selection against the held-out set in
- * tests/fixtures/chatbotEvalSet.js and prints accuracy — "did the LLM pick the right tool
+ * tests/fixtures/chatbotEvalSet.js and prints accuracy - "did the LLM pick the right tool
  * (or correctly pick none)". This is the one eval in the repo that needs a real hosted LLM
  * to mean anything: unlike nlQuery's exact-match (a deterministic parser) or anomaly's
  * precision/recall/F1 (a numeric classifier), there is no rule-based stand-in for "did the
- * model route correctly" — a stubbed provider would just replay whatever this script
+ * model route correctly" - a stubbed provider would just replay whatever this script
  * hardcoded, which isn't an evaluation of anything.
  *
  * Self-skips (exit 0, not a failure) if neither OPENAI_API_KEY nor GEMINI_API_KEY is
- * configured — same convention as the MONGO_TEST_URI-gated integration tests: no keys, no
+ * configured - same convention as the MONGO_TEST_URI-gated integration tests: no keys, no
  * claim of a result.
  *
  * Run: node scripts/eval-chatbot.js
@@ -33,7 +33,7 @@ if (!process.env.OPENAI_API_KEY && !process.env.GEMINI_API_KEY) {
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Free-tier keys (confirmed against a real Gemini key during Phase 8 development) can cap
-// at 5 requests/minute per model — comfortably under that, not just under the total-request
+// at 5 requests/minute per model - comfortably under that, not just under the total-request
 // quota, since this script fires sequentially and has nothing else to batch against.
 const REQUEST_SPACING_MS = 13_000;
 

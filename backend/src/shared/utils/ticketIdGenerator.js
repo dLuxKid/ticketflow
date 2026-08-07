@@ -13,7 +13,7 @@ const ID_LENGTH = 12;
  * This is not merely a display reference: `bookingRepository.findByInviteTokenOrTicketId`
  * resolves a scanned QR against `inviteToken` OR `ticketId`, so the ticket ID is the bearer
  * credential that admits its holder. It therefore has to be unguessable and issued by the
- * server — it was previously generated in the browser (`usePaystack.tsx`), which let a
+ * server - it was previously generated in the browser (`usePaystack.tsx`), which let a
  * caller choose its own admission code.
  *
  * `crypto.randomBytes` rather than `Math.random`: the latter is seeded, predictable and

@@ -1,13 +1,19 @@
 # TicketFlow — Feature List and Testing Guide
 
-**Document version:** 1.0 · **Verified against:** branch `dev`, 7 August 2026
+**Document version:** 2.0 · **Verified against:** branch `dev`, 7 August 2026
 
 > **Purpose.** Every feature the application actually has, and step-by-step instructions to
 > exercise each one by hand. Written to be used two ways: as a demo script (Task 1.2 asks for
 > a 10-minute video), and as a manual test pass before submission.
 >
-> **Accuracy note.** Every feature below was confirmed present in the source. Where something
-> is partially implemented or has a known limitation, that is stated in the row rather than
+> **Changes in 2.0.** Version 1.0 listed the features but only gave test steps for about a
+> third of them — the interesting ones — leaving guest import, the natural-language guest
+> query, no-show prediction, anomaly detection, weather advice and much else as table rows
+> with nothing to do. **Every numbered feature below now has an explicit step.**
+>
+> **Accuracy note.** Every feature was confirmed present in the source, and every threshold,
+> metric and column name quoted here was read out of the code rather than recalled. Where a
+> feature is partially implemented or has a known limitation, that is stated rather than
 > omitted — a feature list that overstates the product is worse than a short one.
 
 ---
@@ -43,6 +49,21 @@ event. Paid events refuse to sell tickets until their organiser can be paid. Fre
 unaffected. In Paystack test mode, account number `0000000000` with any bank generally
 resolves.
 
+### 0.4 Test data you will need
+
+Save this as `guests.csv` for §6.1:
+
+```
+name,email,vip,plusOnes
+Ada Lovelace,ada@example.com,yes,1
+Alan Turing,alan@example.com,no,0
+Grace Hopper,grace@example.com,vip,2
+,broken@example.com,no,0
+```
+
+The last row is deliberately invalid (no name) — it should be **reported as skipped, not
+crash the import**.
+
 ---
 
 ## 1. Accounts, roles and access
@@ -58,173 +79,282 @@ resolves.
 
 ### How to test
 
-**1.1 — Signup role cannot be escalated (security).** Sign up normally and confirm it works.
-Then, from a terminal, try to register as an administrator:
+**1.1** Sign up, log out, log back in. The session survives a page refresh (JWT is in an
+HTTP-only cookie, so it is not readable by scripts).
 
-```bash
-curl -s -X POST http://localhost:4000/api/v1/users/signup -H "Content-Type: application/json" -d '{"name":"Mallory","email":"mallory@example.com","password":"password123","passwordConfirm":"password123","role":"admin"}' | head -c 400
-```
+**1.2** At `/forgot-password`, enter your address → a reset link arrives by email. Follow it,
+set a new password, and confirm **the old password no longer works**. Tokens expire after 10
+minutes; wait it out on a second attempt to see the expiry path.
 
-**Expected:** the account is created with `"role": "user"` — the requested `admin` is
-discarded. This was a real vulnerability (OWASP A01) and is worth demonstrating.
+**1.3** Profile → Settings → change your name and upload a photo. The new photo appears in the
+navbar avatar immediately (it is uploaded to Cloudinary, so the URL changes).
 
-**1.6 — Role management guards.** As the root admin, go to Admin → Users:
-- Promote a user to `creator` → succeeds.
-- Try to change **your own** role → refused.
-- Log in as a *second* admin and try to promote someone to `admin` → refused (only root may).
-- Try to demote the root admin → refused.
+**1.4** Profile → Settings → delete account. You are logged out, and logging back in fails.
+This is a **soft** delete (`isActive: false`) — the row survives so that bookings and audit
+history stay intact.
+
+**1.5** Confirm the roles are distinct by attempting a cross-role action: as a plain **user**,
+open another organiser's dashboard URL directly → refused. See §10 for the admin view.
+
+**1.6** Attempt to sign up with `role: "admin"` in the request body (browser devtools →
+Network → edit and replay the signup request, or `curl`). The account is created as a plain
+**user** — the role is whitelisted server-side. This was a real vulnerability; see
+`technical-documentation.md` §7.4.1.
 
 ---
 
 ## 2. Events
 
-| # | Feature | Notes |
+| # | Feature | Where |
 |---|---|---|
-| 2.1 | Create event with cover image | Cloudinary upload |
-| 2.2 | Three access modes: public, invite-only, hybrid | One schema, not three products |
-| 2.3 | Multiple ticket tiers with quantity and limits | — |
-| 2.4 | Rich venue detail: venue name, dress code, parking, accessibility, age restriction | Feeds the chatbot |
-| 2.5 | Venue capacity (safe occupancy) | Enforced at the door — §5.3 |
-| 2.6 | Meet and Greet on/off per event | — |
-| 2.7 | Edit event | Owner or admin |
+| 2.1 | Create an event with a cover image | `/create-event` |
+| 2.2 | Three access modes: public, invite-only, hybrid | Step 1 |
+| 2.3 | Multiple ticket tiers with quantity and limits | Step 2 |
+| 2.4 | Rich venue detail: venue name, dress code, parking, accessibility, age limit | Step 1 |
+| 2.5 | Venue capacity (safe occupancy) | Step 1 |
+| 2.6 | Meet and Greet on/off per event | Step 1 |
+| 2.7 | Edit event | `/edit-event/:id` |
 | 2.8 | Discovery: browse, search, filter, trending, upcoming | `/explore-events` |
-| 2.9 | Live/upcoming/past status | Derived, runs to end of final day |
+| 2.9 | Location fields: Country → **State/County** → City → Postcode | Step 1 |
 
 ### How to test
 
-**2.1–2.4** Create an event. Location asks for **Country → State/County → City → Postal
-code**; for the UK the State/County list includes **West Midlands**. Fill the venue details
-— you will use them in §7.
+**2.1** Create an event with a cover image. It appears in **My Events** and on
+`/explore-events`.
 
-**2.9 — single-day events are live.** Create an event with the **same start and end date**,
-set to today. It must show as **Live**, not Upcoming. (An earlier version computed a
-zero-length window and such events were never live.)
+**2.2** Create one of each access mode. Then confirm the behavioural difference:
+**invite-only** events are hidden from public discovery and refuse purchase (§6.5);
+**hybrid** events allow both a guest list and ticket sales; **public** allows only purchase.
+
+**2.3** Add two tiers (e.g. General ₦5,000 and VIP ₦25,000) with different quantities. On the
+event page both appear with correct prices. Try to buy more than a tier's remaining quantity
+→ refused with *"Not enough … tickets remaining"*.
+
+**2.4** Fill in venue name, dress code, parking, accessibility and age restriction. These
+appear on the event detail page **and** are what the chatbot answers from in §7.2 and §7.3 —
+so enter something distinctive you will recognise.
+
+**2.5** Set **Venue capacity** to `2`. This is the number the door enforces in §5.6 — it is
+deliberately separate from ticket quantity, because organisers oversell against no-shows.
+
+**2.6** Toggle Meet and Greet **off** on one event and **on** on another. The off event has no
+Meet and Greet entry point for attendees (§9.5).
+
+**2.7** Edit an event and change the name and price. The event page reflects it. Note that
+changing a tier price does **not** alter tickets already sold — their price was stamped at
+purchase.
+
+**2.8** On `/explore-events`: search by name, filter by category, and check the **Trending**
+and **Upcoming** carousels on the home page return real events.
+
+**2.9** Choose **United Kingdom** → the *State/County* dropdown offers **West Midlands** among
+other counties. The field is labelled *State/County*, not *State*, because "state" is
+meaningless for a UK address. City remains a free-text field.
 
 ---
 
 ## 3. Ticketing and payment
 
-| # | Feature | Notes |
+| # | Feature | Where |
 |---|---|---|
-| 3.1 | Reserve → pay → confirm checkout | Seats held before payment |
-| 3.2 | Guest checkout (no account) | — |
-| 3.3 | Server-issued unique ticket IDs | Crockford base32 |
-| 3.4 | QR ticket emailed on payment | Inline `cid:` image |
-| 3.5 | **Server-authoritative pricing** | Client cannot choose a price |
-| 3.6 | **3% platform fee via Paystack split** | §4 |
-| 3.7 | Reservation expiry returns seats | 15-minute hold, swept every 5 min |
-| 3.8 | Free events skip payment | Confirmed inline |
+| 3.1 | Buy a ticket (Paystack) | Event page → Buy |
+| 3.2 | Guest checkout (no account) | Same |
+| 3.3 | Server-issued unique ticket IDs | — |
+| 3.4 | QR ticket emailed on payment | Inbox |
+| 3.5 | **Seats held before payment**, released if abandoned | — |
+| 3.6 | **3% platform fee via Paystack split** | — |
+| 3.7 | **Server-authoritative pricing** | — |
+| 3.8 | Free events skip payment entirely | — |
 | 3.9 | My Tickets, with a downloadable QR ticket | Profile → Tickets |
+
+Test card: **`4084 0840 8408 4081`**, any future expiry, CVV **`408`**.
 
 ### How to test
 
-**3.1 + 3.4 — the happy path.** Buy a ticket with Paystack test card
-`4084 0840 8408 4081`, any future expiry, CVV `408`. Expect: payment succeeds, the ticket
-email arrives with a **visible QR image** (not a blank square), and the ticket appears under
-Profile → Tickets.
+**3.1** Buy a ticket with the test card. You land on a success screen and the booking appears
+in Profile → Tickets.
 
-**3.5 — price cannot be tampered with (security).** With an event whose tier costs, say,
-₦25,000, call the reservation endpoint claiming it costs 1:
+**3.2** Log out entirely and buy again, entering only a name and email. The purchase completes
+with no account — this is why §9.4 (guest access by emailed code) exists.
 
-```bash
-curl -s -X POST http://localhost:4000/api/v1/bookings/create -H "Content-Type: application/json" -d '{"event":"<EVENT_ID>","ticketBuyers":[{"name":"Mallory","email":"m@example.com","ticketType":"<TIER NAME>","price":1,"currency":"USD","ticketUser":"Guest"}]}' | head -c 500
-```
+**3.3** Look at the ticket ID on the ticket. It is 12 characters, uppercase, and contains no
+ambiguous glyphs (no `I`, `L`, `O`, `U`). Buy twice and confirm the two differ. The client
+cannot choose it — it is generated server-side because it is the code the door admits on.
 
-**Expected:** the returned booking carries the **event's** price and currency, and
-`checkout.amount` is the real amount in kobo — the submitted `price: 1` and `currency: "USD"`
-are discarded.
+**3.4** Check the buyer's inbox: the email contains a **scannable QR image**, not a broken
+image box. The QR encodes the *ticket ID*, not the buyer's name — scan it with any phone QR
+reader and you should see the same code printed on the ticket.
 
-**3.7 — abandoned checkout returns the seat.** Start a purchase, close the Paystack popup,
-then check the event's remaining tickets. The seat is held (count drops) and returns within
-15 minutes, or immediately if you run `npm run reservations:release`.
+**3.5** Start a checkout and **close the Paystack popup without paying**. The seats are held,
+not lost: the tier's remaining count drops immediately, and the hold is swept back after 15
+minutes (`npm run reservations:release` forces it immediately).
+
+**3.6** After a successful payment, open your **Paystack dashboard → Transactions** and open
+the charge. It shows the split: the organiser's subaccount share, and your `transaction_charge`
+(3% of the ticket price, in kobo). This is the single most important thing to verify by hand,
+because it is the one step only Paystack can confirm.
+
+**3.7 — the security test.** In devtools → Network, replay the `POST /bookings/create` request
+with `"price": 1` on a ₦25,000 ticket. The booking is still stored at **₦25,000** and Paystack
+is asked for ₦25,000. Previously this succeeded and issued a valid ticket; see
+`technical-documentation.md` §7.4.3.
+
+**3.8** Create an event with a ₦0 tier and register. No Paystack popup appears at all — the
+booking is confirmed inline and the ticket emails immediately.
+
+**3.9** Profile → Tickets → open a ticket. The QR renders on screen and can be downloaded as
+an image for printing.
 
 ---
 
 ## 4. Money: platform fee and payouts
 
-| # | Feature | Notes |
+| # | Feature | Where |
 |---|---|---|
-| 4.1 | Organiser payout onboarding (bank → account → name confirmation) | Profile → Payouts |
-| 4.2 | Paystack subaccount created per organiser | Only last 4 digits stored |
-| 4.3 | 3% fee, split at the point of payment | Configurable `PLATFORM_FEE_PERCENT` |
-| 4.4 | Paid events blocked until payouts are connected | Deliberate |
-| 4.5 | Revenue report: gross, fee, net — per event and total | Profile → Revenue |
-| 4.6 | Admin sees platform-wide revenue and fee income | Same page, wider scope |
+| 4.1 | Payout onboarding: bank → account → name confirmation | Profile → Payouts |
+| 4.2 | Paystack subaccount created per organiser | — |
+| 4.3 | 3% fee, split at the point of payment | — |
+| 4.4 | **Paid events refuse to sell without a payout account** | — |
+| 4.5 | Organiser revenue: gross / fee / net per event and in total | Profile → Revenue |
+| 4.6 | Admin sees platform-wide revenue and fee income | Profile → Revenue |
 
 ### How to test
 
-**4.1** Profile → Payouts. The bank dropdown must be **populated**. Enter an account number
-and press *Verify account* — the resolved account **name** appears and you must confirm it
-before it saves. Only the last four digits are shown afterwards.
+**4.1** Profile → Payouts. The **bank dropdown must populate** (278 Nigerian banks come from
+Paystack). Enter account number `0000000000`, press **Verify account** → the registered
+account name is shown and you must confirm it *before* anything is saved. This two-step
+design exists because a mistyped digit would send an event's revenue to a stranger.
 
-**4.4** Before connecting payouts, try to buy a ticket for that organiser's paid event.
-**Expected:** a clear refusal naming the event, not a silent charge.
+**4.2** After confirming, the page shows the connected bank, the **last four digits only**,
+and the 3% fee. The full account number is never stored — Paystack holds it.
 
-**4.5 / 4.6** Profile → **Revenue**.
-- As the organiser: only *their* events, with Gross / Fee / Net columns.
-- As an admin: **every** event, plus an Organiser column and the platform's fee income.
-- Confirm an *unpaid* (abandoned) reservation does **not** appear in the totals.
+**4.3** Covered by §3.6 — verify the split in the Paystack dashboard.
 
-> **Known limitation (state it in the report):** the split is *instructed* at checkout and
-> settled by Paystack; TicketFlow does not yet read settlement back, so these figures are
-> what was charged, not confirmed bank settlement. "Net" is also before Paystack's own
-> processing charge, which the organiser bears.
+**4.4** Create a paid event with an organiser who has **no** payout account and try to buy a
+ticket → refused with a clear message naming the event. Free events are unaffected. This is
+deliberate: charging anyway would settle the whole amount into the platform account,
+invisibly.
+
+**4.5** Profile → **Revenue** as the organiser. Each event shows tickets sold, **gross**,
+**platform fee** and **net**, with totals. Confirm that an **unpaid/abandoned** reservation
+does *not* appear in the figures — only confirmed payments count.
+
+**4.6** Profile → **Revenue** as the **admin**. The heading changes to *Platform revenue*, an
+**Organiser** column appears, and every event on the platform is listed — with "Platform fee"
+now meaning TicketFlow's own income. Log in as a second organiser and confirm they **cannot**
+see the first organiser's takings.
 
 ---
 
 ## 5. Door admission
 
-| # | Feature | Notes |
+| # | Feature | Where |
 |---|---|---|
-| 5.1 | QR scan-and-admit, atomic single use | Camera or manual entry |
-| 5.2 | Door staff assignment, scoped to events | Role alone grants nothing |
-| 5.3 | Venue capacity stop-and-confirm with override | Fire-safety |
-| 5.4 | Append-only audit log of every scan | Success *and* rejection |
-| 5.5 | Manual check-in fallback | Flagged `manual: true` |
-| 5.6 | Case-insensitive manual code entry | — |
+| 5.1 | Camera QR scanning | `/scan/:eventId` |
+| 5.2 | Manual code entry (always available) | Same |
+| 5.3 | **Atomic single-use admission** | — |
+| 5.4 | Append-only audit log of every scan | Dashboard |
+| 5.5 | Usher assignment scopes who can scan what | Event team |
+| 5.6 | **Venue capacity with supervisor override** | — |
+| 5.7 | Tolerant code entry: case-insensitive, `#` optional | — |
 
 ### How to test
 
-**5.1 — single use.** Scan a valid ticket → admitted. Scan the **same** ticket again →
-*"This ticket has already been admitted"*.
+**5.1** Open the scanner on a phone (Chrome/Android/Edge — it uses the browser's built-in
+`BarcodeDetector`). Point it at a ticket QR → admitted, with the guest's name shown.
 
-**5.6 — typing the code.** On the scanner page, type the ticket code in **lower case**, and
-again with surrounding spaces. Both must admit. For a legacy ticket displayed as `#6F557BD`,
-typing it **without** the `#` must also work. (Previously any of these reported "invalid
-ticket", which at a door is indistinguishable from accusing a guest of forgery.)
+**5.2** Type the ticket ID into the manual box instead. Same result. Manual entry is always
+available because not every browser supports in-browser scanning.
 
-**5.2 — usher scoping.** Assign a user as door staff for Event A only. As that user:
-- Scan a ticket for Event A → admitted.
-- Scan a ticket for Event B → refused, and the attempt is written to Event B's audit log.
+**5.3 — the concurrency guarantee.** Scan the **same ticket twice**. The second attempt is
+refused with *"already been admitted"*. It is impossible for both to succeed: admission is a
+single conditional database update, so exactly one wins.
 
-**5.3 — capacity.** Set an event's **venue capacity to 1**. Admit one guest, then scan a
-second. **Expected:** refusal with a supervisor-override prompt; confirming the override
-admits and records `capacity_override` on the audit row. Then re-scan the *first* (already
-admitted) guest — you must get *"already admitted"*, **not** "venue full".
+**5.4** Open the event dashboard → recent scans. **Every** attempt is listed, successes *and*
+rejections, with the reason (`already_admitted`, `wrong_event`, `at_capacity`). Rejections are
+recorded too — a status flag would only show the final state.
 
-> **Was broken, now fixed:** the scan query did not load the capacity fields, so this limit
-> silently never fired on any real scan.
+**5.5** Assign your door-staff account to Event A (Event team → assign). They can now scan for
+Event A. Give them a ticket for **Event B** → refused with *"not for an event you are checking
+in"*, **and the attempt is logged** as `wrong_event`. Unassign them and their access
+disappears.
+
+**5.6** With Venue capacity set to `2` (§2.5), admit two guests, then scan a third → refused
+with *"the venue has reached its safe capacity"* and a **supervisor override** prompt. Confirm
+the override → admitted, and the audit row carries `capacity_override`, naming who authorised
+it. Note this only limits scans that would actually add someone: re-scanning a guest already
+inside a full venue correctly says *already admitted*, not *venue full*.
+
+**5.7** Type a valid code in **lowercase**, and with surrounding spaces → still admits. If you
+have a legacy `#`-prefixed ID, it resolves with or without the `#`. Previously a correct code
+typed in the wrong case was reported as an invalid ticket, which at a door is indistinguishable
+from a forgery.
 
 ---
 
 ## 6. Guest management (invite-only / hybrid)
 
-| # | Feature | Notes |
+| # | Feature | Where |
 |---|---|---|
-| 6.1 | Import a guest list from CSV/XLSX | Plus a single-guest form |
-| 6.2 | Single-use QR invites emailed per guest | — |
-| 6.3 | Guest list view with arrival status | — |
-| 6.4 | Natural-language guest queries | **Regex parser, not an LLM** |
-| 6.5 | Purchase refused on invite-only events | — |
-| 6.6 | GDPR erase a single guest, plus a retention sweep | `npm run gdpr:sweep` |
+| 6.1 | **Import a guest list from CSV/XLSX** | Guest list → Import |
+| 6.2 | Add a single guest by hand | Guest list |
+| 6.3 | Single-use QR invites emailed per guest | Inbox |
+| 6.4 | Guest list view with arrival status, VIP and plus-ones | Guest list |
+| 6.5 | **Natural-language guest queries** — *regex parser, not an LLM* | Guest list |
+| 6.6 | Purchase refused on invite-only events | — |
+| 6.7 | GDPR: erase one guest, plus a scheduled retention sweep | Guest list / CLI |
 
 ### How to test
 
-**6.4** On the guest list, ask *"who hasn't arrived"* and *"how many VIPs have arrived"*.
-Both must answer from your real guest list. Try nonsense (*"what's the weather"*) → it should
-decline with a hint rather than guess.
+**6.1 — guest import.** On an **invite-only** or **hybrid** event, open Guest list → Import and
+upload the `guests.csv` from §0.4.
 
-**6.5** Try to buy a ticket for an invite-only event → refused with 403.
+- The header row is **optional** and columns may be in any order; without a header the parser
+  assumes `name,email,vip,plusOnes`.
+- `vip` accepts `true` / `yes` / `1` / `vip` (case-insensitive); anything else is not VIP.
+- `plusOnes` is a number; blank or non-numeric becomes `0`.
+- The deliberately broken last row (no name) is reported as **skipped/invalid**, and the other
+  three still import. A malformed row must never abort the whole file.
+- Re-upload the **same file** → the three are reported as **skipped duplicates**, not
+  duplicated. Uniqueness is per `(event, email)`.
+- `.xlsx` and `.xls` work too — export the same sheet from Excel and re-upload it.
+
+**6.2** Add one guest using the single-guest form. It was added specifically because CSV-only
+import did not match how small events actually work.
+
+**6.3** Each imported guest receives an email containing a **single-use QR invite**. Scan one
+at the door (§5.1) → admitted. Scan the *same* invite again → refused. The invite token is
+separate from a purchased ticket ID, but both resolve through the same scan endpoint.
+
+**6.4** The guest list shows each guest's name, email, **VIP** flag, **plus-ones** and arrival
+status, updating as you admit people.
+
+**6.5 — natural-language guest query.** This is a **regex intent parser**, not a language
+model — being precise about that matters for your report. It understands three things:
+
+| It asks | Trigger words | Try |
+|---|---|---|
+| Count or list? | `how many` / `count` → count; `who` / `which` / `list` / `show` → list | *"how many have arrived"* vs *"who has arrived"* |
+| Which status? | `hasn't/haven't arrived`, `has not checked in` → not arrived; `arrived` / `checked in` / `admitted` → arrived | *"who hasn't arrived"* |
+| VIPs only? | the word `vip` | *"how many VIPs have arrived"* |
+
+Test all four combinations, then two edge cases that matter:
+
+- *"who **hasn't** arrived"* must **not** be treated as *arrived* — the negative pattern is
+  checked first, or every question would invert.
+- *"what's the weather"* → it **declines with a hint** rather than guessing. It returns nothing
+  when it does not recognise the question, which is the correct behaviour for a parser.
+
+**6.6** Try to buy a ticket for an invite-only event → refused with 403. Those events admit
+from the guest list only.
+
+**6.7** Erase a single guest from the guest list → their name becomes *Erased Guest* and their
+email a unique placeholder, **but** their VIP status, plus-ones and arrival record survive, so
+attendance statistics stay usable. Then run the scheduled sweep:
+```bash
+cd backend && npm run gdpr:sweep
+```
+It anonymises guests for events past their retention window and is safe to re-run.
 
 ---
 
@@ -232,26 +362,50 @@ decline with a hint rather than guess.
 
 | # | Feature | Notes |
 |---|---|---|
-| 7.1 | Event search in plain English | Real LLM (OpenAI → Gemini fallback) |
-| 7.2 | Answers about a **named** event from local data | — |
-| 7.3 | Weather + dress-code + attendance advice | Open-Meteo, no API key |
+| 7.1 | Event search in plain English | **Real LLM** — OpenAI, Gemini fallback |
+| 7.2 | Answers about a **named** event from local data | Reads your event, not the model's memory |
+| 7.3 | **Weather + dress-code + attendance advice** | **Open-Meteo**, no API key |
 | 7.4 | FAQ / general site help | — |
 | 7.5 | Graceful degradation with no API key | Canned reply, never an error |
+| 7.6 | Rate limited independently of the rest of the API | 20/hour by default |
 
 ### How to test
 
-Open the chat launcher (bottom right, animated).
+Open the chat launcher (bottom right — it pulses to draw attention and is chat-shaped).
 
-- *"Find me music events in Birmingham"* → returns real events from your database.
-- *"Tell me about &lt;your event name&gt;"* → answers using the venue details you entered in §2.4.
-- *"What should I wear to &lt;your event name&gt;?"* → gives dress-code advice using the **real
-  forecast** for the venue, and states that it is not a crime/neighbourhood-safety assessment.
-- Ask about an event **more than 16 days away** → it must say the forecast horizon is exceeded
-  rather than inventing weather.
+**7.1** *"Find me music events in Birmingham"* → returns **real events from your database**,
+not invented ones. Create an event with an unusual name first, then ask for it — that proves
+the answer comes from your data.
 
-> **Precision for the report:** this is the *only* feature that calls an external model.
-> Anomaly detection is rule thresholds, no-show prediction is a local trained model, and the
-> guest query (§6.4) is a regex parser.
+**7.2** *"Tell me about &lt;your event name&gt;"* → answers using the venue name, dress code,
+parking and accessibility you entered in §2.4. Change one of those fields, ask again, and the
+answer changes.
+
+**7.3 — Open-Meteo weather advice.** *"What should I wear to &lt;your event name&gt;?"*
+
+- It geocodes the event's location and fetches a **real daily forecast** — no API key is needed
+  and none is configured, which is itself worth noting.
+- The advice combines the forecast with the organiser's own dress code from §2.4.
+- It states explicitly that the safety notes are **not a crime or neighbourhood-safety
+  assessment**. Confirm that disclaimer appears.
+- **Horizon test:** ask about an event **more than 16 days away**. It must say the date is
+  beyond the forecast horizon rather than inventing weather. Create a far-future event to
+  force this — it is the most instructive case, because confidently wrong weather is worse
+  than none.
+
+**7.4** *"How do I get a refund?"* or *"How do QR tickets work?"* → answered from the built-in
+FAQ without touching your event data.
+
+**7.5** Comment out both `OPENAI_API_KEY` and `GEMINI_API_KEY`, restart the backend, and ask
+anything → a fixed, polite reply. **Never** a 500. Restore the keys afterwards.
+
+**7.6** Send more than 20 messages in an hour → rate-limited, while the rest of the site keeps
+working. The chat endpoint carries its own limiter because model calls cost money.
+
+> **Precision for the report:** this is the **only** feature that calls an external model.
+> Anomaly detection (§8.3) is rule thresholds, no-show prediction (§8.4) is a local trained
+> model, and the guest query (§6.5) is a regex parser. Claiming "AI throughout" would be an
+> overstatement a marker can check.
 
 ---
 
@@ -260,17 +414,49 @@ Open the chat launcher (bottom right, animated).
 | # | Feature | Notes |
 |---|---|---|
 | 8.1 | Live arrivals dashboard over SSE | Pushed, not polled |
-| 8.2 | Sold / admitted / remaining / at-capacity | — |
-| 8.3 | Scan anomaly detection | Rule-based |
-| 8.4 | No-show prediction | Logistic regression, synthetic training data |
+| 8.2 | Sold / admitted / remaining / at-capacity counters | — |
+| 8.3 | **Scan anomaly detection** | Rule-based, tuned thresholds |
+| 8.4 | **No-show prediction** | Logistic regression, synthetic training data |
 
 ### How to test
 
 **8.1** Open the event dashboard on one device and scan a ticket on another. The arrival
-appears **without refreshing**.
+appears **without refreshing** — updates are pushed over Server-Sent Events, not discovered by
+polling.
 
-**8.4** With unadmitted guests, the dashboard shows *"~N of the M remaining guests may not
-show up"*. Treat as indicative — the model's own recall is 0.16, and the UI says so.
+**8.2** Watch the counters as you admit people: **Sold** (tickets bought), **Admitted** (people
+through the door), **Remaining**, and an **at-capacity** warning as you approach the limit set
+in §2.5. The organiser should see capacity coming rather than learn about it from a queue
+outside.
+
+**8.3 — anomaly detection.** Rule-based, with thresholds tuned against labelled fixtures. Three
+rules, each of which you can trigger deliberately:
+
+| Flag | Trigger | How to reproduce |
+|---|---|---|
+| `repeated_rejects` | **≥3** rejections on one ticket | Scan an already-admitted ticket three times |
+| `rapid_sequential` | Two scans **<1.2 s** apart | Scan twice as fast as you can |
+| `multi_device` | **≥3** distinct device/IP fingerprints within **5 minutes** | Scan the same event from three different devices/browsers |
+
+Then open the dashboard's anomalies panel and confirm the flags appear. Note the 1.2 s
+threshold was **tightened from 2 s** because legitimate double-scans from one device were
+being flagged — measured precision improved to 0.948. Manual check-ins are deliberately
+excluded from detection, since they carry no device fingerprint and would manufacture flags.
+
+**8.4 — no-show prediction.** A logistic regression trained offline in Python; the app loads
+only the exported weights, so no Python runtime is needed at runtime.
+
+- With unadmitted guests present, the dashboard shows *"~N of the M remaining guests may not
+  show up"*, plus an average risk percentage.
+- It scores four features: **how far ahead they booked**, **whether they paid** (the strongest
+  signal — paying makes attendance much more likely), **VIP status**, and **group size**.
+- To see the numbers move: create one booking far in advance with several plus-ones (higher
+  risk) and one recent paid booking (lower risk).
+- **Read the disclaimer, and mean it.** The model is trained on *synthetic* data because a new
+  platform has no attendance history. Its own recorded metrics: accuracy **0.724**, ROC-AUC
+  **0.736**, but recall **0.161** — it catches only ~16% of actual no-shows. It is far better
+  at saying "this one will turn up" than at spotting who will not, and the UI says so. Being
+  able to explain *that* is stronger evidence than the feature itself.
 
 ---
 
@@ -279,64 +465,131 @@ show up"*. Treat as indicative — the model's own recall is 0.16, and the UI sa
 | # | Feature | Notes |
 |---|---|---|
 | 9.1 | Attendee directory with explicit opt-in | Per event |
-| 9.2 | Event Chat (Public) | Live over SSE |
+| 9.2 | **Event Chat (Public)** | Live over SSE |
 | 9.3 | Direct messages between attendees | — |
 | 9.4 | **Guest access by emailed one-time code** | No account needed |
-| 9.5 | Enabled/disabled per event | — |
-| 9.6 | "Event is live" notification email | — |
+| 9.5 | Enabled/disabled per event | Set at creation |
+| 9.6 | "Your event is live" notification email | CLI-triggered |
 
 ### How to test
 
-**9.4 — the interesting one.** Buy a ticket as a **guest** (no account). Go to the event's
-Meet and Greet, enter that email, and receive a **6-digit code**. Enter it → you are in.
+**9.1** As an attendee holding a ticket, open the event's Meet and Greet and **opt in**. You
+appear in the directory. Opt out → you disappear. Nobody is listed without choosing to be.
+
+**9.2** Open Event Chat (Public) in two browsers as two different attendees. A message sent in
+one appears in the other **without refreshing**. Reload → history persists. The event's name is
+shown in the heading so guests know which event's channel they are in.
+
+**9.3** From the directory, open a direct message with another attendee and send a message.
+Confirm a **third** attendee cannot see that thread — DMs are visible only to their two
+participants.
+
+**9.4 — the interesting one.** Buy a ticket as a **guest** (no account, §3.2). Go to that
+event's Meet and Greet, enter the booking email, and receive a **6-digit code**. Enter it →
+you are in, with an ordinary session.
 
 Then test the privacy property: request a code for an email that holds **no** booking. The
-response must look **identical** to the success case — otherwise the endpoint would let
-anyone test who is attending. Also confirm a code stops working after ~10 minutes.
+response must look **identical** to the success case — otherwise the endpoint would let anyone
+test who is attending an event. Also confirm a code stops working after ~10 minutes, and that
+a used code cannot be replayed.
+
+**9.5** On the event you created with Meet and Greet **off** (§2.6), attendees have no entry
+point to it. Inviting people into a space they would then be refused entry to would be worse
+than showing nothing.
+
+**9.6** Trigger the notification manually:
+```bash
+cd backend && npm run notify:event-live
+```
+Attendees of a currently-live event receive an email linking straight to its Meet and Greet.
+Run it twice — it re-sends rather than silently skipping, which is intentional.
 
 ---
 
 ## 10. Administration
 
-| # | Feature | Notes |
+| # | Feature | Where |
 |---|---|---|
-| 10.1 | See all events and all users | — |
-| 10.2 | Change roles (root admin only) | §1.6 |
-| 10.3 | Deactivate a user (soft) | — |
-| 10.4 | Archive an event (soft, reversible) | Nothing is destroyed |
-| 10.5 | Platform-wide revenue | §4.6 |
+| 10.1 | See all events and all users | My Events / Admin → Users |
+| 10.2 | Change roles — **root admin only** | Admin → Users |
+| 10.3 | Deactivate a user (soft) | Admin → Users |
+| 10.4 | Archive an event (soft, reversible) | My Events |
+| 10.5 | Platform-wide revenue | Profile → Revenue |
 
 ### How to test
 
-**10.4** Archive an event that has bookings. It disappears from listings, but confirm the
-bookings, guests, chat and audit rows still exist in the database — this is an archive, not a
-delete. Then scan one of its tickets: you must get *"its event has been archived"*, **not**
-"invalid ticket".
+**10.1** As admin, open **My Events** → the heading reads *All events* and lists every event on
+the platform, not just your own. Admin → Users lists every account.
+
+**10.2** As the **root admin**, promote a user to `creator`, then to `admin`. Now log in as
+that *newly promoted* admin and try to promote someone else → **refused**. Only the root admin
+may grant or revoke `admin`. Also confirm you cannot change **your own** role, and that the
+root admin cannot be demoted — otherwise the platform could be locked out of its own
+administration permanently.
+
+**10.3** Deactivate a user → they can no longer log in and vanish from listings. Their
+bookings and audit history survive (soft delete). Confirm an admin cannot delete themselves or
+the root admin.
+
+**10.4** Archive an event → it disappears from every listing, **and**:
+- its bookings, guests, chat history and audit log all survive (the confirmation dialog says
+  how many bookings and how many were paid);
+- assigned door staff are unassigned, since a scan scope on a hidden event is meaningless;
+- scanning one of its tickets now says *"this ticket is valid, but its event has been
+  archived"* — **not** "invalid ticket", which at a door would read as an accusation of fraud.
+
+**10.5** See §4.6.
 
 ---
 
 ## 11. Quality engineering
 
-| Command | What it does |
-|---|---|
-| `cd backend && npm run test:unit` | Unit tests, no database |
-| `cd backend && MONGO_TEST_URI=... npm test` | Full suite incl. integration |
-| `cd backend && npm run test:coverage` | Coverage table |
-| `cd backend && npm run load:test` | Throughput measurement |
-| `cd frontend && npm run test` | Component tests |
-| `cd frontend && npm run test:e2e` | Playwright journeys |
+| # | Feature | Command |
+|---|---|---|
+| 11.1 | 180 backend unit tests, no database needed | `npm run test:unit` |
+| 11.2 | 15 integration suites against a real replica set | `MONGO_TEST_URI=… npm test` |
+| 11.3 | Frontend component tests | `npm run test` (frontend) |
+| 11.4 | Playwright end-to-end | `npm run test:e2e` |
+| 11.5 | Coverage, measured but not gated | `npm run test:coverage` |
+| 11.6 | Load testing | `npm run load:test` |
+| 11.7 | AI/ML evaluation harnesses | `npm run eval:chatbot` etc. |
+| 11.8 | CI: lint, typecheck, tests, coverage, container publish | GitHub Actions |
 
-Current: **261 backend tests**, 9 frontend component tests, all passing.
+### How to test
+
+**11.1–11.4** Run each command and confirm it passes. Unit tests need no database; integration
+tests **skip cleanly** if `MONGO_TEST_URI` is unset rather than failing.
+
+**11.5** `npm run test:coverage` in each package. Backend ≈ **72.6% lines / 85.0% branches**;
+frontend ≈ **2.2%**, which is low because the UI is covered by Playwright instead — state that
+honestly rather than quoting the badge.
+
+**11.6** Raise the rate limit first, or the run flatlines at HTTP 429:
+```bash
+RATE_LIMIT_MAX=100000 npm run dev   # terminal 1
+npm run load:test                   # terminal 2
+```
+
+**11.7** `npm run eval:chatbot`, `eval-anomaly`, `eval-nlquery` print precision/recall figures
+over labelled fixtures — these are the measured numbers quoted in §8.3 and §8.4.
+
+**11.8** Push to `dev` → CI runs lint, typecheck, the full suite and coverage. Merge to `main`
+→ it additionally builds and publishes both container images to GHCR.
 
 ---
 
 ## 12. Suggested 10-minute demo order
 
-1. Browse → **buy a ticket** with a test card → QR email arrives *(§3)*
-2. **Revenue page** — gross, 3% fee, net *(§4.5)*
-3. Organiser **dashboard** open; **scan** the ticket on a phone → live arrival appears *(§8.1, §5.1)*
-4. Scan again → already admitted; **capacity** refusal + override *(§5.3)*
-5. **Guest joins Meet and Greet** with an emailed code *(§9.4)*
-6. **Chatbot**: "what should I wear to X?" → real forecast *(§7.3)*
-7. **Admin**: all events, platform revenue, archive an event *(§10)*
-8. Close on the **security fixes**: signup escalation and price tampering, both refused *(§1.1, §3.5)*
+1. **Create a paid event** with venue detail and a capacity of 2 *(§2.1, 2.4, 2.5)* — 1 min
+2. **Ask the chatbot about it**, including what to wear *(§7.2, 7.3)* — 1 min
+3. **Buy a ticket**, show the emailed QR *(§3.1, 3.4)* — 1½ min
+4. **Show the Paystack split** — organiser share vs 3% fee *(§3.6)* — 1 min
+5. **Import a guest list**, show a skipped bad row *(§6.1)* — 1 min
+6. **Scan at the door**; scan again → already admitted *(§5.1, 5.3)* — 1½ min
+7. **Hit capacity**, override with a reason, show the audit row *(§5.6, 5.4)* — 1 min
+8. **Live dashboard** updating as you scan, plus no-show prediction *(§8.1, 8.4)* — 1 min
+9. **Ask the guest list a question** in English *(§6.5)* — ½ min
+10. **Revenue as organiser, then as admin** *(§4.5, 4.6)* — ½ min
+
+> Say out loud which parts are AI and which are not (§7 note). Examiners reward precision here
+> far more than breadth of claims.

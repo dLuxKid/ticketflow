@@ -7,7 +7,7 @@ import * as paymentService from '../../src/services/paymentService.js';
  * Proves the checkout-confirmation rules that keep a buyer's money and their ticket
  * together, without needing a database:
  *
- *  - a browser callback alone never confirms anything — the charge is verified with
+ *  - a browser callback alone never confirms anything - the charge is verified with
  *    Paystack server-side first;
  *  - a webhook whose signature does not check out changes nothing.
  *

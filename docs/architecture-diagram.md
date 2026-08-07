@@ -1,4 +1,4 @@
-# TicketFlow — Architecture Diagram
+# TicketFlow - Architecture Diagram
 
 > **Diagram set:** [Architecture](architecture-diagram.md) · [Use cases](use-case-diagram.md) · [Data flow](data-flow-diagram.md)
 > All three describe the same system at different altitudes. Process numbers in the DFD
@@ -19,20 +19,20 @@ graph TB
         DOOR["Door-staff device<br/>(camera QR scan, mobile web)"]
     end
 
-    subgraph FE["Frontend — Next.js 15 App Router (:3000)"]
+    subgraph FE["Frontend - Next.js 15 App Router (:3000)"]
         MW["middleware.ts<br/>UX-level route guard:<br/>decodes JWT cookie, checks expiry"]
         RSC["Server + client components<br/>(app/ routes)"]
         SA["Server actions / queries<br/>utils/actions.ts · utils/queries.ts"]
         ST["Client state<br/>TanStack Query · Zustand"]
     end
 
-    subgraph BE["Backend — Node / Express (:4000)"]
+    subgraph BE["Backend - Node / Express (:4000)"]
         SEC["Security middleware<br/>helmet · cors(credentials) · rate-limit (configurable)<br/>mongo-sanitize · xss · hpp · rawBody capture"]
         subgraph PRES["Presentation"]
             RT["Routes<br/>/api/v1: events · users · bookings · chat"]
             CTL["Controllers<br/>auth · event · booking · payment · admission<br/>guest · usher · dashboard · nlQuery · networking · chat"]
         end
-        subgraph SVC["Services — business rules + authorisation"]
+        subgraph SVC["Services - business rules + authorisation"]
             CORE["auth · user · event · booking · payment<br/>guest · usher · admission · dashboard · retention"]
             MONEY["Money path<br/>pricing (server-authoritative)<br/>payout (Paystack subaccounts)"]
             NET["Meet and Greet<br/>networking · networkingGuest · networkingNotification"]
@@ -100,8 +100,8 @@ graph TB
 ```
 
 **Note on the AI boundary.** Only the concierge chatbot (`BOT`) leaves the process for
-inference. Everything else labelled AI here — anomaly detection, no-show prediction and
-natural-language guest queries — runs locally: the first two on rule thresholds and a
+inference. Everything else labelled AI here - anomaly detection, no-show prediction and
+natural-language guest queries - runs locally: the first two on rule thresholds and a
 portable weights file, and the NL guest query on a **regex intent parser, not a language
 model**. The distinction matters both for the data-protection argument (guest lists are never
 sent to a third party) and for accuracy in the report.
@@ -112,7 +112,7 @@ canned reply rather than erroring. An outage at either provider therefore remove
 it never takes down a request path that sells or admits a ticket.
 
 **Note on the frontend guard.** `middleware.ts` decodes the JWT client-side and treats any
-unexpired token as authenticated — it does not verify the signature or read the role. It is a
+unexpired token as authenticated - it does not verify the signature or read the role. It is a
 redirect/UX convenience only. Every real authorisation decision is server-side
 (`authController.protect`, `restrictTo`, and the ownership rules inside the services).
 
@@ -128,7 +128,7 @@ graph LR
 ```
 
 Dependencies point one way. Controllers never touch models directly; services never touch
-`req`/`res`. Authorisation lives in the service layer — `canViewDashboard` is reused by the
+`req`/`res`. Authorisation lives in the service layer - `canViewDashboard` is reused by the
 dashboard, the guest list, the NL query, and erasure, so the same ownership rule holds on
 every route that reaches them.
 
@@ -155,10 +155,10 @@ stateDiagram-v2
     revoked --> [*]
 ```
 
-`bookingRepository.admitById` only matches `status ∈ {issued, delivered, scanned}` — that
+`bookingRepository.admitById` only matches `status ∈ {issued, delivered, scanned}` - that
 guard *is* the single-use guarantee.
 
-## 4. Door check-in — the integrity-critical path
+## 4. Door check-in - the integrity-critical path
 
 ```mermaid
 sequenceDiagram
@@ -199,7 +199,7 @@ sequenceDiagram
 Two simultaneous scans of one token both reach MongoDB; exactly one matches the status
 guard, and the loser is written to `auditlogs` as a rejection with a reason. The audit write
 shares the admission transaction, so an admitted booking can never lack its audit row. This
-is why deployment requires a **replica set** — `withTransaction` throws on a standalone
+is why deployment requires a **replica set** - `withTransaction` throws on a standalone
 `mongod`.
 
 ## 5. Purchase and payment
@@ -223,7 +223,7 @@ sequenceDiagram
     alt any tier short
         BS-->>B: 409 not enough tickets (rolled back, nothing charged)
     else all reserved
-        BS->>BS: insertMany bookings — pending, with reservationExpiresAt<br/>server-issued reference + ticketId
+        BS->>BS: insertMany bookings - pending, with reservationExpiresAt<br/>server-issued reference + ticketId
         BS-->>FE: { reference, requiresPayment }
     end
 
@@ -241,9 +241,9 @@ sequenceDiagram
 
     alt charge confirmed
         CF->>CF: confirmByReference (guarded on pending)
-        CF->>B: email PDF ticket + QR — once, by whoever won the transition
+        CF->>B: email PDF ticket + QR - once, by whoever won the transition
     else failed, abandoned, or hold expired
-        CF->>ER: releaseTicketInventory — seats go back on sale
+        CF->>ER: releaseTicketInventory - seats go back on sale
     end
 ```
 
@@ -261,7 +261,7 @@ Three details that are easy to get wrong when reading this quickly:
   confirming anything. It exists because a webhook can be delayed or misconfigured, and
   without it a paid reservation would be swept away 15 minutes later.
 
-Every reservation has exactly one terminal outcome — confirmed, failed, or expired — and
+Every reservation has exactly one terminal outcome - confirmed, failed, or expired - and
 each of them leaves inventory correct. `scripts/release-expired-reservations.js`
 (`npm run reservations:release`) sweeps holds nobody resolved.
 
@@ -286,7 +286,7 @@ graph LR
     GU --> NLP
 ```
 
-`anomalyService` is rule-based and pure — no training step, unit-testable, and evaluated
+`anomalyService` is rule-based and pure - no training step, unit-testable, and evaluated
 against a committed labelled fixture (`scripts/eval-anomaly.js`: precision 0.948, recall
 0.821, F1 0.880). `noShowService` reimplements scikit-learn inference in JS from exported
 weights, so the running app needs no Python; `tests/unit/noShow.test.js` is a parity test

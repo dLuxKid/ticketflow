@@ -1,26 +1,26 @@
 /**
- * Provider-agnostic LLM client (Phase 8) — OpenAI primary, Gemini fallback.
+ * Provider-agnostic LLM client (Phase 8) - OpenAI primary, Gemini fallback.
  *
  * One shape in, one shape out, regardless of which provider actually answers:
  *   complete({ system, messages, tools }) -> { reply: string|null, toolCall: {id,name,args}|null }
  *
  * Plain `fetch` (global since Node 20) against each provider's REST endpoint, not their
- * SDKs — this codebase already hand-rolls its third-party integrations (paystack.js's HMAC
+ * SDKs - this codebase already hand-rolls its third-party integrations (paystack.js's HMAC
  * check, generateQrCode.js) rather than pulling in a dependency for single-endpoint usage,
  * and two REST calls don't justify two new packages.
  *
  * Fallback is a single retry, not a circuit breaker: if `callOpenAI` throws (network error,
  * non-2xx, missing key), `complete` immediately retries the same request once against
- * `callGemini`. One attempt per provider keeps worst-case latency bounded — this is not a
+ * `callGemini`. One attempt per provider keeps worst-case latency bounded - this is not a
  * health-checked, load-balanced multi-provider router, just "the primary is down right now,
  * try the other one."
  *
  * `messages` is a small generic shape both adapters translate to/from their own wire format:
  *   { role: 'user'|'assistant', content: string }
- *   { role: 'assistant', toolCall: { id, name, args } }        — a model's tool-call turn
- *   { role: 'tool', toolCallId, name, content: string }        — that tool's JSON result
+ *   { role: 'assistant', toolCall: { id, name, args } }        - a model's tool-call turn
+ *   { role: 'tool', toolCallId, name, content: string }        - that tool's JSON result
  * `toolCallId` is OpenAI's `tool_call_id` (needed to pair a result with its call); Gemini
- * has no such id and matches by `name` instead — the shape carries both so either adapter
+ * has no such id and matches by `name` instead - the shape carries both so either adapter
  * can take what it needs, regardless of which provider produced the earlier turn.
  */
 
@@ -164,7 +164,7 @@ export const callGemini = async ({ system, messages, tools }) => {
   if (!apiKey) throw new Error('GEMINI_API_KEY is not set');
   // "-latest" alias, not a pinned version: free-tier API keys can have zero quota granted
   // against a specific pinned model (e.g. gemini-2.0-flash) while the -latest alias for the
-  // same family works fine — confirmed against a real key during Phase 8 development.
+  // same family works fine - confirmed against a real key during Phase 8 development.
   const model = process.env.GEMINI_MODEL || 'gemini-flash-latest';
 
   const res = await fetchImpl(`${GEMINI_URL(model)}?key=${apiKey}`, {
@@ -188,7 +188,7 @@ export const callGemini = async ({ system, messages, tools }) => {
   const functionCallPart = parts.find((p) => p.functionCall);
 
   if (functionCallPart) {
-    // Gemini doesn't hand back a call id — matching is by name (see toGeminiContents' tool
+    // Gemini doesn't hand back a call id - matching is by name (see toGeminiContents' tool
     // role). `id: null` is carried through so a caller pairing this with OpenAI's shape
     // doesn't need a special case.
     return {
@@ -220,7 +220,7 @@ export const complete = async (request) => {
       return await callGemini(request);
     } catch (geminiError) {
       const err = new Error(
-        `Both LLM providers failed — OpenAI: ${openaiError.message}; Gemini: ${geminiError.message}`,
+        `Both LLM providers failed - OpenAI: ${openaiError.message}; Gemini: ${geminiError.message}`,
       );
       err.cause = { openaiError, geminiError };
       throw err;

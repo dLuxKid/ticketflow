@@ -8,7 +8,7 @@ import Button from "./cta-btn";
  * Sized down from the default button because it sits inside a card, not on a page.
  */
 
-// Compact override for card context — appended, so it wins over the default padding.
+// Compact override for card context - appended, so it wins over the default padding.
 const compact = "px-4 py-2 md:px-5 md:py-2.5 text-sm rounded-full";
 
 export default function MoreDetailsBtn({ event }: { event: AllEventData }) {

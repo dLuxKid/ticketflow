@@ -5,16 +5,16 @@ name: Scheduled jobs
 # Both are idempotent (each self-excludes already-processed events), so overlapping or
 # re-run schedules are harmless.
 #
-# Requires repo secrets pointing at the *production* database and mail sender — this
+# Requires repo secrets pointing at the *production* database and mail sender - this
 # workflow does nothing useful until DB, GMAIL_EMAIL, GMAIL_PASSWORD (and friends) are
 # configured under Settings > Secrets and variables > Actions. Until then it's committed as
 # the missing piece, not a claim that it's already wired to prod.
 
 on:
   schedule:
-    # GDPR erasure sweep: once a day is enough — the retention window is measured in days.
+    # GDPR erasure sweep: once a day is enough - the retention window is measured in days.
     - cron: "17 3 * * *"
-    # Event-live networking email: every 15 minutes — this one is genuinely time-sensitive
+    # Event-live networking email: every 15 minutes - this one is genuinely time-sensitive
     # ("the moment the event goes live"), unlike GDPR erasure.
     - cron: "*/15 * * * *"
   workflow_dispatch: {}

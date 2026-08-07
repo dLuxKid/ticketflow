@@ -3,7 +3,7 @@ import catchAsync from '../../shared/middleware/catchAsync.js';
 
 /**
  * Presentation layer for payment webhooks.
- * Handles HTTP concerns only — signature verification and effects live in paymentService.
+ * Handles HTTP concerns only - signature verification and effects live in paymentService.
  */
 
 /**

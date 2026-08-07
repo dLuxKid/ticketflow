@@ -9,7 +9,7 @@ import {
 import { connect, disconnect, buildEvent, skipReason } from '../helpers/db.js';
 
 /**
- * Phase 8 — the search_events/get_event_details tools execute against real data, not
+ * Phase 8 - the search_events/get_event_details tools execute against real data, not
  * invented answers. Driven through handleMessage with an injected `complete` that requests
  * each tool, so this proves the same wiring a real LLM response would trigger, without
  * needing live API keys (see chatbot.llmProvider.test.js / chatbot.service.test.js for the
@@ -108,7 +108,7 @@ if (skipReason) {
   test('get_event_details on a non-existent slug degrades gracefully, not a crash', async () => {
     // eventService.getEventBySlug throws a 404 AppError for an unknown slug.
     // executeTool's try/catch turns that into a {error} tool result instead of letting it
-    // propagate — the model still gets a second turn to phrase something sensible from it,
+    // propagate - the model still gets a second turn to phrase something sensible from it,
     // rather than the whole request blowing up with a raw 404.
     let toolResultSeen;
     const complete = async (req) => {
@@ -117,7 +117,7 @@ if (skipReason) {
           req.messages.find((m) => m.role === 'tool').content,
         );
         return {
-          reply: "I couldn't find that event — could you check the name?",
+          reply: "I couldn't find that event - could you check the name?",
           toolCall: null,
         };
       }

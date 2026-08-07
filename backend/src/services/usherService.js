@@ -6,7 +6,7 @@ import AppError from '../shared/errors/AppError.js';
 /**
  * Door-staff (usher) management for an event.
  *
- * An usher is any user with `eventId` in their `assignedEvents` — admissionService's
+ * An usher is any user with `eventId` in their `assignedEvents` - admissionService's
  * authorizeScan (Phase 2) already checks exactly this field, so assigning someone here is
  * what actually grants them door access, not a separate permission system.
  */

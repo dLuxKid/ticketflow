@@ -5,11 +5,11 @@ import * as eventRepository from '../../src/repositories/eventRepository.js';
 import { connect, disconnect, buildEvent, skipReason } from '../helpers/db.js';
 
 /**
- * Phase 0.1 — proves the oversell race is closed.
+ * Phase 0.1 - proves the oversell race is closed.
  *
  * Two buyers race for the single remaining ticket. Because reserveTicketInventory issues
  * a guarded atomic $inc (single-document, so it can't interleave), exactly one succeeds
- * and quantity lands at 0 — never negative, never double-sold. This test would FAIL
+ * and quantity lands at 0 - never negative, never double-sold. This test would FAIL
  * against the old read-then-write createBooking.
  */
 

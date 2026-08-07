@@ -3,7 +3,7 @@ import catchAsync from '../../shared/middleware/catchAsync.js';
 
 /**
  * Presentation layer for door-staff (usher) management.
- * HTTP concerns only — business logic lives in usherService.
+ * HTTP concerns only - business logic lives in usherService.
  */
 
 export const listUshers = catchAsync(async (req, res) => {

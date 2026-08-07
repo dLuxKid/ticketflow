@@ -4,7 +4,7 @@ import AppError from '../shared/errors/AppError.js';
  * Server-authoritative pricing and the platform fee split.
  *
  * **Why this module exists.** `reserveBooking` used to spread the client's buyer objects
- * straight into the booking, so `price` was whatever the browser said it was — and the
+ * straight into the booking, so `price` was whatever the browser said it was - and the
  * Paystack popup was opened with a client-computed `amount` too. Nothing compared either
  * against the event's own ticket tiers, and `verifyTransaction` only checked that a charge
  * had *succeeded*, never that it was for the right amount. A buyer could therefore pay 1
@@ -14,7 +14,7 @@ import AppError from '../shared/errors/AppError.js';
  * chooses is not a fee. Price authority is therefore a prerequisite for the split below,
  * not a separate improvement.
  *
- * Everything here is pure — no database, no network — so the money arithmetic is unit
+ * Everything here is pure - no database, no network - so the money arithmetic is unit
  * testable in isolation. The rule the rest of the system relies on: **the client may choose
  * WHAT to buy (ticket type and quantity); it may never choose what that costs.**
  */
@@ -32,7 +32,7 @@ export const PLATFORM_FEE_PERCENT = Number(
  * Currency used when an event does not name one.
  *
  * Events created before currency was captured have the field empty, and currency is now
- * stamped from the event rather than accepted from the request — so without a fallback
+ * stamped from the event rather than accepted from the request - so without a fallback
  * those events would fail booking validation instead of selling tickets. Falling back to
  * the *client's* value would defeat the point: currency is half of an amount, and a caller
  * free to pair a naira price with a cheaper code has simply found another way to underpay.
@@ -40,7 +40,7 @@ export const PLATFORM_FEE_PERCENT = Number(
  */
 export const DEFAULT_CURRENCY = process.env.DEFAULT_CURRENCY ?? 'NGN';
 
-/** Paystack (like most processors) works in the currency's minor unit — kobo, cents. */
+/** Paystack (like most processors) works in the currency's minor unit - kobo, cents. */
 export const MINOR_UNITS_PER_MAJOR = 100;
 
 export const toMinorUnits = (majorAmount) =>
@@ -51,7 +51,7 @@ export const toMinorUnits = (majorAmount) =>
  *
  * Rounded DOWN deliberately. Rounding a fee up takes money the organiser is owed on every
  * transaction where it makes a difference; over a large number of small tickets that is a
- * real sum, and it is the organiser — not the platform — who would have to notice it. When
+ * real sum, and it is the organiser - not the platform - who would have to notice it. When
  * a rounding rule can only favour one party, it should favour the party who did not write
  * it.
  *
@@ -113,7 +113,7 @@ export const priceBuyers = (ticketBuyers, event) => {
     return {
       ...buyer,
       // Listed AFTER the spread so a client-supplied price or currency is overwritten
-      // rather than trusted — the same ordering discipline reserveBooking already applies
+      // rather than trusted - the same ordering discipline reserveBooking already applies
       // to `event`, `reference` and `ticketId`.
       price: tier.ticketPrice,
       currency: event.currency || DEFAULT_CURRENCY,
@@ -137,8 +137,8 @@ export const priceBuyers = (ticketBuyers, event) => {
  * ambiguous field never decides who gets paid, whatever it happens to be set to.
  *
  * `bearer: 'subaccount'` puts Paystack's own processing fee on the organiser, so the
- * platform's margin is exactly `platformFeeMinor` and does not quietly shrink — or go
- * negative on a cheap ticket — as gateway pricing changes.
+ * platform's margin is exactly `platformFeeMinor` and does not quietly shrink - or go
+ * negative on a cheap ticket - as gateway pricing changes.
  *
  * @param {number} amountMinor - gross amount in minor units
  * @param {string} subaccountCode - the organiser's Paystack subaccount (ACCT_...)

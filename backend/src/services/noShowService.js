@@ -3,10 +3,10 @@ import { fileURLToPath } from 'url';
 import path from 'path';
 
 /**
- * No-show probability scoring — the runtime half of the Phase 5 feature.
+ * No-show probability scoring - the runtime half of the Phase 5 feature.
  *
  * Training happens offline in Python (ml/no_show/train.py, scikit-learn LogisticRegression
- * on a documented synthetic dataset — see that file's docstring for the labelled
+ * on a documented synthetic dataset - see that file's docstring for the labelled
  * limitation and the features used). This module loads the exported portable weights
  * (mean/std/coef/intercept) and reimplements just the standardize-then-sigmoid inference
  * step in pure JS, so the running app never needs a Python runtime or scikit-learn

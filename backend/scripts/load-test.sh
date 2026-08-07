@@ -3,8 +3,8 @@
 # Throughput and latency for the public read endpoints.
 #
 # Fills the one measured gap in docs/quality-model-iso25010.md §2 (Performance Efficiency),
-# which was rated Weak precisely because the design reasoning — SSE over polling, targeted
-# indexes — had never been verified against numbers.
+# which was rated Weak precisely because the design reasoning - SSE over polling, targeted
+# indexes - had never been verified against numbers.
 #
 # Two things this deliberately does NOT do:
 #
@@ -28,7 +28,7 @@ CONNECTIONS="${CONNECTIONS:-20}"
 DURATION="${DURATION:-15}"
 
 if ! curl -sf -o /dev/null --max-time 10 "$API_URL/api/v1/events"; then
-  echo "Cannot reach $API_URL/api/v1/events — is the API running?" >&2
+  echo "Cannot reach $API_URL/api/v1/events - is the API running?" >&2
   exit 1
 fi
 
@@ -56,7 +56,7 @@ run () {
       });"
 }
 
-echo "Load test — $CONNECTIONS connections, ${DURATION}s each, against $API_URL"
+echo "Load test - $CONNECTIONS connections, ${DURATION}s each, against $API_URL"
 echo
 run "GET /api/v1/events        (list)"   "/api/v1/events"
 run "GET /api/v1/events/:slug  (detail)" "/api/v1/events/$SLUG"
