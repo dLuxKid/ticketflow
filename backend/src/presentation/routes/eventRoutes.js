@@ -40,6 +40,10 @@ router.get('/my/events', eventController.getMyEvents);
 // Any role may call it: door staff are scoped by their own assignedEvents, and a user with
 // none simply gets an empty list.
 router.get('/my/assigned-events', eventController.getAssignedEvents);
+// Two segments, so the public single-segment '/:slug' above cannot swallow it. No role gate:
+// scope is decided inside revenueService from the caller's role — an organiser sees their own
+// events, an admin sees the whole platform.
+router.get('/revenue/summary', eventController.getRevenueSummary);
 // Ownership is enforced in eventService.updateEvent; the service allows the event's
 // own creator or an admin. No role gate here so any user who owns an event can edit it.
 router.patch('/update/:eventId', eventController.updateEvent);

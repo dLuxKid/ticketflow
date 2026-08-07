@@ -1,6 +1,8 @@
 # TicketFlow — Product Quality Evaluation (ISO/IEC 25010)
 
-**Document version:** 1.2 · **Verified against:** branch `dev`, 7 August 2026
+**Document version:** 1.3 · **Verified against:** branch `dev`, 7 August 2026
+
+> **Changes since 1.2.** §9 Safety is downgraded and re-argued: venue-capacity enforcement existed in code but was **silently disabled** by a projection that never loaded the capacity fields, so no real scan was ever limited. It is now genuinely enforced and covered by integration tests. §1 gains revenue reporting.
 
 > **Changes since 1.1.** §6 Security records a third fixed defect — buyer-controlled ticket pricing — and §1 gains the revenue model: a 3% platform fee via Paystack split payments, with organiser payouts settled directly by the provider.
 
@@ -40,7 +42,7 @@ ISO/IEC 25010 was revised in 2023, superseding the 2011 edition. The characteris
 | 4 | Interaction Capability | **Weak → improving** | Accessibility audit covers 2 components; usability testing not yet run |
 | 5 | Reliability | **Strong** | No uptime/error monitoring in production |
 | 6 | Security | **Strong** | No dependency-vulnerability scanning in CI |
-| 7 | Maintainability | **Strong** | Coverage now measured (backend 73.20% lines); frontend unit coverage is 2.22% |
+| 7 | Maintainability | **Strong** | Coverage now measured (backend 72.61% lines); frontend unit coverage is 2.22% |
 | 8 | Flexibility | Moderate | No deployment target configured |
 | 9 | Safety | Moderate | Capacity enforced at the door with an auditable override; no evacuation/occupancy reporting |
 
@@ -194,7 +196,7 @@ A second, subtler instance is worth noting alongside it: the guard preventing de
 | Analysability | `AuditLog` reconstructs door history; centralised `AppError` and error handler; ESLint 9 + Prettier enforced in CI |
 | Modifiability | The repository layer is the only Mongoose caller, so the persistence library could be replaced without touching business logic |
 | Testability | Services take no `req`/`res` and return plain data, which is precisely why authorisation logic is unit-testable with neither HTTP nor a database — 154 backend unit tests run with no database at all |
-| Test coverage *(measured)* | Backend **73.20% lines / 84.93% branches / 38.11% functions**; frontend **2.22% lines**. Emitted as lcov by `npm run test:coverage` in both packages, archived by CI and published to Coveralls as a parallel build with per-package flags |
+| Test coverage *(measured)* | Backend **72.61% lines / 85.03% branches / 37.92% functions**; frontend **2.22% lines**. Emitted as lcov by `npm run test:coverage` in both packages, archived by CI and published to Coveralls as a parallel build with per-package flags |
 
 **Strength.** Testability is a *consequence* of the modularity decision rather than an afterthought — the clearest demonstration in the codebase that architecture choices were made for reasons. The measured figures corroborate it: the layers designed as pure functions are the layers with high branch coverage.
 
@@ -230,6 +232,10 @@ A second, subtler instance is worth noting alongside it: the guard preventing de
 | Hazard warning | The live dashboard exposes `remaining`, `atCapacity` and `capacitySource`, so an organiser sees capacity approaching rather than learning about it from a queue outside |
 | Fail-safe | Reservation expiry returns seats rather than stranding inventory — a commercial rather than physical safety property |
 | Accountability | Exceeding capacity requires a deliberate per-scan `overrideCapacity: true` after a 409 — not a sticky mode — and is recorded on the audit row as `reason: 'capacity_override'` |
+
+**Found and fixed — and the reason this section was previously overstated.** The limit was implemented, unit-tested and visible in the UI, but the scan query populated the event with `select: 'user'`, so `venueCapacity` and `totalQuantity` arrived `undefined`. The service computed a limit of `0`, which `capacityDecision` correctly reads as *no limit configured* — so the guardrail took the permissive branch on **every real scan** and never once stopped anyone. Nothing failed; the control simply did not run. It is now enforced, and pinned by integration tests that exercise the real query rather than the decision function in isolation.
+
+The lesson generalises past this feature, and is the strongest maintainability point in this document: **a unit test of a decision function cannot detect that the function is being fed the wrong data.** Three separate controls in this codebase were disabled by exactly that mechanism (`isRootAdmin`, `payout.subaccountCode`, and the capacity fields). Where a control depends on a `select: false` or narrowly-projected field, the test that proves it works has to go through the query.
 
 **Strength.** This is the clearest example in the system of a **stop-and-confirm rather than a hard block**, and the reasoning is defensible in both directions: refusing outright would strand a paying guest at the door with no recourse, while admitting silently would defeat the safety purpose entirely. Requiring an explicit, logged decision keeps a named human accountable for the trade-off — which is what fire-safety regulation actually assumes exists. A field left blank means *unlimited* rather than *zero*, so an organiser who never entered a capacity is not accidentally locked out of their own door.
 

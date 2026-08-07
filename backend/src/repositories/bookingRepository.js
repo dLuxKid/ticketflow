@@ -106,10 +106,42 @@ export const anonymize = (bookingId) =>
  * guests) or a ticketId (purchased guests) — one lookup covers every guest type. Selects
  * the normally-hidden inviteToken and populates the event owner for authorization.
  */
+/**
+ * Candidate forms of a hand-typed ticket code.
+ *
+ * Scanned codes arrive exactly as issued, but a code read off a phone screen and typed in by
+ * hand at a door does not. Ticket IDs are Crockford base32 and always uppercase, and legacy
+ * IDs carry a leading `#` that is displayed on the ticket but is easy to omit (or to add).
+ * Matching only the raw string meant an usher who typed a correct code in lowercase, or
+ * without the `#`, was told the ticket was invalid — indistinguishable at the door from a
+ * forged one.
+ *
+ * Invite tokens are deliberately NOT case-folded: they are random 24-byte values where case
+ * is significant, so they are only ever matched exactly.
+ */
+const ticketIdCandidates = (code) => {
+  const trimmed = String(code).trim();
+  const upper = trimmed.toUpperCase();
+  const withoutHash = upper.replace(/^#/, '');
+
+  return [...new Set([trimmed, upper, withoutHash, `#${withoutHash}`])];
+};
+
 export const findByScanCode = (code) =>
-  Booking.findOne({ $or: [{ inviteToken: code }, { ticketId: code }] })
+  Booking.findOne({
+    $or: [
+      { inviteToken: String(code).trim() },
+      { ticketId: { $in: ticketIdCandidates(code) } },
+    ],
+  })
     .select('+inviteToken')
-    .populate({ path: 'event', select: 'user' });
+    // `venueCapacity` and `totalQuantity` are required, not optional extras: the door reads
+    // them to decide whether the room is full. Selecting only `user` here left both
+    // undefined, so admissionService computed a capacity of 0 — which capacityDecision
+    // treats as "no limit configured" — and the fire-safety guardrail silently never fired
+    // on a single real scan. A projection that omits a field a decision depends on disables
+    // that decision without failing.
+    .populate({ path: 'event', select: 'user venueCapacity totalQuantity' });
 
 /**
  * Atomically admits a booking: flips status to `admitted` only if it is currently in an

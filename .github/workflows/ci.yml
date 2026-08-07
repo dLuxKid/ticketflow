@@ -17,6 +17,10 @@ jobs:
   backend:
     name: Backend tests
     runs-on: ubuntu-latest
+    # Read once at job level so the step-level `if` can test it. A secret cannot be
+    # referenced directly in a step `if`, only through env.
+    env:
+      COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
 
     steps:
       - uses: actions/checkout@v4
@@ -86,9 +90,16 @@ jobs:
           path: backend/coverage/lcov.info
           if-no-files-found: ignore
 
-      # Coveralls rather than Codecov: the action authenticates with the built-in
-      # GITHUB_TOKEN, so it needs no repository-owner enrolment and no secret — which
-      # matters because the people working on this are contributors, not the repo owner.
+      # Coveralls publishing is OPT-IN on a repository secret, and skipped cleanly when it
+      # is absent.
+      #
+      # The earlier version relied on the built-in GITHUB_TOKEN alone. That works only for a
+      # public repository already enrolled on coveralls.io; anywhere else the upload is
+      # rejected, and because the report is not something a build should ever fail on, the
+      # result was a permanently red step reporting a condition nobody intended to fix.
+      # A gate makes the two states honest: configured and working, or explicitly skipped.
+      # Either way `lcov.info` is still uploaded as a build artifact above, so the coverage
+      # data is never lost — only its publication is optional.
       #
       # base-path is not optional here. Both lcov files address their sources as `src/...`
       # relative to their own package, so without it the backend's src/ and the frontend's
@@ -97,10 +108,11 @@ jobs:
       # parallel: true holds the build open until the frontend job reports too, so the badge
       # reflects one combined run instead of whichever job finished last.
       - name: Report backend coverage to Coveralls
-        if: always()
+        if: ${{ always() && env.COVERALLS_REPO_TOKEN != '' }}
         continue-on-error: true
         uses: coverallsapp/github-action@v2
         with:
+          github-token: ${{ secrets.COVERALLS_REPO_TOKEN }}
           file: backend/coverage/lcov.info
           base-path: backend
           flag-name: backend
@@ -113,6 +125,8 @@ jobs:
   frontend:
     name: Frontend typecheck & lint
     runs-on: ubuntu-latest
+    env:
+      COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
 
     steps:
       - uses: actions/checkout@v4
@@ -151,10 +165,11 @@ jobs:
           if-no-files-found: ignore
 
       - name: Report frontend coverage to Coveralls
-        if: always()
+        if: ${{ always() && env.COVERALLS_REPO_TOKEN != '' }}
         continue-on-error: true
         uses: coverallsapp/github-action@v2
         with:
+          github-token: ${{ secrets.COVERALLS_REPO_TOKEN }}
           file: frontend/coverage/lcov.info
           base-path: frontend
           flag-name: frontend
@@ -163,16 +178,22 @@ jobs:
   # Tells Coveralls both parallel uploads are in, so it can combine them and publish one
   # number. `if: always()` because a failing test job must still close the build — otherwise
   # Coveralls waits on a report that will never arrive and the badge sticks on a stale run.
+  # Skipped entirely when Coveralls is not configured, so the pipeline shows no red step for
+  # a reporting integration nobody has enabled.
   coverage:
     name: Publish combined coverage
     needs: [backend, frontend]
     if: always()
     runs-on: ubuntu-latest
+    env:
+      COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
 
     steps:
       - name: Close the parallel Coveralls build
+        if: ${{ env.COVERALLS_REPO_TOKEN != '' }}
         continue-on-error: true
         uses: coverallsapp/github-action@v2
         with:
+          github-token: ${{ secrets.COVERALLS_REPO_TOKEN }}
           parallel-finished: true
           carryforward: "backend,frontend"

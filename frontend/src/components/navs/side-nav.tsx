@@ -18,6 +18,10 @@ const profile_nav = [
     href: "/my-profile/tickets",
   },
   {
+    name: "Revenue",
+    href: "/my-profile/revenue",
+  },
+  {
     name: "Payouts",
     href: "/my-profile/payouts",
   },

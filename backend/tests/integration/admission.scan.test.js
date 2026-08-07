@@ -44,7 +44,19 @@ if (skipReason) {
   before(async () => {
     await connect();
     owner = { _id: new mongoose.Types.ObjectId(), role: 'creator' };
-    event = await Event.create(buildEvent({ user: owner._id }));
+    // Ticket inventory is raised above 1 deliberately. `buildEvent`'s default of a single
+    // ticket makes the event's own capacity 1 (venueCapacity is unset, so the door falls
+    // back to totalQuantity), which means the second guest admitted in this file would be
+    // refused for being over capacity rather than for the reason under test. That is the
+    // capacity guardrail behaving correctly — the fixture, not the rule, was wrong.
+    event = await Event.create(
+      buildEvent({
+        user: owner._id,
+        ticketDetails: [
+          { ticketName: 'General', ticketPrice: 100, ticketQuantity: 50 },
+        ],
+      }),
+    );
   });
 
   after(async () => {

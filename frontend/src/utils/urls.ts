@@ -22,6 +22,7 @@ export const API_URLS = {
     delete: (id: string) => `${baseUrl}/api/v1/events/${id}`,
     myEvents: `${baseUrl}/api/v1/events/my/events`,
     assignedEvents: `${baseUrl}/api/v1/events/my/assigned-events`,
+    revenueSummary: `${baseUrl}/api/v1/events/revenue/summary`,
     count: `${baseUrl}/api/v1/events/count`,
     upcoming: `${baseUrl}/api/v1/events/upcoming`,
     trending: `${baseUrl}/api/v1/events/trending`,

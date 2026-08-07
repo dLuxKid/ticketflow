@@ -456,7 +456,7 @@ export function EventDetails({
               }}
               isSearchable={true}
               name="state"
-              placeholder="State"
+              placeholder="State/County"
             />
           </label>
           <input

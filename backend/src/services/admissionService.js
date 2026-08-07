@@ -20,6 +20,13 @@ import AppError from '../shared/errors/AppError.js';
 const equalsId = (a, b) => Boolean(a && b && a.equals?.(b));
 
 /**
+ * Statuses from which a booking can still be admitted. Mirrors the guard in
+ * `bookingRepository.admitById`, which is what actually enforces single use — this copy is
+ * only used to decide whether the capacity limit is even relevant to a given scan.
+ */
+const ADMITTABLE_STATUSES = ['issued', 'delivered', 'scanned'];
+
+/**
  * Pure authorization decision: may `actor` admit guests for `event`?
  *  - admin: any event
  *  - the event's owner: their own event
@@ -106,8 +113,19 @@ export const checkInByScan = async (code, actor, context = {}) => {
   if (!code) throw new AppError('No ticket code provided', 400);
 
   const booking = await bookingRepository.findByScanCode(code);
-  if (!booking || !booking.event) {
-    throw new AppError('Invalid or unrecognised ticket', 404);
+  if (!booking) throw new AppError('Invalid or unrecognised ticket', 404);
+
+  // A booking whose event does not load is not the same thing as an unknown code, and
+  // saying so matters at a door: `Event.pre(/^find/)` hides archived events from every
+  // query including this populate, so an admin archiving an event made all of its tickets
+  // report as forgeries. The usher then has a real guest holding a real ticket and an error
+  // message accusing them of fraud, with nothing to act on.
+  if (!booking.event) {
+    throw new AppError(
+      'This ticket is valid, but its event has been archived and cannot admit guests. ' +
+        'Ask an administrator to restore it.',
+      409,
+    );
   }
   const event = booking.event;
 
@@ -137,20 +155,35 @@ export const checkInByScan = async (code, actor, context = {}) => {
   let capacity = { allow: true };
   try {
     await session.withTransaction(async () => {
-      // Counted inside the transaction, not before it: two scanners working the same door at
-      // capacity-1 would otherwise both read "one seat left" and both admit.
-      const effectiveCapacity = event.venueCapacity ?? event.totalQuantity ?? 0;
-      const admittedCount = await bookingRepository.countByEventAndStatus(
-        event._id,
-        'admitted',
-        session,
-      );
-      capacity = capacityDecision({
-        admitted: admittedCount,
-        capacity: effectiveCapacity,
-        override: context.overrideCapacity === true,
-      });
-      if (!capacity.allow) return;
+      // Capacity limits only admissions that would actually put another person in the room.
+      // A ticket that is already admitted, revoked or otherwise unusable adds nobody, so
+      // testing it against the limit produces a wrong and actively confusing answer at the
+      // door: re-scanning a guest who is already inside a full venue would report "the venue
+      // is full" and offer a supervisor override, when the correct — and reassuring — answer
+      // is "this ticket has already been admitted". Admissibility is therefore established
+      // first, and the limit applied only to a scan that would genuinely add someone.
+      //
+      // This ordering does not weaken the limit under concurrency. Two simultaneous scans of
+      // one ticket both pass this pre-check, both evaluate capacity, and are then separated
+      // by the atomic claim below, exactly as before — the claim, not this read, is what
+      // guarantees single use.
+      if (ADMITTABLE_STATUSES.includes(booking.status)) {
+        // Counted inside the transaction, not before it: two scanners working the same door
+        // at capacity-1 would otherwise both read "one seat left" and both admit.
+        const effectiveCapacity =
+          event.venueCapacity ?? event.totalQuantity ?? 0;
+        const admittedCount = await bookingRepository.countByEventAndStatus(
+          event._id,
+          'admitted',
+          session,
+        );
+        capacity = capacityDecision({
+          admitted: admittedCount,
+          capacity: effectiveCapacity,
+          override: context.overrideCapacity === true,
+        });
+        if (!capacity.allow) return;
+      }
 
       admitted = await bookingRepository.admitById(booking._id, session);
       if (admitted) {

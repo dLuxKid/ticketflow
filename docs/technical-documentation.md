@@ -11,6 +11,8 @@
 > 5. **Quality engineering** — coverage is now measured (§8.7), a load-test harness exists with recorded figures, backend lint is enforced in CI, and the rate limit became configurable.
 > 6. **Liveness fix** — an event whose `startDate` equals its `endDate` was never `live`; the window now runs to end-of-day.
 > 7. **Revenue model** — TicketFlow now takes a **3% platform fee** via Paystack split payments, settling organisers directly to their own subaccount (§5.6.1). This required making ticket pricing **server-authoritative**, closing a defect that let a buyer name their own price.
+> 8. **Revenue reporting** — organisers see gross/fee/net per event and in total; admins see the same across the whole platform, including the platform's own fee income (§5.6.2). Closes limitation 9b.
+> 9. **Two door-scan defects fixed** — the scan query never loaded the capacity fields, so the venue-capacity guardrail silently never fired on a single real scan; and a correctly-typed code in the wrong case, or a legacy `#`-prefixed ID typed without the hash, was reported as an invalid ticket (§7.4.4).
 >
 > Limitations 1 and 6 of v3.0 are closed; the remaining items still stand (§12).
 
@@ -321,6 +323,7 @@ erDiagram
 | **Admin soft delete (users / events)** | `userService.canDeleteUser`/`deleteUser`, `eventService.deleteEvent` |
 | **Admin bootstrap** | `scripts/seed-admin.js` (sets `role: 'admin'` + `isRootAdmin`) |
 | **Platform fee / split payments** | `services/pricingService.js` — `platformFeeMinor`, `buildSplit` |
+| **Revenue reporting (organiser + platform)** | `services/revenueService.js`, `GET /events/revenue/summary` |
 | **Server-authoritative pricing** | `services/pricingService.js` — `priceBuyers`, `findTier` |
 | **Organiser payout onboarding** | `services/payoutService.js`, `frontend/src/app/my-profile/payouts/` |
 | Venue capacity guardrail | `services/admissionService.js` — `capacityDecision` |
@@ -445,6 +448,24 @@ Four decisions are worth defending in the report:
 
 **Onboarding is two-step by design**: enter the account, then confirm the **name it resolves to** before anything is saved. A mistyped digit would otherwise route an event's entire revenue to a stranger, and bank transfers are not reversible on request — the confirmation has to happen while the mistake is still free to make.
 
+### 5.6.2 Revenue reporting
+
+`GET /events/revenue/summary` (`revenueService.js`) answers two questions the product could not previously answer at all: *what has this event earned me, net of the platform fee*, and *what has the platform earned across every event*. Before it, the only financial figure anywhere was a per-event "Gross Sales" total on one page, with no concept of the fee and no aggregation — the codebase contained no `aggregate()` call at all.
+
+| Audience | Scope | Shows |
+|---|---|---|
+| Organiser (`creator`) | Their own events | Gross, platform fee, net, tickets sold, transactions |
+| Administrator | **Every** event | The same, plus the organiser's name and the platform's total fee income |
+
+Four decisions worth citing:
+
+1. **Scope is derived from the caller's role inside the service**, never passed in by the request, so there is no parameter an organiser could manipulate to widen it. Covered by tests asserting that one organiser cannot see another's takings.
+2. **The fee is summed per transaction, not taken as a percentage of the grand total.** `platformFeeMinor` rounds down, so the two differ in general, and Paystack deducts per transaction. A report derived differently from the way the money actually moved produces a statement that never reconciles with the provider's.
+3. **Only confirmed payments count.** Pending holds have not been paid and expired ones never will be; including either would report revenue that does not exist.
+4. **Archived events are included.** Money an archived event took is still money the platform took, so dropping those rows would make the report impossible to reconcile.
+
+**Two limits are stated in the UI rather than hidden.** "Net" is before Paystack's own processing charge — the organiser bears it (`bearer: 'subaccount'`) and TicketFlow never sees it, so reporting it would mean inventing a number. And these figures are what was *instructed and charged*, not what was confirmed *settled*; settlement reconciliation is limitation 9c.
+
 ### 5.7 Administration — bootstrap, role change and soft delete
 
 Administration is built around one constraint: **an administrator can never be self-granted.** Three mechanisms enforce it.
@@ -523,6 +544,7 @@ All routes are mounted under `/api/v1` (`backend/app.js:95–98`): `/events`, `/
 | `POST` | `/:eventId/network/guest/verify` | **Public** | Exchange that code for an ordinary session |
 | `GET` | `/my/events` | Protected | Events owned by caller (**all** events when the caller is an admin) |
 | `GET` | `/my/assigned-events` | Protected | Events the caller works as door staff (empty list for everyone else) |
+| `GET` | `/revenue/summary` | Protected | Revenue per event plus totals — own events for an organiser, **all** events for an admin |
 | `PATCH` | `/update/:eventId` | Protected † | Edit event |
 | `DELETE` | `/:eventId` | **Admin** | Archive an event (`isActive: false`); bookings, guests, chat and audit rows are kept, assigned ushers are unassigned |
 | `GET` | `/:eventId/dashboard` | Protected † | Live dashboard snapshot |
@@ -632,6 +654,22 @@ This is the defect that made the platform fee possible at all — a percentage o
 
 Regression cover: `tests/unit/pricing.test.js` (15 tests) and `tests/integration/checkout.split.test.js`, which asserts end to end that a payload claiming a ₦25,000 VIP ticket costs ₦1 is persisted at ₦25,000 in the event's own currency.
 
+### 7.4.4 Fixed defects: the door scanner
+
+Two problems, both of which presented at a door as an accusation against a guest holding a valid ticket.
+
+**The venue-capacity guardrail never fired.** `findByScanCode` populated the event with `select: 'user'`, so `venueCapacity` and `totalQuantity` arrived `undefined`. `admissionService` computed an effective capacity of `0`, and `capacityDecision` reads `0` as *"no limit configured"* — the correct behaviour for an invite-only event with no inventory, and exactly the wrong behaviour here. The result was a fire-safety control that was documented, tested at the unit level, demonstrated in the UI, and **disabled on every real scan**, with nothing anywhere reporting a problem.
+
+This is the *third* instance in this codebase of the same failure mode: a `select`/projection that omits a field a decision depends on. `isRootAdmin` broke the root-admin guard; `payout.subaccountCode` would have made every organiser look unpaid; this one silenced capacity enforcement. **The pattern is worth naming in the report**: a missing projection does not raise an error, it makes a guard read `undefined` and take the permissive branch. Unit tests of the decision function cannot catch it, because the function is correct — the *data it is given* is wrong. Only an integration test that exercises the real query does.
+
+**Correct codes were rejected as invalid.** Lookup was an exact string match. A ticket ID is Crockford base32 and always upper case, and legacy IDs carry a displayed `#` prefix — so an usher who typed a correct code in lower case, or omitted the `#`, was told the ticket was invalid, which at a door is indistinguishable from a forgery. Manual entry now resolves case-insensitively and with or without the prefix. Invite tokens are deliberately excluded from this folding: they are random 24-byte values where case is significant.
+
+Fixing the capacity bug then exposed a genuine ordering defect. Capacity was evaluated *before* admissibility, so re-scanning a guest who was already inside a full venue reported *"the venue is full"* and offered a supervisor override — when the correct answer is *"already admitted"*, and admitting them again would add nobody to the room. The limit now applies only to a scan that would genuinely admit someone. This does not weaken it under concurrency: two simultaneous scans of one ticket are still separated by the atomic claim, which is what guarantees single use.
+
+Finally, a ticket for an **archived** event reported as invalid, because the `pre(/^find/)` hook hides archived events from the populate too. It now says so explicitly.
+
+Regression cover: `tests/integration/admission.lookup.test.js` (8 tests), verified to fail against the pre-fix code.
+
 ### 7.5 Data protection (GDPR)
 
 - Per-record erasure timestamps: `Booking.piiErasedAt`, `Guest.erasedAt`.
@@ -677,7 +715,7 @@ Testing is deliberately split by **what a mock can and cannot prove**. Pure deci
 | `chatbot.llmProvider.test.js` | OpenAI-primary / Gemini-fallback selection and error handling |
 | `ticketEmail.test.js` | Ticket email renders an inline `cid:` QR rather than a `data:` URI (Gmail strips those) |
 
-### 8.3 Backend integration tests — `backend/tests/integration/` (13 files, replica set required)
+### 8.3 Backend integration tests — `backend/tests/integration/` (15 files, replica set required)
 
 | File | What it proves |
 |---|---|
@@ -692,6 +730,8 @@ Testing is deliberately split by **what a mock can and cannot prove**. Pure deci
 | `retention.sweep.test.js` | GDPR sweep behaviour |
 | `networking.chat.test.js` | Public-channel and DM persistence and eligibility end to end |
 | `networking.notify.test.js` | Event-live notification delivery |
+| `revenue.summary.test.js` | Scope (an organiser never sees another's takings; an admin sees all), per-transaction fee arithmetic, and that unpaid reservations are excluded |
+| `admission.lookup.test.js` | Case/hash-insensitive code entry, that the capacity fields are actually selected, that capacity is enforced and overridable, and that an archived event reports as archived rather than as a forgery |
 | `checkout.split.test.js` | The split routes to the organiser's subaccount with the 3% charge; a client-supplied price never reaches the persisted booking; an organiser with no payout account cannot sell; and the `select: false` subaccount code is actually loaded |
 | `chatbot.tools.test.js` | Concierge tool calls resolve against real seeded events |
 
@@ -739,7 +779,7 @@ That omission is a decision, not an oversight. A minimum set before the baseline
 
 | Suite | Lines | Branches | Functions |
 |---|---|---|---|
-| Backend (`npm run test:coverage`, unit only) | **73.20%** | **84.93%** | **38.11%** |
+| Backend (`npm run test:coverage`, unit only) | **72.61%** | **85.03%** | **37.92%** |
 | Frontend (`npm run test:coverage`) | **2.22%** | **16.00%** | **7.31%** |
 
 The asymmetry is expected and worth stating plainly rather than hiding: the logic that decides money, admission and authorisation is on the backend and is covered by pure-function unit tests, which is why line and branch coverage there are high. Function coverage is lower because the unit run never touches controllers, repositories or the mail/Cloudinary adapters — those are exercised by the integration suite, whose execution is not counted in this figure. The frontend number is low for a structural reason: only two components have Vitest tests, and the rest of the UI is covered by Playwright end-to-end runs, which likewise contribute nothing to a V8 unit-coverage report. The honest reading is that **this table measures unit-level coverage only, and understates total tested behaviour**.
@@ -872,7 +912,6 @@ Identifying weaknesses with proposed remedies is explicitly rewarded by the mark
 | 7 | **Backend function coverage is 35.39%** — high line and branch coverage sits on pure decision functions; controllers, repositories and adapters are only reached by the integration suite, which the figure does not include | §8.8 | Merge integration-run coverage into the same lcov report so the published number reflects the suite that actually exercises those layers |
 | 8 | **Load testing covers reads only** — the recorded figures are for the event list and detail endpoints; the concurrency-critical write paths were never measured under load | `scripts/load-test.sh` §9.1.1 | Extend the harness to `/bookings/create` and `/bookings/scan` reporting p50/p95, which is where contention would actually show |
 | 9 | **No dependency vulnerability scanning** — `npm audit` is not in CI | `.github/workflows/ci.yml` | Add `npm audit --audit-level=high` and enable Dependabot |
-| 9b | **No platform-wide or financial reporting.** There is per-event reporting (live dashboard "Sold"; Gross Sales on `/my-profile/event-history/:id`) but no aggregation across events and no export — the codebase contains no `aggregate()` call and no report endpoint. An admin can see every event but must open each one individually | `services/dashboardService.js`; no export route in `presentation/routes/` | Add an admin summary endpoint (tickets sold, gross sales, platform fee earned, admission rate, grouped by event and period) and a CSV export |
 | 9c | **Payouts are not reconciled.** The split is instructed at checkout and Paystack settles it, but nothing reads settlement back: the platform cannot show an organiser what they were actually paid, nor detect a transaction that settled differently from the instruction | `services/payoutService.js` has no settlement read | Consume Paystack's `transfer`/`settlement` webhooks into a ledger, and show organisers a statement per event. Instructed ≠ settled, and only the second is evidence |
 | 9d | **The platform fee is not shown to the buyer.** The organiser sees the percentage on their payouts page, but the checkout total is the ticket price with no fee breakdown, because the fee is deducted from the organiser's share rather than added to the buyer's | `frontend/.../payouts/page.tsx` states it; checkout does not | Defensible as designed (the buyer pays the advertised price), but state the deduction in organiser-facing terms at event-creation time too, so the economics are visible before an event is published |
 | 10 | **Paystack public key is hard-coded** in `usePaystack.tsx` rather than read from the environment | `frontend/src/hooks/usePaystack.tsx` | Move to `NEXT_PUBLIC_PAYSTACK_KEY`; the current value will not survive a production build |
@@ -898,6 +937,9 @@ Identifying weaknesses with proposed remedies is explicitly rewarded by the mark
 | No venue-capacity enforcement (safety) | `admissionService.capacityDecision` enforces occupancy at the door with an auditable override — §5.5 |
 | Signup accepted an arbitrary `role` | `SIGNUP_ROLES` whitelist; administrators are only ever granted — §1.1, §6.1 |
 | Sales/booker list readable by any authenticated user | `getBookingsForEvent` now authorises through `getEventForViewer`; response narrowed to the rendered fields — §7.4.2 |
+| No platform-wide or financial reporting (9b) | `revenueService` — gross/fee/net per event and in total, scoped by role — §5.6.2 |
+| Venue-capacity guardrail silently disabled | Scan query now selects the capacity fields; capacity applied only to admissible scans — §7.4.4 |
+| Correct ticket codes rejected when hand-typed | Case- and `#`-insensitive resolution; archived events reported as such — §7.4.4 |
 | Client-supplied ticket price accepted unchecked | Price and currency are stamped from the event's tiers, and the charged amount is verified on confirmation — §5.6.1, §7.4.3 |
 | No revenue model / no organiser payouts (9a) | 3% platform fee via Paystack split payments, with in-app payout onboarding — §5.6.1 |
 

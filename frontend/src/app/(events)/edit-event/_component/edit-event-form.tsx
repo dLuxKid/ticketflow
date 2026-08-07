@@ -620,7 +620,7 @@
 //                 }}
 //                 isSearchable={true}
 //                 name="state"
-//                 placeholder="State"
+//                 placeholder="State/County"
 //               />
 //             </label>
 //             <input
@@ -1857,7 +1857,7 @@ export default function EditEventForm({ event }: { event: eventData }) {
                 }}
                 isSearchable={true}
                 name="state"
-                placeholder="State"
+                placeholder="State/County"
               />
             </label>
             <input

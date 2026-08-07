@@ -167,6 +167,32 @@ Organisers connect an account at **Profile → Payouts**: pick a bank, enter the
 confirm the name it resolves to, done. TicketFlow stores only the last four digits and an
 opaque Paystack reference — never the full account number.
 
+### Testing payments
+
+Paystack **test mode only accepts test cards** — a real card number is declined against a
+`pk_test_` key, so nothing can be charged by accident. The standard success card, which
+completes immediately with no PIN or OTP step:
+
+| Field | Value |
+| ----- | ----- |
+| Card number | `4084 0840 8408 4081` |
+| Expiry | any future date (e.g. `12/30`) |
+| CVV | `408` |
+| PIN / OTP | any (e.g. `0000` / `123456`) if prompted |
+
+Paystack also publishes cards that simulate declines, insufficient funds and the full
+PIN + OTP flow — useful for checking that a failed payment releases the held seats. The
+current list is at
+[paystack.com/docs/payments/test-payments](https://paystack.com/docs/payments/test-payments).
+
+For **payout onboarding** in test mode, account number `0000000000` with any bank generally
+resolves; a real account number may not resolve under a test key.
+
+> **Both keys must come from the same Paystack account and the same mode.** A `sk_test_` key
+> can only verify `pk_test_` transactions. If they are mismatched, every payment will be
+> charged in the popup and then refused at confirmation with *"Payment could not be
+> verified"* — which is the most likely cause of that error.
+
 > **Upgrading an existing deployment:** every organiser with paid events needs to complete
 > payout onboarding, and `PAYSTACK_PUBLIC_KEY` must be set, or their events will stop selling.
 
@@ -237,7 +263,7 @@ Current baseline (unit tests only):
 
 | Suite    | Lines  | Branches | Functions |
 | -------- | ------ | -------- | --------- |
-| Backend  | 73.20% | 84.93%   | 38.11%    |
+| Backend  | 72.61% | 85.03%   | 37.92%    |
 | Frontend | 2.22%  | 16.00%   | 7.31%     |
 
 The backend number is the meaningful one: the domain logic that decides money, admission and
@@ -269,6 +295,15 @@ and how they map to the performance-efficiency characteristic.
 
 ---
 
+## Revenue reporting
+
+**Profile → Revenue** shows gross sales, the platform fee and net, per event and in total.
+Scope follows your role, decided server-side: an organiser sees only their own events, an
+admin sees every event plus the platform's total fee income. Only confirmed payments are
+counted — abandoned reservations never appear.
+
+---
+
 ## Quality gate (CI)
 
 `.github/workflows/ci.yml` runs on every push and PR to **`main` and `dev`**:
@@ -279,6 +314,11 @@ and how they map to the performance-efficiency characteristic.
   → upload `lcov.info`.
 - **Publish combined coverage** — waits on both jobs, then closes the parallel Coveralls
   build so the badge reflects one run rather than whichever job finished last.
+
+**Coveralls publishing is opt-in.** All three Coveralls steps are skipped unless a
+`COVERALLS_REPO_TOKEN` repository secret is set (get it from coveralls.io after adding the
+repo). Without it the steps are cleanly skipped rather than failing, and `lcov.info` is still
+uploaded as a build artifact either way — only the publication is optional.
 
 Lint, typecheck and tests are blocking; coverage and its publication are measurement only.
 
@@ -299,6 +339,7 @@ See `docs/docker.md` for details.
 
 | Document                                                       | What it covers                                                     |
 | -------------------------------------------------------------- | ------------------------------------------------------------------ |
+| [`docs/feature-testing-guide.md`](docs/feature-testing-guide.md) | **Every feature and how to test it by hand** — also the demo script |
 | [`docs/technical-documentation.md`](docs/technical-documentation.md) | Full system reference: features, architecture, API, data model, security |
 | [`docs/design-models.md`](docs/design-models.md)                | State machines, sequence, package and class diagrams                |
 | [`docs/architecture-diagram.md`](docs/architecture-diagram.md)  | Layered / deployment architecture                                   |

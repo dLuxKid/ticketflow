@@ -158,6 +158,26 @@ export const countActive = () => {
  * usher was authorised to scan but had no way to discover which events, so the scanner was
  * only reachable if somebody sent them the raw /scan/<id> URL.
  */
+/**
+ * Every event on the platform, with the organiser's name — the admin revenue scope.
+ *
+ * Archived events are included deliberately: money they took is still money the platform
+ * took, and a financial report that silently drops rows when an event is archived cannot be
+ * reconciled against the payment provider.
+ */
+export const findAllForReporting = () =>
+  Event.find({}, null, { includeArchived: true })
+    .select('eventName slug currency startDate user')
+    .populate({ path: 'user', select: 'name' })
+    .lean();
+
+/** The events one organiser owns — their own revenue scope. Same archival reasoning. */
+export const findByOwnerForReporting = (userId) =>
+  Event.find({ user: userId }, null, { includeArchived: true })
+    .select('eventName slug currency startDate user')
+    .populate({ path: 'user', select: 'name' })
+    .lean();
+
 export const findByIds = (ids) =>
   Event.find({ _id: { $in: ids ?? [] } }).sort('-startDate');
 

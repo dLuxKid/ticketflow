@@ -39,13 +39,22 @@ const secretKey = () => {
  * usefully ("Account number is invalid", "Unknown bank code") and an organiser stuck on
  * this screen needs that text, not "request failed".
  */
-const paystackRequest = async (path, options = {}, fetchImpl = fetch) => {
+const paystackRequest = async (
+  path,
+  options = {},
+  fetchImpl = fetch,
+  { requiresAuth = true } = {},
+) => {
   let res;
   try {
     res = await fetchImpl(`${PAYSTACK_API}${path}`, {
       ...options,
       headers: {
-        Authorization: `Bearer ${secretKey()}`,
+        // The bank directory is public data and Paystack serves it unauthenticated. Demanding
+        // a secret key for it coupled the *first* step of payout onboarding to a key that a
+        // deployment may not have configured yet — which presented as an empty bank dropdown
+        // with no explanation, exactly when the organiser is trying to set payments up.
+        ...(requiresAuth ? { Authorization: `Bearer ${secretKey()}` } : {}),
         'Content-Type': 'application/json',
         ...(options.headers ?? {}),
       },
@@ -84,15 +93,22 @@ export const listBanks = async (country = 'nigeria', fetchImpl = fetch) => {
     `/bank?country=${encodeURIComponent(country)}`,
     { method: 'GET' },
     fetchImpl,
+    { requiresAuth: false },
   );
 
   // Narrowed to the three fields the picker needs. Paystack returns a large record per bank
   // and passing it through would put fields in the client bundle that nothing reads.
-  return (data ?? []).map((bank) => ({
-    name: bank.name,
-    code: bank.code,
-    currency: bank.currency,
-  }));
+  //
+  // Inactive and deleted banks are filtered out: they are still returned by the directory
+  // but cannot receive a payout, and offering one only produces a failure two steps later
+  // at account resolution.
+  return (data ?? [])
+    .filter((bank) => bank.active !== false && bank.is_deleted !== true)
+    .map((bank) => ({
+      name: bank.name,
+      code: bank.code,
+      currency: bank.currency,
+    }));
 };
 
 /**

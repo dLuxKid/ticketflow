@@ -25,7 +25,11 @@ const field =
 
 export default function PayoutsPage() {
   const { data: payout, isLoading } = usePayout();
-  const { data: banks, isLoading: banksLoading } = useBanks();
+  const {
+    data: banks,
+    isLoading: banksLoading,
+    error: banksError,
+  } = useBanks();
 
   const [bankCode, setBankCode] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
@@ -134,6 +138,26 @@ export default function PayoutsPage() {
           {payout?.connected ? "Change payout account" : "Add a payout account"}
         </h2>
 
+        {/* An empty dropdown with no explanation is the worst possible failure here: the
+            organiser cannot tell whether the page is broken, still loading, or waiting on
+            them. Say which, and say what to do about it. */}
+        {banksError && (
+          <div
+            role="alert"
+            className="rounded-big border border-red-300/60 bg-red-50 p-4"
+          >
+            <p className="text-sm font-semibold text-red-900">
+              Could not load the bank list
+            </p>
+            <p className="mt-1 text-sm text-red-900/80">
+              {(banksError as any)?.response?.data?.message ??
+                "The payment provider could not be reached."}{" "}
+              Payouts cannot be set up until this is resolved — if you run this
+              deployment, check that the Paystack keys are configured.
+            </p>
+          </div>
+        )}
+
         <label className="flex flex-col gap-1.5">
           <span className="text-sm font-medium text-main-black">Bank</span>
           <select
@@ -145,7 +169,13 @@ export default function PayoutsPage() {
             }}
           >
             <option value="">
-              {banksLoading ? "Loading banks…" : "Select your bank"}
+              {banksLoading
+                ? "Loading banks…"
+                : banksError
+                  ? "Bank list unavailable"
+                  : sortedBanks.length === 0
+                    ? "No banks available"
+                    : "Select your bank"}
             </option>
             {sortedBanks.map((bank) => (
               <option key={`${bank.code}-${bank.name}`} value={bank.code}>

@@ -1,4 +1,5 @@
 import * as eventService from '../../services/eventService.js';
+import * as revenueService from '../../services/revenueService.js';
 import catchAsync from '../../shared/middleware/catchAsync.js';
 
 /**
@@ -111,4 +112,17 @@ export const getUpcomingEvents = catchAsync(async (req, res) => {
     status: 'success',
     data: { event },
   });
+});
+
+/**
+ * Revenue summary — per event plus totals, scoped by role.
+ *
+ * No role gate on the route: `revenueService` decides scope from `req.user.role`, so an
+ * organiser receives only their own events and an admin the whole platform. Gating the
+ * route on `admin` would have hidden organisers' own earnings from them.
+ */
+export const getRevenueSummary = catchAsync(async (req, res) => {
+  const summary = await revenueService.getRevenueSummary(req.user);
+
+  res.status(200).json({ status: 'success', data: summary });
 });
