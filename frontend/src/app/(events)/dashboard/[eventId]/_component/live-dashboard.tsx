@@ -128,7 +128,7 @@ export default function LiveDashboard({ eventId }: { eventId: string }) {
   return (
     <section className="flex-center flex-col w-full max-w-screen-md mx-auto gap-6 py-10 px-4">
       <PageHeader
-        eyebrow="EntryPoint"
+        eyebrow="TicketFlow"
         title="Live arrivals"
         subtitle="Watch guests arrive in real time as they're scanned at the door."
         tabs={eventTabs(eventId, "dashboard")}

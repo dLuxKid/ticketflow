@@ -171,7 +171,7 @@ export default function Scanner({ eventId }: { eventId: string }) {
   return (
     <section className="flex-center flex-col w-full max-w-screen-sm mx-auto gap-6 py-10 px-4">
       <PageHeader
-        eyebrow="EntryPoint"
+        eyebrow="TicketFlow"
         title="Scan tickets"
         subtitle="Point the camera at a guest's QR code, or type their code below."
         tabs={eventTabs(eventId, "scan")}

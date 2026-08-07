@@ -1,4 +1,5 @@
 import * as userService from '../../services/userService.js';
+import * as payoutService from '../../services/payoutService.js';
 import catchAsync from '../../shared/middleware/catchAsync.js';
 
 /**
@@ -75,4 +76,49 @@ export const deleteMe = catchAsync(async (req, res) => {
   await userService.deleteMe(req.user.id);
 
   res.status(204).json({ status: 'success', data: null });
+});
+
+// ─── Payout onboarding ─────────────────────────────────────────────────────────
+
+/** The signed-in organiser's own payout setup. Never exposes the subaccount code. */
+export const getMyPayout = catchAsync(async (req, res) => {
+  const payout = await payoutService.getPayoutFor(req.user.id);
+
+  res.status(200).json({ status: 'success', data: { payout } });
+});
+
+/** Banks available for payout, for the onboarding dropdown. */
+export const getPayoutBanks = catchAsync(async (req, res) => {
+  const banks = await payoutService.listBanks(req.query.country || undefined);
+
+  res.status(200).json({ status: 'success', data: { banks } });
+});
+
+/**
+ * Resolves a bank account to its registered name so the organiser can confirm the
+ * destination BEFORE it is saved. A mistyped digit here would send an event's entire
+ * revenue to a stranger, and bank transfers are not reversible on request.
+ */
+export const resolvePayoutAccount = catchAsync(async (req, res) => {
+  const account = await payoutService.resolveAccount({
+    accountNumber: req.body.accountNumber,
+    bankCode: req.body.bankCode,
+  });
+
+  res.status(200).json({ status: 'success', data: { account } });
+});
+
+/** Creates the Paystack subaccount and attaches it to the signed-in user. */
+export const connectPayout = catchAsync(async (req, res) => {
+  const payout = await payoutService.connectPayoutAccount(req.user, {
+    bankCode: req.body.bankCode,
+    accountNumber: req.body.accountNumber,
+    businessName: req.body.businessName,
+  });
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Payout account connected — your events can now sell tickets',
+    data: { payout },
+  });
 });

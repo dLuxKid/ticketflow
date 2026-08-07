@@ -196,7 +196,7 @@ export default function NetworkHub({ eventId }: { eventId: string }) {
   return (
     <section className="flex-center flex-col w-full max-w-screen-md mx-auto gap-6 py-10 px-4">
       <PageHeader
-        eyebrow="EntryPoint"
+        eyebrow="TicketFlow"
         title={eventName ? `Meet and Greet · ${eventName}` : "Meet and Greet"}
         subtitle="Chat with everyone here, or message someone one-to-one."
         right={

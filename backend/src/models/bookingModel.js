@@ -83,7 +83,7 @@ const bookingSchema = new mongoose.Schema(
       required: [true, 'Booking must have a ticket type.'],
     },
     // How this admission came to exist: a paid purchase or an organiser invite.
-    // Reporting-only — it never changes how admission is granted (see EntryPoint merge).
+    // Reporting-only — it never changes how admission is granted (see guest-management merge).
     source: {
       type: String,
       enum: ['purchase', 'invite'],

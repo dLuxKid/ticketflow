@@ -27,6 +27,15 @@ router.patch('/update-my-password', authController.updatePassword);
 router.patch('/update-my-details', handleImg, userController.updateMe);
 router.delete('/delete-me', userController.deleteMe);
 
+// ─── Payout onboarding (any signed-in user who organises events) ────────────────
+// No role gate: `creator` is self-assignable at signup, so gating on it would add a step
+// without adding a control. Each route acts only on `req.user`, so a caller can only ever
+// read or connect their OWN payout account.
+router.get('/me/payout', userController.getMyPayout);
+router.get('/payout/banks', userController.getPayoutBanks);
+router.post('/payout/resolve-account', userController.resolvePayoutAccount);
+router.post('/me/payout', userController.connectPayout);
+
 // ─── Admin-only routes ─────────────────────────────────────────────────────────
 router.use(authController.restrictTo('admin'));
 

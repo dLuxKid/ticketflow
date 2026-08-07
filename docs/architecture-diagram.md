@@ -34,6 +34,7 @@ graph TB
         end
         subgraph SVC["Services — business rules + authorisation"]
             CORE["auth · user · event · booking · payment<br/>guest · usher · admission · dashboard · retention"]
+            MONEY["Money path<br/>pricing (server-authoritative)<br/>payout (Paystack subaccounts)"]
             NET["Meet and Greet<br/>networking · networkingGuest · networkingNotification"]
             AI["Analytics (local)<br/>anomaly · anomalyReport · noShow · nlGuestQuery"]
             BOT["AI concierge<br/>chatbotService · llmProvider · weatherService"]
@@ -79,6 +80,10 @@ graph TB
     AI --> MLM
     RP --> MDB
 
+    CTL --> MONEY
+    MONEY --> RP
+    MONEY -->|"subaccount + split"| PS
+    CORE --> MONEY
     CORE -->|"init transaction"| PS
     PS -.->|"signed webhook<br/>POST /api/bookings/webhook/paystack"| SEC
     SH --> SMTP

@@ -113,7 +113,7 @@ const eventSchema = new mongoose.Schema(
     //   public      — ticket tiers required, checkout open, listed in public discovery
     //   invite_only — no tiers, checkout disabled, hidden from discovery, guest-list only
     //   hybrid      — ticket tiers AND a guest list both active
-    // See the EntryPoint merge design note: one access mode, not two event types.
+    // See the guest-management merge design note: one access mode, not two event types.
     accessMode: {
       type: String,
       enum: ['public', 'invite_only', 'hybrid'],
@@ -235,7 +235,7 @@ const eventSchema = new mongoose.Schema(
  * The bias is intentional: for a chat channel, opening slightly early or closing slightly
  * late is far less harmful than locking attendees out of their own live event.
  */
-const endOfDay = (date) => {
+export const endOfDay = (date) => {
   const end = new Date(date);
   end.setUTCHours(23, 59, 59, 999);
   return end;

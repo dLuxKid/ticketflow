@@ -20,6 +20,16 @@ export const findByIdWithRole = (id) =>
   User.findById(id).select('+role +isRootAdmin');
 
 /**
+ * Loads a user including their payout account.
+ *
+ * `+payout.subaccountCode` is explicit for the same reason `+isRootAdmin` is above: the
+ * field is `select: false`, so a caller that forgets it silently sees "no payout account
+ * connected" rather than an error.
+ */
+export const findByIdWithPayout = (id) =>
+  User.findById(id).select('+payout.subaccountCode');
+
+/**
  * Sets a user's role on an admin's authority.
  *
  * `isRootAdmin` is deliberately not settable here — root status comes only from

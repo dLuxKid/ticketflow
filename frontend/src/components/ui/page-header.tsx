@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 /**
- * Shared premium page header for the EntryPoint organiser surfaces (guest list, dashboard,
+ * Shared premium page header for the organiser surfaces (guest list, dashboard,
  * scanner, door staff). An eyebrow label + large title + subtitle over a soft purple wash,
  * with an optional right-aligned slot (e.g. a live status pill) and optional quick-nav tabs.
  * Uses the app's design tokens so it reads as one product with the rest of TicketFlow.

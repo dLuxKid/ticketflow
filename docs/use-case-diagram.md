@@ -58,6 +58,7 @@ graph LR
             UC16(["View guest list"])
             UC21(["Assign / unassign door staff"])
             UC31(["Archive an event"])
+            UC42(["Connect a payout account"])
         end
 
         subgraph G["Meet and Greet"]
@@ -114,6 +115,7 @@ graph LR
     ATTENDEE --- UC36
     ATTENDEE --- UC37
 
+    ORG --- UC42
     ORG --- UC11
     ORG --- UC12
     ORG --- UC13
@@ -141,6 +143,8 @@ graph LR
     ADMIN --- UC31
     ROOT --- UC29
 
+    UC42 -.->|include| PAY
+    UC6 -.->|include| UC42
     UC5 -.->|include| UC6
     UC6 -.->|include| UC7
     UC14 -.->|include| UC15
@@ -223,6 +227,7 @@ graph LR
 | 39 | Ask about a named event | Visitor | — (chatbot tool within 37) | `chatbotService.resolveEvent` |
 | 40 | Get weather / dress-code advice | Visitor, Attendee | — (chatbot tool within 37) | `weatherService` (Open-Meteo) |
 | 41 | Work an assigned door | Usher | `GET /api/events/my/assigned-events` | `eventService.getAssignedEvents` |
+| 42 | Connect a payout account | Organiser | `GET /users/payout/banks`, `POST /users/payout/resolve-account`, `POST /users/me/payout` | `payoutService` (Paystack subaccounts) |
 
 ## 3. Preconditions and business rules worth stating
 

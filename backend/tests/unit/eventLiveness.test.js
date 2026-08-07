@@ -15,19 +15,42 @@ import Event from '../../src/models/eventModel.js';
 const at = (iso) => new Date(iso);
 const build = (startDate, endDate) => new Event({ startDate, endDate });
 
-test('a single-day event with identical start and end is live that day', () => {
-  const today = new Date();
-  const sameInstant = new Date(today);
-  sameInstant.setUTCHours(9, 0, 0, 0);
+/**
+ * Times are expressed RELATIVE TO NOW, never as a fixed clock time.
+ *
+ * These two tests previously pinned "today at 09:00 UTC" and "today at 00:30 UTC" and
+ * asserted `live`. Both are in the *future* when the suite runs early in the UTC day, so
+ * they failed every morning before 09:00 — a real scheduling flake that would have broken
+ * any CI run in that window, while passing all afternoon.
+ *
+ * Note that "a few minutes ago" is NOT a safe substitute: just after midnight UTC it lands
+ * on the previous calendar day, whose end-of-day has already passed, making the event
+ * `past`. The anchors below are safe at every hour.
+ */
+const startOfTodayUtc = () => {
+  const d = new Date();
+  d.setUTCHours(0, 0, 0, 0);
+  return d;
+};
 
+test('a single-day event with identical start and end is live that day', () => {
   // The regression: an exact-instant window here is zero-length and never matches.
+  const sameInstant = startOfTodayUtc();
   assert.equal(build(sameInstant, sameInstant).isLive, 'live');
 });
 
-test('an event still running later today is live, not past', () => {
-  const earlierToday = new Date();
-  earlierToday.setUTCHours(0, 30, 0, 0);
-  assert.equal(build(earlierToday, earlierToday).isLive, 'live');
+test('an event starting at this exact moment is live, not upcoming', () => {
+  // The inclusive edge: `startDate > now` must be strict, or an event is dead on arrival
+  // for the instant it begins.
+  const now = new Date();
+  assert.equal(build(now, now).isLive, 'live');
+});
+
+test('an event starting later today is still upcoming, not live', () => {
+  // The other side of the boundary: end-of-day generosity applies to when an event STOPS
+  // being live, not to when it starts.
+  const soon = new Date(Date.now() + 60 * 60 * 1000);
+  assert.equal(build(soon, soon).isLive, 'upcoming');
 });
 
 test('a future event is upcoming', () => {

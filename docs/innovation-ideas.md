@@ -1,4 +1,4 @@
-# Innovation & differentiation ideas — EntryPoint × TicketFlow
+# Innovation & differentiation ideas — TicketFlow
 
 Mapped to the 7003SCN marking criteria (quality, **complexity**, **creativity**,
 entrepreneurship, market fit). Ordered by return-on-effort for the assessment: what gives

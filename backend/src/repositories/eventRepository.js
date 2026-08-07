@@ -1,6 +1,11 @@
 import Event from '../models/eventModel.js';
 import Booking from '../models/bookingModel.js';
 import Guest from '../models/guestModel.js';
+// Imported for its registration side effect, not for a binding: the queries below populate
+// `Event.user`, and Mongoose resolves that ref by model name at query time. Any entry point
+// that reached this module without having loaded the User model would fail with
+// "Schema hasn't been registered for model User" — at checkout, in production.
+import '../models/userModel.js';
 import APIFeatures from '../shared/utils/apiFeatures.js';
 
 /**
@@ -23,6 +28,31 @@ export const findEndedBefore = (cutoffDate) =>
 
 export const findByIdWithOrganizer = (id) =>
   Event.findById(id).populate({ path: 'user', select: 'name' });
+
+/**
+ * Same lookup, but also carrying the organiser's payout account — checkout needs to know
+ * which Paystack subaccount the ticket money is split to.
+ *
+ * Kept separate from `findByIdWithOrganizer` rather than widening it: that method feeds
+ * ticket emails, which have no business loading banking details. Selecting payout data
+ * only where a payout decision is actually made keeps the blast radius of a future logging
+ * or serialisation mistake small.
+ */
+export const findByIdWithPayoutAccount = (id) =>
+  Event.findById(id).populate({
+    // `+payout.subaccountCode` is required, not decorative: the field is `select: false`,
+    // so without the explicit opt-in it arrives as undefined and checkout would conclude
+    // the organiser has no payout account. The root-admin guard was broken by exactly this
+    // mistake once already — a select:false field that a decision depends on has to be
+    // asked for at every call site that decides.
+    //
+    // Only the subaccount code is selected, never the whole `payout` object. That is partly
+    // minimalism — the money path has no use for the bank name — and partly a hard
+    // constraint: projecting a parent path and one of its children together is rejected by
+    // MongoDB as a path collision.
+    path: 'user',
+    select: 'name +payout.subaccountCode',
+  });
 
 export const updateById = (id, data, options = { new: true }) =>
   Event.findByIdAndUpdate(id, data, options);
@@ -201,7 +231,25 @@ export const findUpcoming = () =>
  */
 export const findLiveEvents = () => {
   const now = new Date();
-  return Event.find({ startDate: { $lte: now }, endDate: { $gte: now } });
+  // `endDate` is compared against the START of today, not against `now`.
+  //
+  // This must agree with the `isLive` virtual, which runs the window to the end of the
+  // final calendar day. Comparing `endDate >= now` instead — as this did — reintroduces
+  // exactly the zero-length-window bug that `isLive` was fixed for: a single-day event
+  // (startDate === endDate, the common case) drops out of this query the moment its stored
+  // instant passes, so the networking notification stops going out while the event is still
+  // shown as live everywhere else in the product.
+  //
+  // Asking for events whose endDate falls on today or later is the query-side equivalent of
+  // `now <= endOfDay(endDate)`, and unlike a computed per-document comparison it stays a
+  // single indexable range.
+  const startOfToday = new Date(now);
+  startOfToday.setUTCHours(0, 0, 0, 0);
+
+  return Event.find({
+    startDate: { $lte: now },
+    endDate: { $gte: startOfToday },
+  });
 };
 
 /** Records when an event's live-notification was last sent — informational, not a gate. */

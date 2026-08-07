@@ -4,7 +4,7 @@ import catchAsync from '../../shared/middleware/catchAsync.js';
 /**
  * Presentation layer for the AI concierge chatbot (Phase 8).
  * Public/unauthenticated on purpose — event discovery and FAQ help should work for
- * anonymous visitors, unlike everything else the EntryPoint merge added.
+ * anonymous visitors, unlike everything else the guest-management merge added.
  */
 export const sendMessage = catchAsync(async (req, res) => {
   const { reply, toolUsed } = await chatbotService.handleMessage({

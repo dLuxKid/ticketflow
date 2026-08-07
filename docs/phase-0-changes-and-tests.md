@@ -1,8 +1,8 @@
 # Phase 0 — Change log & test plan
 
-Branch: `phase-0-harden-flaws` · Commit: `Phase 0: harden load-bearing flaws before the EntryPoint merge`
+Branch: `phase-0-harden-flaws` · Commit: `Phase 0: harden load-bearing flaws before the guest-management merge`
 
-Phase 0 fixes the four flaws the EntryPoint guest-management features depend on. This
+Phase 0 fixes the four flaws the guest-management features depend on. This
 document records **every change** and the **tests each change should be verified against** —
 the automated ones already written, plus the manual/API and edge cases to add for complete
 coverage (LO3 evidence).

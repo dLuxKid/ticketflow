@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 /**
  * One collection for both the event-wide group chat and one-to-one DMs (Phase 7) — the
- * same "one collection, not a parallel structure kept in sync" rule the EntryPoint merge
+ * same "one collection, not a parallel structure kept in sync" rule the guest-management merge
  * already applied to admissions (single `Booking`, not separate purchase/invite
  * collections). `recipient: null` means a broadcast to everyone watching the event's
  * networking stream; a set `recipient` means a DM between `sender` and `recipient`.

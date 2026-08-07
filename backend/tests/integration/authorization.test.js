@@ -27,7 +27,11 @@ if (skipReason) {
 
   before(async () => {
     await connect();
-    const event = await Event.create(buildEvent({ user: owner._id }));
+    // `currency` is set explicitly: the sales view renders it beside gross sales, so the
+    // test needs it present to prove it survives the response narrowing.
+    const event = await Event.create(
+      buildEvent({ user: owner._id, currency: 'NGN' }),
+    );
     eventId = event._id;
     const booking = await Booking.create({
       event: eventId,
@@ -116,6 +120,83 @@ if (skipReason) {
     await assert.rejects(
       () => bookingService.checkInAttendee(bookingId, true, usher),
       (err) => err.statusCode === 403,
+    );
+  });
+
+  // ─── Sales view (booker list + gross sales) ──────────────────────────────────
+  // This endpoint took only an event ID and checked nothing, so any authenticated account
+  // could read any event's bookers: every attendee's name and email, the event's revenue,
+  // and `ticketId` — the credential the door scanner admits on. Same defect class as the
+  // event-update IDOR above, and the reason these tests sit in the same file.
+
+  test('non-owner cannot read another user’s event sales/booker list (403)', async () => {
+    await assert.rejects(
+      () => bookingService.getBookingsForEvent(eventId, stranger),
+      (err) => err.statusCode === 403,
+    );
+  });
+
+  test('an unauthenticated caller cannot read the sales/booker list', async () => {
+    // `protect` should stop this first, but the service must not depend on that: a missing
+    // user has to be a denial in its own right, not an unhandled read.
+    await assert.rejects(
+      () => bookingService.getBookingsForEvent(eventId, undefined),
+      (err) => err.statusCode === 403 || err.statusCode === 404,
+    );
+  });
+
+  test('an usher assigned to the event still cannot read the sales list (403)', async () => {
+    // Door staff need to admit people, not to see what the event earned or who bought what.
+    // Scan scope deliberately does not widen into the organiser's commercial data.
+    const usher = {
+      _id: new mongoose.Types.ObjectId(),
+      role: 'usher',
+      assignedEvents: [eventId],
+    };
+
+    await assert.rejects(
+      () => bookingService.getBookingsForEvent(eventId, usher),
+      (err) => err.statusCode === 403,
+    );
+  });
+
+  test('owner can read their own event’s sales/booker list', async () => {
+    const { bookers, event } = await bookingService.getBookingsForEvent(
+      eventId,
+      owner,
+    );
+    assert.ok(Array.isArray(bookers));
+    assert.ok(
+      bookers.some((b) => b.ticketId === 'TID-1'),
+      'the seeded booking should be present for the owner',
+    );
+    assert.equal(event.currency, 'NGN');
+    assert.equal(typeof event.totalQuantity, 'number');
+  });
+
+  test('admin can read any event’s sales/booker list', async () => {
+    const { bookers } = await bookingService.getBookingsForEvent(
+      eventId,
+      admin,
+    );
+    assert.ok(bookers.some((b) => b.ticketId === 'TID-1'));
+  });
+
+  test('the sales response exposes only the two event fields the view renders', async () => {
+    // getEventForViewer returns the whole event document; passing it straight through would
+    // silently widen the response every time a field is added to the schema.
+    const { event } = await bookingService.getBookingsForEvent(eventId, owner);
+    assert.deepEqual(Object.keys(event).sort(), ['currency', 'totalQuantity']);
+  });
+
+  test('a missing event is a 404, not an empty sales list', async () => {
+    await assert.rejects(
+      () =>
+        bookingService.getBookingsForEvent(
+          new mongoose.Types.ObjectId(),
+          admin,
+        ),
+      (err) => err.statusCode === 404,
     );
   });
 

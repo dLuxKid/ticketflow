@@ -20,6 +20,29 @@ interface Props {
 }
 
 /**
+ * Paystack parameters built by the server at reservation time.
+ *
+ * `amount` and `transaction_charge` are in the currency's minor unit (kobo). Nothing here
+ * is derived in the browser — see the comment on `reservation` below for why.
+ */
+type PaystackCurrency = "NGN" | "GHS" | "USD" | "ZAR" | "KES" | "XOF";
+
+interface CheckoutConfig {
+  reference: string;
+  amount: number;
+  // The event's currency, which react-paystack types as a closed union. It originates from
+  // the event document rather than this component, so it is narrowed here rather than
+  // validated — an unsupported currency is a data problem the server should reject.
+  currency: PaystackCurrency;
+  publicKey: string;
+  subaccount: string;
+  transaction_charge: number;
+  // Who pays Paystack's own processing fee. Always "subaccount" here — the organiser bears
+  // it, so the platform's margin is exactly transaction_charge.
+  bearer: "account" | "subaccount";
+}
+
+/**
  * Checkout flow: reserve → pay → confirm.
  *
  * The order matters. This used to charge the buyer first and only then ask the API to
@@ -37,17 +60,28 @@ export const usePaystack = (props: Props) => {
   const [loading, setLoading] = useState(false);
 
   const [bookings, setBookings] = useState<BookingsType[]>([]);
-  // Set once the server has held the seats; triggers the payment popup via the effect below.
-  const [reservation, setReservation] = useState<{ reference: string } | null>(
-    null
-  );
+  // The server's checkout configuration, returned when it holds the seats. This is not
+  // merely a reference any more: the amount, the destination subaccount and the platform's
+  // cut all decide who receives money, so none of them may be computed here.
+  //
+  // Previously this component set `amount` from a prop and carried the Paystack public key
+  // as a literal in the bundle. Both were client-side facts about a payment, which meant a
+  // modified client could pay any amount it liked for any ticket.
+  const [reservation, setReservation] = useState<CheckoutConfig | null>(null);
   const openedFor = useRef<string | null>(null);
 
   const config = {
     reference: reservation?.reference ?? "",
     email: props.email,
-    amount: props.totalPrice * 100,
-    publicKey: "pk_test_6ace9b13128336053a51ecb02a7554544fac14d9",
+    amount: reservation?.amount ?? 0,
+    currency: reservation?.currency,
+    publicKey: reservation?.publicKey ?? "",
+    // The split. `subaccount` routes the organiser's share to their own Paystack account,
+    // `transaction_charge` is the platform fee in kobo (computed server-side), and
+    // `bearer: "subaccount"` puts Paystack's own processing fee on the organiser.
+    subaccount: reservation?.subaccount,
+    transaction_charge: reservation?.transaction_charge,
+    bearer: reservation?.bearer,
     metadata: {
       custom_fields: [
         {
@@ -152,7 +186,8 @@ export const usePaystack = (props: Props) => {
         return;
       }
 
-      setReservation({ reference: String(data.data.reference) });
+      // Everything Paystack needs comes from the server, unmodified.
+      setReservation(data.data.checkout as CheckoutConfig);
     } catch (error: any) {
       setSuccess(false);
       toast.error(

@@ -10,6 +10,7 @@
 > 4. **Richer events** — `venueName`, `dressCode`, `parkingInfo`, `accessibilityInfo`, `ageRestriction`, `venueCapacity`, `networkingEnabled`, plus soft-delete fields (§4).
 > 5. **Quality engineering** — coverage is now measured (§8.7), a load-test harness exists with recorded figures, backend lint is enforced in CI, and the rate limit became configurable.
 > 6. **Liveness fix** — an event whose `startDate` equals its `endDate` was never `live`; the window now runs to end-of-day.
+> 7. **Revenue model** — TicketFlow now takes a **3% platform fee** via Paystack split payments, settling organisers directly to their own subaccount (§5.6.1). This required making ticket pricing **server-authoritative**, closing a defect that let a buyer name their own price.
 >
 > Limitations 1 and 6 of v3.0 are closed; the remaining items still stand (§12).
 
@@ -39,7 +40,7 @@
 
 ## 1. Product overview
 
-**TicketFlow** is a full-stack event-ticketing platform extended with an invite-only and hybrid guest-management module ("EntryPoint"). A single data model serves three distinct real-world scenarios:
+**TicketFlow** is a full-stack event-ticketing platform with integrated invite-only and hybrid guest management. A single data model serves three distinct real-world scenarios:
 
 | Scenario | Access mode | How guests are admitted |
 |---|---|---|
@@ -319,6 +320,9 @@ erDiagram
 | **Role management (root-admin guarded)** | `services/userService.js` — `canChangeRole`, `changeUserRole` |
 | **Admin soft delete (users / events)** | `userService.canDeleteUser`/`deleteUser`, `eventService.deleteEvent` |
 | **Admin bootstrap** | `scripts/seed-admin.js` (sets `role: 'admin'` + `isRootAdmin`) |
+| **Platform fee / split payments** | `services/pricingService.js` — `platformFeeMinor`, `buildSplit` |
+| **Server-authoritative pricing** | `services/pricingService.js` — `priceBuyers`, `findTier` |
+| **Organiser payout onboarding** | `services/payoutService.js`, `frontend/src/app/my-profile/payouts/` |
 | Venue capacity guardrail | `services/admissionService.js` — `capacityDecision` |
 | Reservation expiry sweeper (in-process) | `shared/reservationSweeper.js` |
 
@@ -413,6 +417,34 @@ The design point worth citing: this is a **stop-and-confirm, not a hard block**.
 
 `shared/utils/generatePdf.js` and its `pdfTemplate` helper are **misnomers**: they render an HTML email body, not a PDF. No PDF is produced server-side. PDF export is a client-side concern handled by `react-to-pdf` in the browser.
 
+### 5.6.1 Revenue model — server-authoritative pricing and the platform fee
+
+TicketFlow takes a **3% platform fee** on each paid ticket, implemented as a Paystack **split payment** so the organiser is settled directly by the payment provider and the platform never holds their money.
+
+**Money flow.** The buyer is charged the advertised ticket price. Paystack routes the organiser's share to their own subaccount and the platform's `transaction_charge` to the main account, in the same transaction. `bearer: 'subaccount'` places Paystack's own processing fee on the organiser, so the platform's margin is exactly the stated 3% and does not shrink — or go negative on a cheap ticket — as gateway pricing changes.
+
+| Concern | Where | Decision |
+|---|---|---|
+| Fee rate | `pricingService.PLATFORM_FEE_PERCENT` | 3%, configurable via env so commercial terms are a deployment decision, not a code change |
+| Fee amount | `platformFeeMinor` | Computed in minor units and **rounded down** |
+| Split parameters | `buildSplit` | `subaccount` + explicit `transaction_charge` + `bearer: 'subaccount'` |
+| Onboarding | `payoutService`, `/users/me/payout` | Bank picker → account resolution → subaccount creation |
+| Stored | `User.payout` | Subaccount code (`select: false`), bank, **last four digits only** |
+
+Four decisions are worth defending in the report:
+
+1. **Pricing had to become server-authoritative first.** `reserveBooking` previously spread the client's buyer objects straight into the booking, so `price` was whatever the browser claimed; the Paystack popup was opened with a browser-computed `amount`; and `verifyTransaction` checked only that a charge *succeeded*, never its value. A buyer could pay ₦1 for a ₦50,000 ticket and receive a valid, scannable ticket. **A percentage of a number the payer chooses is not a fee**, so this was a prerequisite rather than a separate improvement. Price and currency now come from the event's own tiers, and confirmation compares the actual charge against the amount recomputed from the stored bookings.
+
+2. **The fee rounds down, not up.** Rounding up would take a fraction more than the advertised rate on every transaction where it makes a difference, always in the platform's favour, and it is the organiser who would have to notice. When a rounding rule can only favour one party, it should favour the party who did not write it.
+
+3. **`transaction_charge`, not the subaccount's `percentage_charge`.** Paystack subaccounts carry a stored `percentage_charge`, but the *direction* of that field — whether it names the platform's cut or the organiser's share — is ambiguous in the published documentation, and the documentation pages could not be retrieved to settle it. `transaction_charge` is unambiguous: an explicit amount to the main account that overrides the stored configuration. Sending it on **every** transaction means the ambiguous field never decides who gets paid, whatever it is set to. *Depending only on the contract you can verify is the design principle here*, and it is a better answer than guessing correctly would have been.
+
+4. **An organiser with no payout account cannot sell paid tickets — checkout refuses with 409.** The alternative is charging the buyer and settling the entire amount into the platform account, invisibly to both parties: precisely the silent revenue retention this feature exists to remove. A refusal is recoverable in minutes through the payouts page; money landing in the wrong account is not.
+
+**Data minimisation.** The full bank account number is never stored. Paystack holds it; TicketFlow keeps the opaque subaccount code, the bank, and the last four digits so the organiser can recognise which account they connected. Storing full account numbers would create a payment-data liability with no matching capability — nothing in this system can act on one. The subaccount code is `select: false` and never leaves the server.
+
+**Onboarding is two-step by design**: enter the account, then confirm the **name it resolves to** before anything is saved. A mistyped digit would otherwise route an event's entire revenue to a stranger, and bank transfers are not reversible on request — the confirmation has to happen while the mistake is still free to make.
+
 ### 5.7 Administration — bootstrap, role change and soft delete
 
 Administration is built around one constraint: **an administrator can never be self-granted.** Three mechanisms enforce it.
@@ -468,6 +500,10 @@ All routes are mounted under `/api/v1` (`backend/app.js:95–98`): `/events`, `/
 | `DELETE` | `/delete-me` | Protected | Soft-delete (`isActive: false`) |
 | `GET` | `/` | **Admin** | List all users |
 | `GET` | `/:id` | **Admin** | Fetch any user |
+| `GET` | `/me/payout` | Protected | The caller's own payout account (never the subaccount code) |
+| `GET` | `/payout/banks` | Protected | Banks available for payout, from Paystack |
+| `POST` | `/payout/resolve-account` | Protected | Resolve an account number to its registered name, before saving |
+| `POST` | `/me/payout` | Protected | Create the Paystack subaccount and connect it |
 | `PATCH` | `/:id/role` | **Admin** | Change a user's role — `canChangeRole` blocks self-changes, blocks non-root admins from granting or revoking `admin`, and blocks demoting the root admin |
 | `DELETE` | `/:id` | **Admin** | Deactivate a user (`isActive: false`) — `canDeleteUser` blocks self-deletion and deletion of the root admin |
 
@@ -568,6 +604,34 @@ The Paystack webhook is verified with **HMAC-SHA512 over the raw request body**,
 
 This is the highest-severity defect found in the codebase and is worth citing directly as evidence: it is an instance of the general rule that **anything the server treats as authority must be stamped server-side**, the same rule that governs `ticketId`, `reference` and `event` on a booking (§4.1).
 
+### 7.4.2 Fixed vulnerability: unauthorised access to event sales data (OWASP A01)
+
+`GET /bookings/event/:eventId` returns an event's **sales view** — every booker's name, email, ticket type, price and `ticketId`, plus the figures the organiser's Gross Sales page renders. The route sat behind `protect`, but `bookingService.getBookingsForEvent` accepted only an event ID and performed **no ownership check whatsoever**, so any authenticated account could read the booker list of *any* event on the platform by changing the ID in the URL — a classic IDOR.
+
+The exposure was threefold: **personal data** (every attendee's name and email, a GDPR matter in its own right), **commercial data** (any organiser's revenue, visible to competitors), and **`ticketId`, the credential the door scanner admits on**. The last is mitigated but not eliminated by the scan endpoint's own role gate — the code was still disclosed to anyone with an account.
+
+The fix routes the call through `getEventForViewer`, the *same* event-owner-or-admin rule already enforced by the dashboard, guest list, NL query and erasure, rather than writing a fourth comparison. The response is also narrowed to the two event fields the view actually renders, so future schema additions cannot silently widen it.
+
+**The lesson generalises, and is the more useful thing to say in the report.** Every neighbouring endpoint got this right; this one drifted precisely because it had *its own* (absent) rule instead of the shared one. Authorisation that is duplicated per-endpoint fails silently and invisibly at whichever endpoint someone forgot — which is an argument for the two-tier pattern in §7.2 being enforced consistently, not merely present.
+
+Regression cover: seven tests in `tests/integration/authorization.test.js` assert that a stranger, an unauthenticated caller and even an **usher assigned to that very event** are all refused, while the owner and an admin succeed. The usher case is a deliberate boundary — door staff need to admit people, not to see what an event earned. The tests were confirmed to fail against the pre-fix code before being accepted.
+
+### 7.4.3 Fixed vulnerability: buyer-controlled ticket price (OWASP A04 / A08)
+
+Three separate places trusted the client with the value of a transaction:
+
+1. `reserveBooking` spread each buyer object from the request straight into the booking, so `price` — and `currency`, which is half of an amount — were whatever the browser sent.
+2. `usePaystack` opened the payment popup with `amount: props.totalPrice * 100`, computed in the browser, alongside a Paystack public key hard-coded into the bundle.
+3. `confirmCheckout` verified with Paystack that the charge had **succeeded**, but never what it was **for**.
+
+Together these mean a modified client could reserve a ₦50,000 ticket, pay ₦1 for it, and have the booking confirmed and a valid scannable ticket emailed — the charge really did succeed, so every check passed. Nothing in the audit trail would look unusual; the shortfall is only visible by comparing the booking's price against the event's tier, which nothing did.
+
+The fix applies the rule already used for `ticketId`, `reference` and `event` (§4.1): **anything the server treats as authority must be stamped server-side.** `pricingService.priceBuyers` rewrites price and currency from the event's own `ticketDetails`, listed after the spread so a supplied value is discarded rather than trusted; the entire Paystack configuration is now built server-side; and confirmation compares the charged amount against the total recomputed from the stored bookings, refusing an underpayment with 402.
+
+This is the defect that made the platform fee possible at all — a percentage of an attacker-chosen amount is not a fee — which is why §5.6.1 treats pricing authority as part of the revenue model rather than a separate hardening task.
+
+Regression cover: `tests/unit/pricing.test.js` (15 tests) and `tests/integration/checkout.split.test.js`, which asserts end to end that a payload claiming a ₦25,000 VIP ticket costs ₦1 is persisted at ₦25,000 in the event's own currency.
+
 ### 7.5 Data protection (GDPR)
 
 - Per-record erasure timestamps: `Booking.piiErasedAt`, `Guest.erasedAt`.
@@ -585,7 +649,7 @@ This is the highest-severity defect found in the codebase and is worth citing di
 
 Testing is deliberately split by **what a mock can and cannot prove**. Pure decision logic is unit-tested in isolation; anything whose correctness depends on database concurrency semantics is tested against a **real MongoDB replica set**, because a mocked transaction would falsely validate exactly the code that is hardest to get right.
 
-### 8.2 Backend unit tests — `backend/tests/unit/` (21 files, 154 tests, no database)
+### 8.2 Backend unit tests — `backend/tests/unit/` (23 files, 180 tests, no database)
 
 | File | What it proves |
 |---|---|
@@ -601,6 +665,8 @@ Testing is deliberately split by **what a mock can and cannot prove**. Pure deci
 | `retention.test.js` | GDPR erasure logic |
 | `models.test.js` | Schema validation rules, including conditional `requiredForPurchase` |
 | `role.authz.test.js` | `SIGNUP_ROLES` whitelist, `canChangeRole` and `canDeleteUser` — self-change, non-root admin grant, root-admin demotion and root-admin deletion are all refused |
+| `pricing.test.js` | Fee arithmetic (rounding down, clamping a misconfigured percentage, free tickets), price authority (a client-supplied price and currency are discarded), and that the split always sends an explicit `transaction_charge` |
+| `payout.test.js` | Bank list narrowing, account-number validation before any network call, Paystack's own error text surfaced, provider failures as 502 not 400, and that the subaccount code never reaches a response |
 | `capacity.test.js` | `capacityDecision` at, under and over capacity, and with an explicit override |
 | `eventLiveness.test.js` | `isLive`, including the single-day event that the previous zero-length window never marked live |
 | `networking.authz.test.js` | Who may read, post and appear in the directory for an event |
@@ -611,14 +677,14 @@ Testing is deliberately split by **what a mock can and cannot prove**. Pure deci
 | `chatbot.llmProvider.test.js` | OpenAI-primary / Gemini-fallback selection and error handling |
 | `ticketEmail.test.js` | Ticket email renders an inline `cid:` QR rather than a `data:` URI (Gmail strips those) |
 
-### 8.3 Backend integration tests — `backend/tests/integration/` (12 files, replica set required)
+### 8.3 Backend integration tests — `backend/tests/integration/` (13 files, replica set required)
 
 | File | What it proves |
 |---|---|
 | **`admission.scan.test.js`** | **Concurrency: two simultaneous scans of one ticket yield exactly one admission** — the core atomicity guarantee |
 | **`reservation.lifecycle.test.js`** | Holds leave bookings pending; failed charges return seats; double-release and concurrent release credit seats once; expired holds are swept while live and confirmed ones are not; confirming twice is a no-op |
 | `inventory.reservation.test.js` | Concurrent purchases cannot oversell a ticket type |
-| `authorization.test.js` | End-to-end RBAC across all four roles |
+| `authorization.test.js` | End-to-end RBAC across all four roles, including the two fixed IDORs: event update and the **sales/booker list** (§7.4.2) — a stranger, an anonymous caller and an assigned usher are each refused |
 | `guest.invite.test.js` | Import → invite issuance → booking linkage |
 | `dashboard.snapshot.test.js` | Dashboard read-model correctness |
 | `nlquery.answer.test.js` | NL query answering against seeded data |
@@ -626,6 +692,7 @@ Testing is deliberately split by **what a mock can and cannot prove**. Pure deci
 | `retention.sweep.test.js` | GDPR sweep behaviour |
 | `networking.chat.test.js` | Public-channel and DM persistence and eligibility end to end |
 | `networking.notify.test.js` | Event-live notification delivery |
+| `checkout.split.test.js` | The split routes to the organiser's subaccount with the 3% charge; a client-supplied price never reaches the persisted booking; an organiser with no payout account cannot sell; and the `select: false` subaccount code is actually loaded |
 | `chatbot.tools.test.js` | Concierge tool calls resolve against real seeded events |
 
 Both concurrency-sensitive money paths — overselling inventory and double-admitting a ticket — are covered by tests that issue genuinely simultaneous operations, which is the specific class of defect a mocked database cannot detect.
@@ -672,7 +739,7 @@ That omission is a decision, not an oversight. A minimum set before the baseline
 
 | Suite | Lines | Branches | Functions |
 |---|---|---|---|
-| Backend (`npm run test:coverage`, unit only) | **73.04%** | **84.83%** | **35.39%** |
+| Backend (`npm run test:coverage`, unit only) | **73.20%** | **84.93%** | **38.11%** |
 | Frontend (`npm run test:coverage`) | **2.22%** | **16.00%** | **7.31%** |
 
 The asymmetry is expected and worth stating plainly rather than hiding: the logic that decides money, admission and authorisation is on the backend and is covered by pure-function unit tests, which is why line and branch coverage there are high. Function coverage is lower because the unit run never touches controllers, repositories or the mail/Cloudinary adapters — those are exercised by the integration suite, whose execution is not counted in this figure. The frontend number is low for a structural reason: only two components have Vitest tests, and the rest of the UI is covered by Playwright end-to-end runs, which likewise contribute nothing to a V8 unit-coverage report. The honest reading is that **this table measures unit-level coverage only, and understates total tested behaviour**.
@@ -687,12 +754,20 @@ Triggers on **push and pull request to both `main` and `dev`**, on Node 22, as t
 
 | Job | Steps |
 |---|---|
-| **Backend tests** | `npm ci` → **`npm run lint`** → start `mongo:7` with `--replSet rs0` via `docker run` → poll until `rs.status().myState == 1` → `node --test --test-concurrency=1` over the full suite → coverage (`continue-on-error`) → upload `lcov.info` → tear down Mongo |
-| **Frontend typecheck & lint** | `npm ci` → `npx tsc --noEmit` → `npm run lint` → `npm run test:coverage` → upload `lcov.info` |
+| **Backend tests** | `npm ci` → **`npm run lint`** → start `mongo:7` with `--replSet rs0` via `docker run` → poll until `rs.status().myState == 1` → `node --test --test-concurrency=1` over the full suite → coverage (`continue-on-error`) → upload `lcov.info` → report to Coveralls → tear down Mongo |
+| **Frontend typecheck & lint** | `npm ci` → `npx tsc --noEmit` → `npm run lint` → `npm run test:coverage` → upload `lcov.info` → report to Coveralls |
+| **Publish combined coverage** | `needs: [backend, frontend]`, `if: always()` → close the parallel Coveralls build |
 
 Two ordering decisions are deliberate. Lint runs **before** the database is provisioned, since it needs nothing but `node_modules` and a lint failure should not cost the time of spinning up a replica set. And the backend was previously **never linted in CI at all**, which is how 76 errors accumulated unnoticed; adding the step immediately caught a real defect — a route registered against a controller export that did not exist, which would have crashed the server on boot.
 
-**What blocks a merge:** lint, typecheck and tests. **What does not:** coverage, which is measurement only (§8.8) and is marked `continue-on-error` with its report uploaded as a build artifact.
+**What blocks a merge:** lint, typecheck and tests. **What does not:** coverage, which is measurement only (§8.8), marked `continue-on-error`, uploaded as a build artifact and published to Coveralls.
+
+**Why Coveralls rather than Codecov.** Codecov now requires an upload token that only a repository *owner* can issue, which the people working on this repository are not. Coveralls' action authenticates with the workflow's built-in `GITHUB_TOKEN`, so it needs no secret and no owner-level enrolment — any contributor's push publishes coverage. Two implementation details matter and were not obvious:
+
+- **`base-path` is required, not cosmetic.** Both `lcov.info` files address their sources as `src/…` relative to their own package. Uploaded as-is, the backend's `src/` and the frontend's `src/` would merge into one incoherent tree and every file link would break. `base-path: backend` / `base-path: frontend` re-roots them.
+- **The upload is a *parallel* build.** Each job reports with `parallel: true` under its own flag, and a third job with `parallel-finished: true` closes it. Without that, the badge would show whichever job happened to finish last rather than a combined figure.
+
+The README badge therefore reports a **blended** number well below the backend's 73%. That is a real limitation of a single badge over a two-package monorepo, and the per-suite table in §8.8 remains the honest breakdown — the badge evidences that coverage is tracked, not that the code is good.
 
 ### 9.1.1 Load testing
 
@@ -751,7 +826,7 @@ Required backend environment variables (`backend/config.env`): `DB`, `JWT_SECRET
 ## 10. User interface and design system
 
 - **"Soft cotton" palette.** Tailwind CSS 4 `@theme` tokens in `frontend/src/styles/globals.css`, a documented rebrand from an earlier high-saturation scheme to a cooler, lower-glare one. The source comment records the accessibility constraint applied: button text retains ≥ 4.8:1 contrast against the primary indigo, exceeding the WCAG 2.2 AA 4.5:1 requirement for body text.
-- **Responsive navigation.** Distinct desktop, mobile and side variants (`components/navs/`), sticky positioning, with cross-navigation linking the ticketing pages to the EntryPoint guest-management pages.
+- **Responsive navigation.** Distinct desktop, mobile and side variants (`components/navs/`), sticky positioning, with cross-navigation linking the ticketing pages to the guest-management pages.
 - **Category carousel** (`app/_components/category-carousel.tsx`). Horizontal snap-scroll whose arrow controls render conditionally from `canLeft`/`canRight` state derived from `scrollLeft`/`scrollWidth`, plus a fading right-edge gradient signalling further content — a deliberate discoverability affordance rather than decoration.
 - **Accessibility.** A WCAG 2.2 AA pass is scoped and recorded in `docs/accessibility.md`.
 
@@ -797,6 +872,9 @@ Identifying weaknesses with proposed remedies is explicitly rewarded by the mark
 | 7 | **Backend function coverage is 35.39%** — high line and branch coverage sits on pure decision functions; controllers, repositories and adapters are only reached by the integration suite, which the figure does not include | §8.8 | Merge integration-run coverage into the same lcov report so the published number reflects the suite that actually exercises those layers |
 | 8 | **Load testing covers reads only** — the recorded figures are for the event list and detail endpoints; the concurrency-critical write paths were never measured under load | `scripts/load-test.sh` §9.1.1 | Extend the harness to `/bookings/create` and `/bookings/scan` reporting p50/p95, which is where contention would actually show |
 | 9 | **No dependency vulnerability scanning** — `npm audit` is not in CI | `.github/workflows/ci.yml` | Add `npm audit --audit-level=high` and enable Dependabot |
+| 9b | **No platform-wide or financial reporting.** There is per-event reporting (live dashboard "Sold"; Gross Sales on `/my-profile/event-history/:id`) but no aggregation across events and no export — the codebase contains no `aggregate()` call and no report endpoint. An admin can see every event but must open each one individually | `services/dashboardService.js`; no export route in `presentation/routes/` | Add an admin summary endpoint (tickets sold, gross sales, platform fee earned, admission rate, grouped by event and period) and a CSV export |
+| 9c | **Payouts are not reconciled.** The split is instructed at checkout and Paystack settles it, but nothing reads settlement back: the platform cannot show an organiser what they were actually paid, nor detect a transaction that settled differently from the instruction | `services/payoutService.js` has no settlement read | Consume Paystack's `transfer`/`settlement` webhooks into a ledger, and show organisers a statement per event. Instructed ≠ settled, and only the second is evidence |
+| 9d | **The platform fee is not shown to the buyer.** The organiser sees the percentage on their payouts page, but the checkout total is the ticket price with no fee breakdown, because the fee is deducted from the organiser's share rather than added to the buyer's | `frontend/.../payouts/page.tsx` states it; checkout does not | Defensible as designed (the buyer pays the advertised price), but state the deduction in organiser-facing terms at event-creation time too, so the economics are visible before an event is published |
 | 10 | **Paystack public key is hard-coded** in `usePaystack.tsx` rather than read from the environment | `frontend/src/hooks/usePaystack.tsx` | Move to `NEXT_PUBLIC_PAYSTACK_KEY`; the current value will not survive a production build |
 | 11 | **No deployment pipeline** — CI validates but never deploys | No CD job or hosting config | Add a deploy job (e.g. Render/Railway for the API, Vercel for the frontend) gated on a green build |
 
@@ -819,6 +897,9 @@ Identifying weaknesses with proposed remedies is explicitly rewarded by the mark
 | Reservation release not scheduled | `src/shared/reservationSweeper.js` runs in-process on a 5-minute interval, started after the DB connection resolves and cancelled on `SIGTERM` |
 | No venue-capacity enforcement (safety) | `admissionService.capacityDecision` enforces occupancy at the door with an auditable override — §5.5 |
 | Signup accepted an arbitrary `role` | `SIGNUP_ROLES` whitelist; administrators are only ever granted — §1.1, §6.1 |
+| Sales/booker list readable by any authenticated user | `getBookingsForEvent` now authorises through `getEventForViewer`; response narrowed to the rendered fields — §7.4.2 |
+| Client-supplied ticket price accepted unchecked | Price and currency are stamped from the event's tiers, and the charged amount is verified on confirmation — §5.6.1, §7.4.3 |
+| No revenue model / no organiser payouts (9a) | 3% platform fee via Paystack split payments, with in-app payout onboarding — §5.6.1 |
 
 ---
 

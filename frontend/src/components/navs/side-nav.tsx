@@ -18,6 +18,10 @@ const profile_nav = [
     href: "/my-profile/tickets",
   },
   {
+    name: "Payouts",
+    href: "/my-profile/payouts",
+  },
+  {
     name: "Help & support",
     href: "/my-profile/help-and-support",
   },

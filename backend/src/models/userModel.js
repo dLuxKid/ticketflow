@@ -45,6 +45,28 @@ const userSchema = new mongoose.Schema(
       default: false,
       select: false,
     },
+    // Where this organiser's ticket revenue is settled. Present only once they have
+    // completed payout onboarding; until then their paid events cannot sell tickets, which
+    // is deliberate — see bookingService.buildCheckoutConfig.
+    //
+    // **Deliberately NOT stored: the bank account number.** Paystack holds it; we keep only
+    // the opaque subaccount code needed to route the split, plus the last four digits and
+    // the resolved account name so the organiser can recognise which account they connected.
+    // Storing full account numbers would create a payment-data liability with no
+    // corresponding capability — nothing in this system can act on one.
+    payout: {
+      // Paystack subaccount code, e.g. ACCT_xxxxxxxxxx. The only field the money path reads.
+      subaccountCode: { type: String, select: false },
+      bankName: { type: String },
+      bankCode: { type: String },
+      accountNameMasked: { type: String },
+      accountNumberLast4: { type: String },
+      // The platform percentage in force when this account was connected, recorded so a
+      // later change to PLATFORM_FEE_PERCENT is visible as a change rather than silently
+      // repricing historical arrangements.
+      platformFeePercent: { type: Number },
+      connectedAt: { type: Date },
+    },
     // Events an usher is authorised to scan/admit for. Only meaningful when role === 'usher';
     // door check-in is scoped to these events (enforced in Phase 2).
     assignedEvents: {

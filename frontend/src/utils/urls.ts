@@ -11,6 +11,9 @@ export const API_URLS = {
     getMyAccount: `${baseUrl}/api/v1/users/get-my-account`,
     all: `${baseUrl}/api/v1/users`,
     role: (id: string) => `${baseUrl}/api/v1/users/${id}/role`,
+    myPayout: `${baseUrl}/api/v1/users/me/payout`,
+    payoutBanks: `${baseUrl}/api/v1/users/payout/banks`,
+    resolvePayoutAccount: `${baseUrl}/api/v1/users/payout/resolve-account`,
   },
   events: {
     base: `${baseUrl}/api/v1/events`,

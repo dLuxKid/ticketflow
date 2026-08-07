@@ -86,6 +86,26 @@ jobs:
           path: backend/coverage/lcov.info
           if-no-files-found: ignore
 
+      # Coveralls rather than Codecov: the action authenticates with the built-in
+      # GITHUB_TOKEN, so it needs no repository-owner enrolment and no secret — which
+      # matters because the people working on this are contributors, not the repo owner.
+      #
+      # base-path is not optional here. Both lcov files address their sources as `src/...`
+      # relative to their own package, so without it the backend's src/ and the frontend's
+      # src/ would collide into one bogus tree and every file link would 404.
+      #
+      # parallel: true holds the build open until the frontend job reports too, so the badge
+      # reflects one combined run instead of whichever job finished last.
+      - name: Report backend coverage to Coveralls
+        if: always()
+        continue-on-error: true
+        uses: coverallsapp/github-action@v2
+        with:
+          file: backend/coverage/lcov.info
+          base-path: backend
+          flag-name: backend
+          parallel: true
+
       - name: Stop MongoDB
         if: always()
         run: docker rm -f mongo
@@ -129,3 +149,30 @@ jobs:
           name: frontend-coverage
           path: frontend/coverage/lcov.info
           if-no-files-found: ignore
+
+      - name: Report frontend coverage to Coveralls
+        if: always()
+        continue-on-error: true
+        uses: coverallsapp/github-action@v2
+        with:
+          file: frontend/coverage/lcov.info
+          base-path: frontend
+          flag-name: frontend
+          parallel: true
+
+  # Tells Coveralls both parallel uploads are in, so it can combine them and publish one
+  # number. `if: always()` because a failing test job must still close the build — otherwise
+  # Coveralls waits on a report that will never arrive and the badge sticks on a stale run.
+  coverage:
+    name: Publish combined coverage
+    needs: [backend, frontend]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Close the parallel Coveralls build
+        continue-on-error: true
+        uses: coverallsapp/github-action@v2
+        with:
+          parallel-finished: true
+          carryforward: "backend,frontend"

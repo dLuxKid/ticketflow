@@ -74,7 +74,7 @@ export default function TeamManager({ eventId }: { eventId: string }) {
   return (
     <section className="flex-center flex-col w-full max-w-screen-md mx-auto gap-6 py-10 px-4">
       <PageHeader
-        eyebrow="EntryPoint"
+        eyebrow="TicketFlow"
         title="Door staff"
         subtitle="Add anyone with a TicketFlow account by email — they can scan and admit guests for this event only, without access to edit it or see your other events."
         tabs={eventTabs(eventId, "team")}

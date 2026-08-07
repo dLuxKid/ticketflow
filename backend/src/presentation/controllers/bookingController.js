@@ -41,6 +41,7 @@ export const getMyBookings = catchAsync(async (req, res) => {
 export const getBookingsForEvent = catchAsync(async (req, res) => {
   const { bookers, event } = await bookingService.getBookingsForEvent(
     req.params.event,
+    req.user,
   );
 
   res.status(200).json({

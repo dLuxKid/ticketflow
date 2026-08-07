@@ -82,6 +82,10 @@ export const verifyTransaction = async (reference, fetchImpl = fetch) => {
     paid: body?.data?.status === 'success',
     id: body?.data?.id,
     message: body?.data?.gateway_response,
+    // Returned in the currency's minor unit. Verifying that a charge *succeeded* without
+    // checking what it was FOR leaves underpayment undetected — see confirmCheckout.
+    amountMinor: body?.data?.amount,
+    currency: body?.data?.currency,
   };
 };
 
@@ -119,6 +123,19 @@ export const confirmCheckout = async (reference) => {
   const verified = await verifyTransaction(reference);
   if (!verified.paid) {
     throw new AppError('Payment could not be verified', 402);
+  }
+
+  // A successful charge is not the same as a *sufficient* one. Checking only `status` meant
+  // any completed payment against this reference confirmed the booking, whatever its value.
+  // The expected amount is recomputed from the reservation's own stored prices — which are
+  // now written from the event's tiers, not the request — so this compares the charge
+  // against the server's number rather than against anything the payer influenced.
+  const expectedMinor = await bookingService.expectedAmountMinor(reference);
+  if (expectedMinor > 0 && Number(verified.amountMinor) < expectedMinor) {
+    throw new AppError(
+      'The amount paid does not match the amount due for this reservation',
+      402,
+    );
   }
 
   return bookingService.confirmReservation(reference, {

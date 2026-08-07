@@ -263,7 +263,7 @@ export default function GuestManager({ eventId }: { eventId: string }) {
   return (
     <section className="flex-center flex-col w-full max-w-screen-md mx-auto gap-6 py-10 px-4">
       <PageHeader
-        eyebrow="EntryPoint"
+        eyebrow="TicketFlow"
         title="Guest list"
         subtitle="Add guests one at a time, or import a whole list at once. Each new guest is emailed a single-use QR invite."
         tabs={eventTabs(eventId, "guests")}

@@ -28,7 +28,7 @@ export default async function Navbar({
           priority
           // The logo is an opaque JPG tile, so it cannot pick up the surrounding colour.
           // Over the dark hero a soft ring keeps its edge defined against the photo.
-          className="h-8 w-auto rounded-md transition-shadow duration-300 group-data-[solid=false]/nav:ring-1 group-data-[solid=false]/nav:ring-main-white/25 md:h-12"
+          className="h-8 w-auto rounded-md transition-shadow duration-300 group-data-[solid=false]/nav:ring-1 group-data-[solid=false]/nav:ring-main-white/50 md:h-12"
         />
       </Link>
 

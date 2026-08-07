@@ -1,6 +1,7 @@
-# TicketFlow (with EntryPoint guest-management)
+# TicketFlow
 
 [![CI](https://github.com/dLuxKid/ticketflow/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/dLuxKid/ticketflow/actions/workflows/ci.yml)
+[![Coverage Status](https://coveralls.io/repos/github/dLuxKid/ticketflow/badge.svg?branch=dev)](https://coveralls.io/github/dLuxKid/ticketflow?branch=dev)
 
 Event ticketing + invite-only guest management: paid tickets, invite-only/hybrid events,
 single-use QR invites, an atomic door scanner, a live arrivals dashboard, a Meet-and-Greet
@@ -70,8 +71,17 @@ EMAIL_FROM=
 
 DEV_FRONTEND_URL=http://localhost:3000
 
-# Only needed to test Paystack payment webhooks:
+# Payments. BOTH keys are now required to sell paid tickets: the secret key verifies
+# charges and creates organiser payout subaccounts, and the public key is sent to the
+# browser by the server (it is no longer hard-coded in the frontend bundle).
 PAYSTACK_SECRET_KEY=
+PAYSTACK_PUBLIC_KEY=
+
+# Platform fee taken from each paid ticket, as a percentage. Default 3.
+PLATFORM_FEE_PERCENT=3
+
+# Currency used for events that do not specify one. Default NGN.
+DEFAULT_CURRENCY=NGN
 
 # AI concierge chatbot. OpenAI is tried first, Gemini is the fallback; with neither key set
 # the chatbot degrades to a canned reply rather than erroring:
@@ -132,6 +142,36 @@ itself be demoted or deleted through the API.
 
 ---
 
+## How the money works
+
+TicketFlow takes a **3% platform fee** on each paid ticket, using Paystack **split payments**.
+The buyer pays the advertised ticket price; Paystack settles the organiser's share directly
+into the organiser's own subaccount and the platform's fee into the main account, in the same
+transaction. **TicketFlow never holds an organiser's money.**
+
+- The organiser also bears Paystack's own processing fee (`bearer: "subaccount"`), so the
+  platform's margin is exactly 3% and does not shrink as gateway pricing changes.
+- The fee is **rounded down**, never up.
+- Ticket prices are **server-authoritative**: the price and currency written to a booking come
+  from the event's own ticket tiers, and the amount actually charged is verified against them
+  before tickets are issued. The client chooses *what* to buy, never what it costs.
+
+### Organisers must connect a payout account
+
+A paid event **cannot sell tickets until its organiser has connected a bank account** — checkout
+refuses with a clear message. This is deliberate: the alternative is charging buyers and
+settling the whole amount into the platform account, invisible to everyone. Free events are
+unaffected.
+
+Organisers connect an account at **Profile → Payouts**: pick a bank, enter the account number,
+confirm the name it resolves to, done. TicketFlow stores only the last four digits and an
+opaque Paystack reference — never the full account number.
+
+> **Upgrading an existing deployment:** every organiser with paid events needs to complete
+> payout onboarding, and `PAYSTACK_PUBLIC_KEY` must be set, or their events will stop selling.
+
+---
+
 ## Roles
 
 | Role      | Can do                                                                                          |
@@ -162,7 +202,7 @@ npm run migrate:ticket-ids          # server-side scannable ticketIds for old bo
 
 ```bash
 cd backend
-npm run test:unit    # 154 unit tests, no database required
+npm run test:unit    # unit tests, no database required
 
 # Full suite (incl. integration) needs a replica-set Mongo — point MONGO_TEST_URI at a
 # THROWAWAY test DB, and run sequentially (free-tier Atlas is flaky under parallel load):
@@ -197,13 +237,23 @@ Current baseline (unit tests only):
 
 | Suite    | Lines  | Branches | Functions |
 | -------- | ------ | -------- | --------- |
-| Backend  | 73.04% | 84.83%   | 35.39%    |
+| Backend  | 73.20% | 84.93%   | 38.11%    |
 | Frontend | 2.22%  | 16.00%   | 7.31%     |
 
 The backend number is the meaningful one: the domain logic that decides money, admission and
 authorisation lives there and is covered by pure-function unit tests. The frontend figure is
 low because Vitest currently covers two components — the bulk of the UI is exercised by
 Playwright end-to-end instead, and E2E runs are not counted in this figure.
+
+**The badge is a combined figure.** CI reports both `lcov.info` files to
+[Coveralls](https://coveralls.io/github/dLuxKid/ticketflow) as a parallel build (flags
+`backend` and `frontend`), so the badge blends the two — which means it will read well below
+the backend's 73%. The per-suite table above is the honest breakdown; read the badge as
+"coverage exists and is tracked", not as a quality score.
+
+Coveralls authenticates with the workflow's built-in `GITHUB_TOKEN`, so no repository secret
+and no owner-level enrolment is needed — any contributor's push publishes coverage. All
+Coveralls steps are `continue-on-error`, so an outage at their end can never fail a build.
 
 ### Load testing
 
@@ -227,8 +277,10 @@ and how they map to the performance-efficiency characteristic.
   suite (unit + integration, sequential) → coverage (non-blocking) → upload `lcov.info`.
 - **Frontend** — `npm ci` → **typecheck** (`tsc --noEmit`) → **lint** → Vitest with coverage
   → upload `lcov.info`.
+- **Publish combined coverage** — waits on both jobs, then closes the parallel Coveralls
+  build so the badge reflects one run rather than whichever job finished last.
 
-Lint, typecheck and tests are blocking; coverage is measurement only.
+Lint, typecheck and tests are blocking; coverage and its publication are measurement only.
 
 ---
 

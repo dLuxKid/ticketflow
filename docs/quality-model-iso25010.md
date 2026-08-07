@@ -1,8 +1,10 @@
 # TicketFlow — Product Quality Evaluation (ISO/IEC 25010)
 
-**Document version:** 1.1 · **Verified against:** branch `dev`, 6 August 2026
+**Document version:** 1.2 · **Verified against:** branch `dev`, 7 August 2026
 
-> **Changes since 1.0.** Test coverage is now measured and quoted in §7 (backend 73.04% lines, frontend 2.22%), with the absence of a failing threshold defended as a decision. §9 Safety is rewritten: venue-capacity enforcement at the door now exists, so the characteristic moves from Weak to Moderate and the remaining gap is occupancy *reporting* rather than enforcement. §6 Security gains the fixed signup privilege-escalation defect.
+> **Changes since 1.1.** §6 Security records a third fixed defect — buyer-controlled ticket pricing — and §1 gains the revenue model: a 3% platform fee via Paystack split payments, with organiser payouts settled directly by the provider.
+
+> **Changes since 1.0.** Test coverage is now measured and quoted in §7 (backend 73.20% lines, frontend 2.22%), with the absence of a failing threshold defended as a decision. §9 Safety is rewritten: venue-capacity enforcement at the door now exists, so the characteristic moves from Weak to Moderate and the remaining gap is occupancy *reporting* rather than enforcement. §6 Security gains the fixed signup privilege-escalation defect.
 
 > **Purpose.** Evaluates TicketFlow against the ISO/IEC 25010 software product quality model, the international standard within the SQuaRE (Systems and software Quality Requirements and Evaluation) series. It supplies the "quality assurance and testing methods **according to international standards**" evidence required by Learning Outcome 3, and the strengths/weaknesses/recommendations depth the Outstanding band expects.
 >
@@ -38,7 +40,7 @@ ISO/IEC 25010 was revised in 2023, superseding the 2011 edition. The characteris
 | 4 | Interaction Capability | **Weak → improving** | Accessibility audit covers 2 components; usability testing not yet run |
 | 5 | Reliability | **Strong** | No uptime/error monitoring in production |
 | 6 | Security | **Strong** | No dependency-vulnerability scanning in CI |
-| 7 | Maintainability | **Strong** | Coverage now measured (backend 73.04% lines); frontend unit coverage is 2.22% |
+| 7 | Maintainability | **Strong** | Coverage now measured (backend 73.20% lines); frontend unit coverage is 2.22% |
 | 8 | Flexibility | Moderate | No deployment target configured |
 | 9 | Safety | Moderate | Capacity enforced at the door with an auditable override; no evacuation/occupancy reporting |
 
@@ -171,6 +173,12 @@ paths once a throwaway database is available.
 
 A second, subtler instance is worth noting alongside it: the guard preventing demotion of the root admin initially could not fire at all, because `isRootAdmin` is `select: false` and the repository method loading the target user did not request it. The guard read `undefined` and silently permitted the action. **A security control that depends on a field the query never loads is not a control** — it is a comment.
 
+**A third, found while answering a question about revenue reporting.** `GET /bookings/event/:eventId` — the organiser's sales view — enforced authentication but no ownership, so any account could read any event's booker list: every attendee's name and email, the event's gross sales, and `ticketId`, the door-admission credential. It now reuses the same `getEventForViewer` rule as the dashboard and guest list, with seven regression tests that were verified to fail against the pre-fix code.
+
+**A fourth, found while implementing the platform fee.** Ticket price was taken from the request and never checked against the event's tiers; the Paystack amount was computed in the browser; and payment confirmation verified only that a charge *succeeded*, never its value. A modified client could pay ₦1 for a ₦50,000 ticket and receive a valid, scannable ticket, with nothing in the audit trail looking unusual. Price and currency are now stamped from the event, the whole checkout configuration is built server-side, and the charged amount is verified against the stored bookings before tickets are issued.
+
+**The pattern across all four is the evaluative point**, and is worth stating as such rather than listing the defects: each was a place where a rule that exists correctly elsewhere in the system was *absent* rather than *wrong* — and in the fourth case the rule was even documented in this repository ("server-issued identifiers", §4.1 of the technical documentation) while `price` quietly sat outside it. Duplicated authorisation fails silently at whichever endpoint someone forgot, and no amount of care at the other endpoints detects it. That is an argument for centralising the decision — which the architecture already supports and which these fixes now use — over trusting per-endpoint diligence.
+
 **Weakness.** No automated dependency-vulnerability scanning; `npm audit` is not in CI. Given ~40 direct frontend dependencies this is a realistic exposure. The client-side route guard decodes but does not verify the JWT signature — correct as a UX layer, but it must be documented as such so no one later mistakes it for a control.
 
 **Recommendation.** Add `npm audit --audit-level=high` as a CI step, and Dependabot for updates. Both are configuration-only.
@@ -186,7 +194,7 @@ A second, subtler instance is worth noting alongside it: the guard preventing de
 | Analysability | `AuditLog` reconstructs door history; centralised `AppError` and error handler; ESLint 9 + Prettier enforced in CI |
 | Modifiability | The repository layer is the only Mongoose caller, so the persistence library could be replaced without touching business logic |
 | Testability | Services take no `req`/`res` and return plain data, which is precisely why authorisation logic is unit-testable with neither HTTP nor a database — 154 backend unit tests run with no database at all |
-| Test coverage *(measured)* | Backend **73.04% lines / 84.83% branches / 35.39% functions**; frontend **2.22% lines**. Emitted as lcov by `npm run test:coverage` in both packages and archived by CI |
+| Test coverage *(measured)* | Backend **73.20% lines / 84.93% branches / 38.11% functions**; frontend **2.22% lines**. Emitted as lcov by `npm run test:coverage` in both packages, archived by CI and published to Coveralls as a parallel build with per-package flags |
 
 **Strength.** Testability is a *consequence* of the modularity decision rather than an afterthought — the clearest demonstration in the codebase that architecture choices were made for reasons. The measured figures corroborate it: the layers designed as pure functions are the layers with high branch coverage.
 

@@ -3,7 +3,13 @@ import assert from 'node:assert/strict';
 import Event from '../../src/models/eventModel.js';
 import Booking from '../../src/models/bookingModel.js';
 import * as bookingService from '../../src/services/bookingService.js';
-import { connect, disconnect, buildEvent, skipReason } from '../helpers/db.js';
+import {
+  connect,
+  disconnect,
+  buildEvent,
+  createPayableOrganiser,
+  skipReason,
+} from '../helpers/db.js';
 
 /**
  * Proves the purchase flow's money-safety invariants.
@@ -39,19 +45,27 @@ if (skipReason) {
       .ticketQuantity;
   };
 
+  // A paid event needs an organiser who can actually be paid: checkout refuses to sell
+  // tickets for an event whose organiser has no payout account.
+  let organiser;
+
   before(async () => {
     await connect();
+    organiser = await createPayableOrganiser();
   });
 
   after(async () => {
     await Booking.deleteMany({ email: /example\.com$/ });
     await Event.deleteMany({ eventName: 'Test Event' });
+    const User = (await import('../../src/models/userModel.js')).default;
+    await User.deleteMany({ _id: organiser._id });
     await disconnect();
   });
 
   test('reserving holds the seats and leaves the booking pending, unpaid', async () => {
     const event = await Event.create(
       buildEvent({
+        user: organiser._id,
         ticketDetails: [
           { ticketName: 'General', ticketPrice: 100, ticketQuantity: 5 },
         ],
@@ -81,6 +95,7 @@ if (skipReason) {
   test('a failed charge returns the seats to inventory', async () => {
     const event = await Event.create(
       buildEvent({
+        user: organiser._id,
         ticketDetails: [
           { ticketName: 'General', ticketPrice: 100, ticketQuantity: 2 },
         ],
@@ -117,6 +132,7 @@ if (skipReason) {
   test('releasing twice does not credit the seats twice', async () => {
     const event = await Event.create(
       buildEvent({
+        user: organiser._id,
         ticketDetails: [
           { ticketName: 'General', ticketPrice: 100, ticketQuantity: 3 },
         ],
@@ -139,6 +155,7 @@ if (skipReason) {
   test('concurrent releases of one reservation credit the seats once', async () => {
     const event = await Event.create(
       buildEvent({
+        user: organiser._id,
         ticketDetails: [
           { ticketName: 'General', ticketPrice: 100, ticketQuantity: 4 },
         ],
@@ -165,6 +182,7 @@ if (skipReason) {
   test('an expired hold is swept, and a live one is left alone', async () => {
     const event = await Event.create(
       buildEvent({
+        user: organiser._id,
         ticketDetails: [
           { ticketName: 'General', ticketPrice: 100, ticketQuantity: 6 },
         ],
@@ -200,6 +218,7 @@ if (skipReason) {
   test('a confirmed reservation is never released by the sweep', async () => {
     const event = await Event.create(
       buildEvent({
+        user: organiser._id,
         ticketDetails: [
           { ticketName: 'General', ticketPrice: 100, ticketQuantity: 2 },
         ],
@@ -232,6 +251,7 @@ if (skipReason) {
   test('confirming twice reports the second call as a no-op', async () => {
     const event = await Event.create(
       buildEvent({
+        user: organiser._id,
         ticketDetails: [
           { ticketName: 'General', ticketPrice: 100, ticketQuantity: 2 },
         ],
