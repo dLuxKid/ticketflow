@@ -352,4 +352,3 @@ See `docs/docker.md` for details.
 | [`docs/docker.md`](docs/docker.md)                              | Container stack                                                     |
 | [`docs/phase-0-changes-and-tests.md`](docs/phase-0-changes-and-tests.md) | Change log & test plan                                     |
 | [`docs/innovation-ideas.md`](docs/innovation-ideas.md)          | Feature ideas for the assessment                                    |
-| `IMPLEMENTATION_PROMPT.md`                                      | The full merge design & schema reference                            |
