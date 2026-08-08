@@ -13,7 +13,7 @@ import catchAsync from '../../shared/middleware/catchAsync.js';
 export const createBooking = catchAsync(async (req, res) => {
   const userId = req.user?._id;
 
-  const { reference, bookings, requiresPayment } =
+  const { reference, bookings, requiresPayment, checkout } =
     await bookingService.reserveBooking(
       req.body.ticketBuyers,
       req.body.event,
@@ -25,7 +25,7 @@ export const createBooking = catchAsync(async (req, res) => {
     message: requiresPayment
       ? 'Your tickets are reserved - complete payment to confirm'
       : 'You have successfully registered for this event',
-    data: { booking: bookings, reference, requiresPayment },
+    data: { booking: bookings, reference, requiresPayment, checkout },
   });
 });
 

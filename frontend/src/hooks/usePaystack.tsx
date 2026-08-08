@@ -113,7 +113,7 @@ export const usePaystack = (props: Props) => {
       // reservation is not lost just because this call failed.
       toast.error(
         error.response?.data?.message ??
-          "We could not confirm your payment yet. If you were charged, your tickets will still be issued."
+        "We could not confirm your payment yet. If you were charged, your tickets will still be issued."
       );
     } finally {
       setLoading(false);
@@ -136,8 +136,12 @@ export const usePaystack = (props: Props) => {
     if (!reservation) return;
     if (openedFor.current === reservation.reference) return;
     openedFor.current = reservation.reference;
-    // @ts-ignore - react-paystack's callback types are looser than its runtime contract
-    initializePayment(onSuccess, onClose);
+    try {
+      // @ts-ignore - react-paystack's callback types are looser than its runtime contract
+      initializePayment(onSuccess, onClose);
+    } catch (err) {
+      console.error("Paystack failed to initialize:", err); // ← ADD THIS TRY/CATCH BLOCK, REPLACING THE ORIGINAL SINGLE LINE
+    }
   }, [reservation, initializePayment, onSuccess, onClose]);
 
   /** Holds the seats server-side, then opens checkout (or finishes, if the event is free). */
@@ -186,6 +190,7 @@ export const usePaystack = (props: Props) => {
         return;
       }
 
+      setReservation(data.data.checkout as CheckoutConfig);
       // Everything Paystack needs comes from the server, unmodified.
       setReservation(data.data.checkout as CheckoutConfig);
     } catch (error: any) {

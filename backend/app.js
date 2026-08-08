@@ -39,6 +39,14 @@ app.use(
   }),
 );
 
+// ─── CORS ──────────────────────────────────────────────────────────────────────
+const corsOptions = {
+  credentials: true,
+  origin: process.env.DEV_FRONTEND_URL || 'http://localhost:3000',
+  optionsSuccessStatus: 200,
+};
+app.use(cors(corsOptions));
+
 // ─── Rate Limiting ─────────────────────────────────────────────────────────────
 // Configurable, with the previous hardcoded values as defaults so nothing changes unless a
 // deployment opts in. Two reasons it needed to move out of the source:
@@ -50,19 +58,12 @@ app.use(
 //   2. It made the API impossible to load test - every run flatlined at 429 after 100
 //      requests, so no throughput or latency figure could ever be gathered.
 const limiter = rateLimit({
-  max: Number(process.env.RATE_LIMIT_MAX) || 100,
+  max: Number(process.env.RATE_LIMIT_MAX) || 500,
   windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS) || 60 * 60 * 1000,
   message: 'Too many requests from this IP, please try again in an hour!',
 });
 app.use('/api', limiter);
 
-// ─── CORS ──────────────────────────────────────────────────────────────────────
-const corsOptions = {
-  credentials: true,
-  origin: process.env.DEV_FRONTEND_URL || 'http://localhost:3000',
-  optionsSuccessStatus: 200,
-};
-app.use(cors(corsOptions));
 
 // ─── Body Parsing ──────────────────────────────────────────────────────────────
 // Capture the exact raw bytes on the way in so webhook handlers can verify provider
