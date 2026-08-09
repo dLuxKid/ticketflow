@@ -48,17 +48,50 @@ jobs:
       # IMPLEMENTATION_PROMPT.md's Phase 0 note.
       - name: Start MongoDB as a single-node replica set
         run: |
+          set -euo pipefail
           docker run -d --name mongo -p 27017:27017 mongo:7 --replSet rs0
+
           for i in $(seq 1 30); do
             docker exec mongo mongosh --quiet --eval "db.runCommand({ ping: 1 })" && break
             echo "waiting for mongod..."; sleep 2
           done
-          docker exec mongo mongosh --quiet --eval "rs.initiate()"
+
+          # The member host MUST be given explicitly.
+          #
+          # A bare `rs.initiate()` configures the member using the container's own hostname
+          # (its Docker ID, e.g. `eba0352e1b6f`). Inside the container that resolves and the
+          # set reaches PRIMARY, so every readiness check here passed — but the connection
+          # string used by the tests carries `replicaSet=rs0`, which makes the driver perform
+          # topology discovery: it reads the replica-set config, learns the member is
+          # `eba0352e1b6f:27017`, and tries to resolve THAT from the runner host, where it
+          # does not exist. Result: `getaddrinfo EAI_AGAIN <container-id>` on every
+          # integration test, while the database itself was perfectly healthy.
+          #
+          # Pinning 127.0.0.1 makes the advertised address the one the runner can actually
+          # reach.
+          docker exec mongo mongosh --quiet --eval \
+            'rs.initiate({_id: "rs0", members: [{_id: 0, host: "127.0.0.1:27017"}]})'
+
           for i in $(seq 1 30); do
             STATE=$(docker exec mongo mongosh --quiet --eval "rs.status().myState" 2>/dev/null || echo "")
             [ "$STATE" = "1" ] && echo "replica set is PRIMARY" && break
             echo "waiting for PRIMARY..."; sleep 2
           done
+
+          # Fail here, loudly, rather than 60 tests later with a DNS error that looks like a
+          # test bug. This asserts the two things the tests actually depend on: the member is
+          # advertised as 127.0.0.1, and a client doing replica-set discovery from the runner
+          # (exactly what the test connection string does) can complete a write.
+          ADVERTISED=$(docker exec mongo mongosh --quiet --eval 'rs.conf().members[0].host')
+          echo "replica set advertises: $ADVERTISED"
+          case "$ADVERTISED" in
+            127.0.0.1:27017) ;;
+            *) echo "::error::Replica set advertises '$ADVERTISED', which the runner cannot resolve"; exit 1 ;;
+          esac
+
+          docker exec mongo mongosh --quiet \
+            "mongodb://127.0.0.1:27017/ci_preflight?replicaSet=rs0" \
+            --eval 'db.preflight.insertOne({ok: 1}); print("replica-set discovery OK")'
 
       - name: Run tests (sequential - see note below)
         working-directory: backend
