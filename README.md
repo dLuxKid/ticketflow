@@ -1,7 +1,7 @@
 # TicketFlow
 
 [![CI](https://github.com/dLuxKid/ticketflow/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/dLuxKid/ticketflow/actions/workflows/ci.yml)
-[![Coverage Status](https://coveralls.io/repos/github/dLuxKid/ticketflow/badge.svg?branch=dev)](https://coveralls.io/github/dLuxKid/ticketflow?branch=dev)
+[![codecov](https://codecov.io/gh/dLuxKid/ticketflow/branch/dev/graph/badge.svg)](https://codecov.io/gh/dLuxKid/ticketflow)
 
 Event ticketing + invite-only guest management: paid tickets, invite-only/hybrid events,
 single-use QR invites, an atomic door scanner, a live arrivals dashboard, a Meet-and-Greet
@@ -80,7 +80,8 @@ PAYSTACK_PUBLIC_KEY=
 # Platform fee taken from each paid ticket, as a percentage. Default 3.
 PLATFORM_FEE_PERCENT=3
 
-# Currency used for events that do not specify one. Default NGN.
+# Currency used for events that do not specify one. Must be one Paystack can settle:
+# NGN, GHS, ZAR, KES, USD or XOF. Default NGN.
 DEFAULT_CURRENCY=NGN
 
 # AI concierge chatbot. OpenAI is tried first, Gemini is the fallback; with neither key set
@@ -162,7 +163,7 @@ each chosen to put a different state on screen:
 
 The catalogue covers upcoming, **live right now**, past and sold-out events; public,
 invite-only and hybrid access; free and paid tiers; Lagos (NGN) and Coventry/Birmingham
-(GBP). Two events are live as you run it, so the arrivals dashboard, door scanning and Meet
+(USD). Two events are live as you run it, so the arrivals dashboard, door scanning and Meet
 and Greet are all reachable - and one of them already has paid bookings with two guests
 admitted, so the dashboard shows real numbers rather than zeros. The command prints a
 session card with the logins and the invite codes to scan.
@@ -177,10 +178,10 @@ Everything it creates is tagged with the `@usability.test` email domain, and `--
 deletes only what matches that - but it is still a destructive command, so **never point it
 at a production database**. A plain re-run refuses rather than duplicating data.
 
-> **Paying for a seeded event:** Paystack test mode settles the currencies your account is
-> enabled for, which generally does not include GBP. The two UK events intended to be bought
-> are therefore **free** - they confirm without opening Paystack at all. Point a
-> "buy a ticket" task at *Coventry Student Welcome Fair*, or at one of the naira events.
+> **Paying for a seeded event:** the UK events are priced in **USD**, not GBP — Paystack
+> cannot settle GBP at all, so the Event schema refuses it and a GBP event could never sell a
+> ticket. The UK event intended to be bought is **free**, so it confirms without opening
+> Paystack. Point a "buy a ticket" task at *Coventry Student Welcome Fair*, or at a naira event.
 
 ---
 
@@ -197,6 +198,38 @@ transaction. **TicketFlow never holds an organiser's money.**
 - Ticket prices are **server-authoritative**: the price and currency written to a booking come
   from the event's own ticket tiers, and the amount actually charged is verified against them
   before tickets are issued. The client chooses *what* to buy, never what it costs.
+
+### Currencies
+
+Ticket prices are charged in a currency the payment provider can actually settle:
+**NGN, GHS, ZAR, KES, USD, XOF**. The organiser picks it explicitly when creating or editing
+an event, and the Event schema refuses anything else.
+
+This is a provider constraint, not a preference. Currency used to be derived from the event's
+country — UK → GBP, Germany/France → EUR — and Paystack settles neither, so those events
+could never sell a ticket: the charge is rejected at the gateway *after* the buyer commits.
+Choosing the country now only *suggests* a default.
+
+### What the buyer is charged
+
+The advertised ticket price, and nothing else. There is **no booking fee added at checkout** —
+the 3% comes out of the organiser's settlement.
+
+Until recently the checkout page ran the total through a legacy "5% + 100" markup, displaying
+₦5,380 for a ₦5,000 ticket while Paystack charged the true ₦5,000. The page was quoting a
+price nobody was charging; that markup is gone.
+
+### Revenue reporting
+
+**Profile → Revenue.** Organisers see gross, the platform fee deducted, and their net, with a
+daily earnings trend. Admins get a **My events / Platform** switch:
+
+- *My events* — what they are owed for events they organise themselves.
+- *Platform* — **TicketFlow's own income, which is the 3% fee alone.** Gross belongs to
+  organisers and net is paid away to them, so reporting either as platform revenue would
+  overstate it by more than an order of magnitude.
+
+The scope is enforced server-side: a non-admin requesting the platform view gets a 403.
 
 ### Organisers must connect a payout account
 
@@ -305,8 +338,8 @@ Current baseline (unit tests only):
 
 | Suite    | Lines  | Branches | Functions |
 | -------- | ------ | -------- | --------- |
-| Backend  | 72.61% | 85.03%   | 37.92%    |
-| Frontend | 2.16%  | 15.58%   | 7.08%     |
+| Backend  | 72.66% | 85.28%   | 38.15%    |
+| Frontend | 2.16%  | 16.56%   | 7.75%     |
 
 The backend number is the meaningful one: the domain logic that decides money, admission and
 authorisation lives there and is covered by pure-function unit tests. The frontend figure is
@@ -314,14 +347,27 @@ low because Vitest currently covers two components - the bulk of the UI is exerc
 Playwright end-to-end instead, and E2E runs are not counted in this figure.
 
 **The badge is a combined figure.** CI reports both `lcov.info` files to
-[Coveralls](https://coveralls.io/github/dLuxKid/ticketflow) as a parallel build (flags
-`backend` and `frontend`), so the badge blends the two - which means it will read well below
-the backend's 73%. The per-suite table above is the honest breakdown; read the badge as
-"coverage exists and is tracked", not as a quality score.
+[Codecov](https://codecov.io/gh/dLuxKid/ticketflow) under separate flags (`backend` and
+`frontend`), so the badge blends the two and will read well below the backend's ~73%. The
+per-suite table above is the honest breakdown; read the badge as "coverage exists and is
+tracked", not as a quality score.
 
-Coveralls authenticates with the workflow's built-in `GITHUB_TOKEN`, so no repository secret
-and no owner-level enrolment is needed - any contributor's push publishes coverage. All
-Coveralls steps are `continue-on-error`, so an outage at their end can never fail a build.
+**Codecov publishing is opt-in.** Both upload steps are skipped unless a `CODECOV_TOKEN`
+repository secret is set:
+
+1. Sign in at [codecov.io](https://codecov.io) with GitHub and add the repository.
+2. Copy the upload token it gives you.
+3. GitHub → **Settings → Secrets and variables → Actions → New repository secret**, named
+   `CODECOV_TOKEN`.
+
+Without it the steps are cleanly skipped rather than failing, and `lcov.info` is still
+uploaded as a build artifact either way — only the publication is optional. Both steps are
+`continue-on-error` with `fail_ci_if_error: false`, so a Codecov outage can never fail a
+build.
+
+> Adding the repo on Codecov and creating the secret both need **admin** rights on the
+> repository. If you only have contributor access, the owner has to do those steps — the CI
+> wiring is already in place and starts working the moment the secret exists.
 
 ### Load testing
 
@@ -337,15 +383,6 @@ and how they map to the performance-efficiency characteristic.
 
 ---
 
-## Revenue reporting
-
-**Profile → Revenue** shows gross sales, the platform fee and net, per event and in total.
-Scope follows your role, decided server-side: an organiser sees only their own events, an
-admin sees every event plus the platform's total fee income. Only confirmed payments are
-counted - abandoned reservations never appear.
-
----
-
 ## Quality gate (CI)
 
 `.github/workflows/ci.yml` runs on every push and PR to **`main` and `dev`**:
@@ -354,13 +391,6 @@ counted - abandoned reservations never appear.
   suite (unit + integration, sequential) → coverage (non-blocking) → upload `lcov.info`.
 - **Frontend** - `npm ci` → **typecheck** (`tsc --noEmit`) → **lint** → Vitest with coverage
   → upload `lcov.info`.
-- **Publish combined coverage** - waits on both jobs, then closes the parallel Coveralls
-  build so the badge reflects one run rather than whichever job finished last.
-
-**Coveralls publishing is opt-in.** All three Coveralls steps are skipped unless a
-`COVERALLS_REPO_TOKEN` repository secret is set (get it from coveralls.io after adding the
-repo). Without it the steps are cleanly skipped rather than failing, and `lcov.info` is still
-uploaded as a build artifact either way - only the publication is optional.
 
 Lint, typecheck and tests are blocking; coverage and its publication are measurement only.
 

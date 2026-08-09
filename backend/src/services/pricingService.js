@@ -40,6 +40,32 @@ export const PLATFORM_FEE_PERCENT = Number(
  */
 export const DEFAULT_CURRENCY = process.env.DEFAULT_CURRENCY ?? 'NGN';
 
+/**
+ * Currencies Paystack can actually charge in.
+ *
+ * This list is a **payment-provider constraint, not a preference**. Events were previously
+ * given a currency derived from their country — United Kingdom → GBP, Germany/France → EUR —
+ * and neither is settleable by Paystack. Any organiser outside the supported set produced an
+ * event whose tickets could never be bought: the charge would be rejected at the gateway,
+ * after the buyer had already committed. Restricting the field at the point of creation turns
+ * a payment-time failure into a form-time one.
+ *
+ * Kept in step with the `Currency` union in `react-paystack`, which is what the browser
+ * checkout accepts; widening one without the other only moves the failure.
+ */
+export const SUPPORTED_CURRENCIES = Object.freeze([
+  'NGN', // Nigerian naira
+  'GHS', // Ghanaian cedi
+  'ZAR', // South African rand
+  'KES', // Kenyan shilling
+  'USD', // US dollar
+  'XOF', // West African CFA franc
+]);
+
+/** Is this a currency the payment provider will settle? */
+export const isSupportedCurrency = (code) =>
+  SUPPORTED_CURRENCIES.includes(String(code).toUpperCase());
+
 /** Paystack (like most processors) works in the currency's minor unit - kobo, cents. */
 export const MINOR_UNITS_PER_MAJOR = 100;
 

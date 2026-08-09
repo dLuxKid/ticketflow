@@ -224,7 +224,7 @@ const EVENTS = [
   },
   // ─── UK events ───────────────────────────────────────────────────────────────
   // A UK participant reading a listing priced in naira is being asked to do two unfamiliar
-  // things at once, and you cannot tell afterwards which one confused them. These carry GBP
+  // things at once, and you cannot tell afterwards which one confused them. These carry USD
   // and West Midlands addresses so the catalogue matches the people testing it.
   //
   // Read the Paystack note on `free` below before choosing which event a buy-ticket task
@@ -232,7 +232,7 @@ const EVENTS = [
   {
     key: 'coventry-free',
     covers:
-      'the UK buy-a-ticket task - free, so it completes end to end regardless of what Paystack test mode does with GBP',
+      'the UK buy-a-ticket task - free, so it completes end to end without depending on which currencies the Paystack test account is enabled for',
     eventName: 'Coventry Student Welcome Fair',
     eventCategory: 'Education',
     eventDescription:
@@ -240,14 +240,14 @@ const EVENTS = [
     startsIn: 4,
     venueName: 'Coventry University Hub',
     location: COVENTRY,
-    currency: 'GBP',
+    currency: 'USD',
     ticketDetails: [
       { ticketName: 'Free entry', ticketPrice: 0, ticketQuantity: 400 },
     ],
   },
   {
     key: 'coventry-paid',
-    covers: 'a realistic GBP-priced listing with a capacity limit',
+    covers: 'a realistic USD-priced listing with a capacity limit',
     eventName: 'Coventry Guest Lecture: Software at Scale',
     eventCategory: 'Technology',
     eventDescription:
@@ -255,7 +255,7 @@ const EVENTS = [
     startsIn: 14,
     venueName: 'Alan Berry Building',
     location: COVENTRY,
-    currency: 'GBP',
+    currency: 'USD',
     venueCapacity: 150,
     ticketDetails: [
       { ticketName: 'Standard', ticketPrice: 12, ticketQuantity: 120 },
@@ -265,7 +265,7 @@ const EVENTS = [
   {
     key: 'birmingham-festival',
     covers:
-      'a larger multi-tier GBP event, with the cheapest tier already gone',
+      'a larger multi-tier USD event, with the cheapest tier already gone',
     eventName: 'Birmingham Jazz Festival',
     eventCategory: 'Music',
     eventDescription:
@@ -273,7 +273,7 @@ const EVENTS = [
     startsIn: 12,
     venueName: 'Symphony Hall',
     location: BIRMINGHAM,
-    currency: 'GBP',
+    currency: 'USD',
     ticketDetails: [
       { ticketName: 'Early bird', ticketPrice: 18, ticketQuantity: 0 },
       { ticketName: 'Standard', ticketPrice: 25, ticketQuantity: 300 },
@@ -292,7 +292,7 @@ const EVENTS = [
     endsIn: 6 / 24,
     venueName: 'ICC Birmingham',
     location: BIRMINGHAM,
-    currency: 'GBP',
+    currency: 'USD',
     accessMode: 'hybrid',
     venueCapacity: 200,
     ticketDetails: [
@@ -343,7 +343,10 @@ const buildEvent = (spec, ownerId) => {
     endTime: end,
     eventLocation: spec.location ?? LAGOS,
     // Stamped onto every booking made for this event (pricingService.priceBuyers), so the
-    // UK events below have to name GBP or their tickets would be sold in naira.
+    // UK events below have to name their own currency or their tickets would be sold in
+    // naira. They use USD rather than GBP: Paystack cannot settle GBP at all, so the Event
+    // schema refuses it (pricingService.SUPPORTED_CURRENCIES) and a GBP event could never
+    // sell a single ticket — the charge is rejected at the gateway after the buyer commits.
     ...(spec.currency ? { currency: spec.currency } : {}),
     venueName: spec.venueName,
     coverImage: COVER,
@@ -559,9 +562,10 @@ const run = async () => {
       '  Scenario 3 duplicate-scan step: scan the FIRST code twice - the second',
       '  attempt must be refused as already admitted.',
       '',
-      '  NOTE on the UK events: Paystack test mode does not settle GBP. Point a',
-      '  buy-a-ticket task at "Coventry Student Welcome Fair" (free, completes end',
-      '  to end) or at a naira event. The paid GBP listings are there to be browsed.',
+      '  NOTE on the UK events: they are priced in USD, not GBP - Paystack cannot',
+      '  settle GBP at all, so a GBP event would be refused at checkout. Point a',
+      '  buy-a-ticket task at the free UK event (completes end to end) or at a naira',
+      '  event; the paid USD listings are there to be browsed.',
       '',
       '  Reset between participants:  npm run seed:usability -- --reset',
       '════════════════════════════════════════════════════════════════',

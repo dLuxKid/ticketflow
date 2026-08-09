@@ -37,13 +37,23 @@ router.get('/my-tickets', bookingController.getMyBookings);
 router.get('/event/:event', bookingController.getBookingsForEvent);
 router.patch('/check-in/:id', bookingController.checkInAttendee);
 
-// ─── Door admission (usher / organiser / admin) ─────────────────────────────────
-// Atomic single-use scan-and-admit for every guest type. Event-level scope (an usher may
-// only admit for their assigned events) is enforced in admissionService.
-router.post(
-  '/scan',
-  authController.restrictTo('usher', 'creator', 'admin'),
-  admissionController.scan,
-);
+// ─── Door admission (organiser / assigned usher / admin) ────────────────────────
+// Atomic single-use scan-and-admit for every guest type.
+//
+// **No role gate here, deliberately.** `admissionService.authorizeScan` is the authority:
+// it admits an admin, the event's own owner, or an usher assigned to that specific event,
+// and refuses everyone else with 403. A `restrictTo('usher','creator','admin')` used to sit
+// in front of it and was actively wrong — **role is not a reliable proxy for ownership**.
+// Signup only ever grants `user` or `creator`, and creating an event does not promote
+// anyone, so an organiser who signed up as a plain `user` owns events they could not scan
+// for: the route rejected them before the ownership rule ran, with a generic "you do not
+// have permission" that named nothing. An admin worked, which made it look like an
+// ownership bug rather than a routing one.
+//
+// The service already documents this exact reasoning and `checkInAttendee` (manual
+// check-in) already relies on it with no role gate; this route was simply left behind.
+// Duplicating an authorisation rule in two places is how they drift apart — and the copy
+// that drifts is always the one nobody tested.
+router.post('/scan', admissionController.scan);
 
 export default router;

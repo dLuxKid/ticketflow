@@ -50,10 +50,19 @@
   /* outline: 1px solid red; */
 }
 
-input,
-select,
-textarea {
-  @apply outline-none text-main-black text-base;
+/* In @layer base so a per-element Tailwind utility can override it.
+
+   Unlayered, this rule beat every `text-*` utility regardless of specificity — layered
+   styles always lose to unlayered ones — so an input placed on a dark surface rendered its
+   text in #2e3244 no matter what class it carried. The Explore Events filters were dark
+   slate on a near-black field: effectively invisible, and no amount of adjusting the
+   utility class could have fixed it. Same trap as the `section` rule below. */
+@layer base {
+  input,
+  select,
+  textarea {
+    @apply outline-none text-main-black text-base;
+  }
 }
 
 input:focus,
@@ -71,8 +80,11 @@ textarea:active {
   }
 }
 
-input::placeholder {
-  @apply text-main-black text-base;
+/* Layered for the same reason: `placeholder:text-*` utilities must be able to win. */
+@layer base {
+  input::placeholder {
+    @apply text-main-black text-base;
+  }
 }
 
 button {

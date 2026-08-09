@@ -41,7 +41,7 @@ export default function SearchDate() {
         selected={startDate}
         placeholderText="Date"
         onChange={(date: Date | null) => handleSearch(date)}
-        className="h-12 w-full bg-transparent pl-10 pr-3 text-main-white placeholder:text-main-white/60 focus:outline-none"
+        className="h-12 w-full bg-transparent pl-10 pr-3 text-main-white placeholder:text-main-white/75 focus:outline-none"
         excludeDates={excludeDates}
       />
       <span className="absolute left-3 bottom-[15px] h-[18px] w-[18px] text-main-white">

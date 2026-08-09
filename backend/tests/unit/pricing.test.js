@@ -6,6 +6,8 @@ import {
   priceBuyers,
   findTier,
   buildSplit,
+  isSupportedCurrency,
+  DEFAULT_CURRENCY,
 } from '../../src/services/pricingService.js';
 
 /**
@@ -146,4 +148,35 @@ test('the split always sends an explicit charge, never relying on percentage_cha
   const split = buildSplit(250_000, 'ACCT_x');
   assert.equal(typeof split.transaction_charge, 'number');
   assert.ok(Object.hasOwn(split, 'transaction_charge'));
+});
+
+// ─── Supported currencies ──────────────────────────────────────────────────────
+
+test('only currencies the payment provider can settle are supported', () => {
+  // The list is a provider constraint, not a preference. Events used to take their currency
+  // from their country — UK → GBP, Germany/France → EUR — and Paystack settles neither, so
+  // those events could never sell a ticket: the charge is rejected at the gateway, after the
+  // buyer has committed.
+  for (const good of ['NGN', 'GHS', 'ZAR', 'KES', 'USD', 'XOF']) {
+    assert.equal(
+      isSupportedCurrency(good),
+      true,
+      `${good} should be supported`,
+    );
+  }
+  for (const bad of ['GBP', 'EUR', 'JPY', 'CAD']) {
+    assert.equal(isSupportedCurrency(bad), false, `${bad} must be refused`);
+  }
+});
+
+test('currency support is case-insensitive', () => {
+  // The schema uppercases on write; this keeps the check agreeing with it.
+  assert.equal(isSupportedCurrency('ngn'), true);
+  assert.equal(isSupportedCurrency('Usd'), true);
+});
+
+test('the default currency is itself supported', () => {
+  // A misconfigured DEFAULT_CURRENCY would otherwise produce events that fail validation
+  // only at save time, with nothing pointing at the environment variable as the cause.
+  assert.equal(isSupportedCurrency(DEFAULT_CURRENCY), true);
 });

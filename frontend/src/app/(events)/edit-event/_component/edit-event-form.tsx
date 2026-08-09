@@ -1164,7 +1164,11 @@ import Select, { SingleValue } from "react-select";
 import { toast } from "sonner";
 import "tippy.js/dist/tippy.css";
 
-import { categories, timzezones } from "@/assets/data/react-select-options";
+import {
+  categories,
+  timzezones,
+  supportedCurrencies,
+} from "@/assets/data/react-select-options";
 import CloseIcon from "@/assets/svg/close-svg";
 import GlobeIcon from "@/assets/svg/globe";
 import { FaPlus } from "react-icons/fa";
@@ -1824,9 +1828,12 @@ export default function EditEventForm({ event }: { event: eventData }) {
                     newEventLocation.country = country.value;
                     newEventLocation.state = "";
 
+                    // Country no longer overwrites the currency on an existing event.
+                    // Doing so silently repriced a published event the moment an organiser
+                    // corrected its location — and could set it to a currency the payment
+                    // provider cannot settle. Currency is its own field below.
                     setEventData((prev) => ({
                       ...prev,
-                      currency: country.currency,
                       eventLocation: newEventLocation,
                     }));
                   }
@@ -1876,6 +1883,38 @@ export default function EditEventForm({ event }: { event: eventData }) {
               value={eventData.eventLocation.postalCode}
               onChange={handleEventLocation}
             />
+          </div>
+
+          <div className="mt-4 max-w-sm">
+            <p className="text-sm font-semibold text-main-black mb-1">
+              Ticket currency
+            </p>
+            <Select
+              styles={categoriesStyles}
+              value={
+                supportedCurrencies.find(
+                  (option) => option.value === eventData.currency
+                ) || null
+              }
+              classNamePrefix="select"
+              options={supportedCurrencies}
+              onChange={(currency: SingleValue<reactSelectOptions>) => {
+                setEventData((prev) => ({
+                  ...prev,
+                  currency: currency?.value as string,
+                }));
+              }}
+              isSearchable={true}
+              name="currency"
+              placeholder="Select currency"
+            />
+            {/* Changing this on a live event repricies it for future buyers only — tickets
+                already sold keep the price and currency stamped at purchase, so past sales
+                are never retroactively re-denominated. */}
+            <p className="text-xs text-main-black/60 mt-1">
+              Applies to tickets sold from now on. Tickets already purchased keep
+              the currency they were bought in.
+            </p>
           </div>
           <label className="bg-transparent rounded-md h-12 w-full px-4 text-main-black flex items-center border border-main-purple mt-4">
             <input

@@ -68,8 +68,33 @@ describe("DigitalTicket", () => {
     ).toBeInTheDocument();
   });
 
-  it("formats the event date as day/month/year rather than an ISO string", () => {
+  it("formats the date exactly as the emailed ticket does", () => {
     render(<DigitalTicket ticketBodyDetails={ticket} />);
-    expect(screen.getByText("12/09/2026")).toBeInTheDocument();
+
+    // Character-for-character the format used by the email template
+    // (backend/src/shared/utils/document.js). A buyer comparing the screen against their
+    // inbox must not find two documents disagreeing about when to turn up — and neither
+    // should ever show a raw ISO string.
+    // Derived with the email's own Intl options rather than hardcoded: ICU renders
+    // September as "Sept" in en-GB on some Node builds and "Sep" on others, and pinning one
+    // spelling would make this fail on a different runtime for no real reason. What matters
+    // is that the component and the email agree.
+    const asEmailFormatsIt = ticket.startDate.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+
+    expect(screen.getByText(asEmailFormatsIt)).toBeInTheDocument();
+    expect(screen.queryByText(/2026-09-12T/)).toBeNull();
+  });
+
+  it("shows the ticket type and the admit-once wording", () => {
+    render(<DigitalTicket ticketBodyDetails={ticket} />);
+
+    // No ticketType on this booking, so the tier falls back rather than rendering blank.
+    expect(screen.getByText("Standard")).toBeInTheDocument();
+    // Single-use is the property the door enforces; the ticket should say so plainly.
+    expect(screen.getByText(/one person once/i)).toBeInTheDocument();
   });
 });

@@ -1,12 +1,14 @@
 # TicketFlow - Product Quality Evaluation (ISO/IEC 25010)
 
-**Document version:** 1.3 · **Verified against:** branch `dev`, 7 August 2026
+**Document version:** 1.4 · **Verified against:** branch `dev`, 9 August 2026
+
+> **Changes since 1.3.** §1 records revenue *scoping* (an organiser's net and the platform's fee are separate questions, and the platform's revenue is the fee alone). §3 Compatibility gains the currency constraint - events could previously be created in currencies the payment provider cannot settle, so their tickets could never be sold. §6 records a fourth class of defect: figures shown to users that no system actually charged.
 
 > **Changes since 1.2.** §9 Safety is downgraded and re-argued: venue-capacity enforcement existed in code but was **silently disabled** by a projection that never loaded the capacity fields, so no real scan was ever limited. It is now genuinely enforced and covered by integration tests. §1 gains revenue reporting.
 
 > **Changes since 1.1.** §6 Security records a third fixed defect - buyer-controlled ticket pricing - and §1 gains the revenue model: a 3% platform fee via Paystack split payments, with organiser payouts settled directly by the provider.
 
-> **Changes since 1.0.** Test coverage is now measured and quoted in §7 (backend 72.61% lines, frontend 2.16%), with the absence of a failing threshold defended as a decision. §9 Safety is rewritten: venue-capacity enforcement at the door now exists, so the characteristic moves from Weak to Moderate and the remaining gap is occupancy *reporting* rather than enforcement. §6 Security gains the fixed signup privilege-escalation defect.
+> **Changes since 1.0.** Test coverage is now measured and quoted in §7 (backend 72.66% lines, frontend 2.16%), with the absence of a failing threshold defended as a decision. §9 Safety is rewritten: venue-capacity enforcement at the door now exists, so the characteristic moves from Weak to Moderate and the remaining gap is occupancy *reporting* rather than enforcement. §6 Security gains the fixed signup privilege-escalation defect.
 
 > **Purpose.** Evaluates TicketFlow against the ISO/IEC 25010 software product quality model, the international standard within the SQuaRE (Systems and software Quality Requirements and Evaluation) series. It supplies the "quality assurance and testing methods **according to international standards**" evidence required by Learning Outcome 3, and the strengths/weaknesses/recommendations depth the Outstanding band expects.
 >
@@ -38,11 +40,11 @@ ISO/IEC 25010 was revised in 2023, superseding the 2011 edition. The characteris
 |---|---|---|---|
 | 1 | Functional Suitability | **Strong** | No formal requirements-to-test traceability matrix |
 | 2 | Performance Efficiency | Moderate | Read paths now measured; write paths and a latency budget still outstanding |
-| 3 | Compatibility | Moderate | No API versioning policy beyond the `/v1` prefix |
+| 3 | Compatibility | Moderate | No API versioning policy beyond the `/v1` prefix; currency now constrained to what the provider settles |
 | 4 | Interaction Capability | **Weak → improving** | Accessibility audit covers 2 components; usability testing not yet run |
 | 5 | Reliability | **Strong** | No uptime/error monitoring in production |
 | 6 | Security | **Strong** | No dependency-vulnerability scanning in CI |
-| 7 | Maintainability | **Strong** | Coverage now measured (backend 72.61% lines); frontend unit coverage is 2.16% |
+| 7 | Maintainability | **Strong** | Coverage now measured (backend 72.66% lines); frontend unit coverage is 2.16% |
 | 8 | Flexibility | Moderate | Images published to GHCR, but no deployment target runs them |
 | 9 | Safety | Moderate | Capacity enforced at the door with an auditable override; no evacuation/occupancy reporting |
 
@@ -57,7 +59,7 @@ The pattern is worth stating plainly in the report: quality attributes that are 
 | Sub-characteristic | Evidence |
 |---|---|
 | Functional completeness | Three distinct event models (`public`, `invite_only`, `hybrid`) served by one schema; full sell→admit loop plus guest management, live dashboard and three analytics features. Feature-to-source index: `technical-documentation.md` §5.1 |
-| Functional correctness | **180 unit tests across 23 files** (no database) plus **15 integration suites** against a real replica set. Correctness under concurrency proved rather than asserted: `admission.scan.test.js` (two simultaneous scans admit once), `inventory.reservation.test.js` (concurrent buyers cannot oversell) |
+| Functional correctness | **187 unit tests across 23 files** (no database) plus **17 integration suites** against a real replica set. Correctness under concurrency proved rather than asserted: `admission.scan.test.js` (two simultaneous scans admit once), `inventory.reservation.test.js` (concurrent buyers cannot oversell) |
 | Functional appropriateness | `accessMode` unification means an organiser running a hybrid event uses one workflow, not two products. The single-guest form (`f113cf2`) was added specifically because CSV-only import did not fit how small events actually work |
 
 **Strength.** Correctness evidence targets the paths where correctness is genuinely hard - money and admission - rather than distributing shallow tests evenly.
@@ -119,6 +121,8 @@ paths once a throwaway database is available.
 | Co-existence | Four containers share one host without interference (`docker-compose.yml`); backend and frontend deploy independently |
 | Interoperability | REST/JSON over `/api/v1`; Paystack webhooks; Cloudinary; SMTP via Nodemailer; guest import accepts both CSV and Excel `.xlsx`; QR codes follow the standard encoding so any reader works |
 
+**Now constrained: currency.** `Event.currency` is restricted by enum to the six currencies Paystack can settle (NGN, GHS, ZAR, KES, USD, XOF). It was previously a free string derived from the event's country, so a UK event was given GBP and a German one EUR — neither settleable. Those events were created, listed and browsed normally, and then failed at the payment gateway *after* the buyer committed. Compatibility with an external provider is not only a matter of protocol: accepting data the provider will later reject is an interoperability defect that surfaces at the worst possible moment.
+
 **Weakness.** The `/v1` prefix exists but no versioning or deprecation policy sits behind it; a breaking change would have no defined migration path for clients.
 
 **Recommendation.** State a versioning policy in the README even if `/v2` never ships - the absence of a policy, not the absence of a version, is the defect.
@@ -179,7 +183,9 @@ A second, subtler instance is worth noting alongside it: the guard preventing de
 
 **A fourth, found while implementing the platform fee.** Ticket price was taken from the request and never checked against the event's tiers; the Paystack amount was computed in the browser; and payment confirmation verified only that a charge *succeeded*, never its value. A modified client could pay ₦1 for a ₦50,000 ticket and receive a valid, scannable ticket, with nothing in the audit trail looking unusual. Price and currency are now stamped from the event, the whole checkout configuration is built server-side, and the charged amount is verified against the stored bookings before tickets are issued.
 
-**The pattern across all four is the evaluative point**, and is worth stating as such rather than listing the defects: each was a place where a rule that exists correctly elsewhere in the system was *absent* rather than *wrong* - and in the fourth case the rule was even documented in this repository ("server-issued identifiers", §4.1 of the technical documentation) while `price` quietly sat outside it. Duplicated authorisation fails silently at whichever endpoint someone forgot, and no amount of care at the other endpoints detects it. That is an argument for centralising the decision - which the architecture already supports and which these fixes now use - over trusting per-endpoint diligence.
+**A fifth, of a different kind — a figure shown to a user that nothing actually charged.** The checkout page inflated every total by a legacy "5% + 100" markup, displaying 5,380 for a 5,000 ticket while the server charged 5,000. Not an access-control failure but a **truthfulness** one, and arguably worse for a payment product: every other defect here required someone to go looking, whereas this one was on screen for every buyer. It also survived the introduction of a *different* fee model, so the page was briefly asserting two contradictory pricing rules at once. Removed; the buyer pays the advertised price.
+
+**The pattern across all four access-control defects is the evaluative point**, and is worth stating as such rather than listing the defects: each was a place where a rule that exists correctly elsewhere in the system was *absent* rather than *wrong* - and in the fourth case the rule was even documented in this repository ("server-issued identifiers", §4.1 of the technical documentation) while `price` quietly sat outside it. Duplicated authorisation fails silently at whichever endpoint someone forgot, and no amount of care at the other endpoints detects it. That is an argument for centralising the decision - which the architecture already supports and which these fixes now use - over trusting per-endpoint diligence.
 
 **Weakness.** No automated dependency-vulnerability scanning; `npm audit` is not in CI. Given ~40 direct frontend dependencies this is a realistic exposure. The client-side route guard decodes but does not verify the JWT signature - correct as a UX layer, but it must be documented as such so no one later mistakes it for a control.
 
@@ -196,11 +202,11 @@ A second, subtler instance is worth noting alongside it: the guard preventing de
 | Analysability | `AuditLog` reconstructs door history; centralised `AppError` and error handler; ESLint 9 + Prettier enforced in CI |
 | Modifiability | The repository layer is the only Mongoose caller, so the persistence library could be replaced without touching business logic |
 | Testability | Services take no `req`/`res` and return plain data, which is precisely why authorisation logic is unit-testable with neither HTTP nor a database - 154 backend unit tests run with no database at all |
-| Test coverage *(measured)* | Backend **72.61% lines / 85.03% branches / 37.92% functions**; frontend **2.16% lines**. Emitted as lcov by `npm run test:coverage` in both packages, archived by CI and published to Coveralls as a parallel build with per-package flags |
+| Test coverage *(measured)* | Backend **72.66% lines / 85.28% branches / 38.15% functions**; frontend **2.16% lines**. Emitted as lcov by `npm run test:coverage` in both packages, archived by CI and published to Codecov under per-package flags (opt-in on a repository secret) |
 
 **Strength.** Testability is a *consequence* of the modularity decision rather than an afterthought - the clearest demonstration in the codebase that architecture choices were made for reasons. The measured figures corroborate it: the layers designed as pure functions are the layers with high branch coverage.
 
-**Weakness.** Frontend unit coverage is **2.16%** - only two components have Vitest specs, with the rest of the UI covered by Playwright end-to-end runs that contribute nothing to a V8 unit-coverage report. Backend function coverage (37.92%) is similarly depressed because controllers, repositories and adapters are reached only by the integration suite, which is excluded from the coverage run. `Booking.status` also declares two unreachable values (`scanned`, `rejected`) - a maintenance trap for the next developer.
+**Weakness.** Frontend unit coverage is **2.16%** - only two components have Vitest specs, with the rest of the UI covered by Playwright end-to-end runs that contribute nothing to a V8 unit-coverage report. Backend function coverage (38.15%) is similarly depressed because controllers, repositories and adapters are reached only by the integration suite, which is excluded from the coverage run. `Booking.status` also declares two unreachable values (`scanned`, `rejected`) - a maintenance trap for the next developer.
 
 **Deliberate omission worth defending.** Neither package declares a **failing coverage threshold**. A minimum set before the baseline is known either sits low enough to assert nothing or breaks the build on day one; in both cases it measures the threshold rather than the code. Publishing the number first and setting a floor under it once it is trusted is the defensible order, and CI marks the coverage step `continue-on-error` to make that stance explicit rather than accidental.
 

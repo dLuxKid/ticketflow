@@ -1,6 +1,6 @@
 # TicketFlow - Technical Documentation
 
-**Document version:** 4.1 · **Repository state:** branch `dev`, working tree ahead of commit `c6f5943` · **Last verified:** 7 August 2026
+**Document version:** 4.2 · **Repository state:** branch `dev`, working tree ahead of commit `c6f5943` · **Last verified:** 9 August 2026
 
 > **Changes since v3.0.** Six areas changed materially:
 >
@@ -220,6 +220,7 @@ erDiagram
         string   eventName
         string   slug
         string   accessMode "public|invite_only|hybrid"
+        string   currency "NGN|GHS|ZAR|KES|USD|XOF"
         object   ticketDetails "embedded ticket subdocs"
         number   totalQuantity "derived pre-save"
         number   venueCapacity "capacity guardrail"
@@ -324,6 +325,9 @@ erDiagram
 | **Admin bootstrap** | `scripts/seed-admin.js` (sets `role: 'admin'` + `isRootAdmin`) |
 | **Platform fee / split payments** | `services/pricingService.js` - `platformFeeMinor`, `buildSplit` |
 | **Revenue reporting (organiser + platform)** | `services/revenueService.js`, `GET /events/revenue/summary` |
+| **Supported currencies** | `services/pricingService.js` - `SUPPORTED_CURRENCIES`, enforced by the `Event.currency` enum |
+| **Daily earnings trend chart** | `revenueService.dailySeries`, `frontend/src/components/ui/earnings-trend.tsx` |
+| **Digital ticket (web), matching the emailed one** | `frontend/src/components/ui/digital-ticket.tsx`, `shared/utils/document.js` |
 | **Server-authoritative pricing** | `services/pricingService.js` - `priceBuyers`, `findTier` |
 | **Organiser payout onboarding** | `services/payoutService.js`, `frontend/src/app/my-profile/payouts/` |
 | Venue capacity guardrail | `services/admissionService.js` - `capacityDecision` |
@@ -452,19 +456,46 @@ Four decisions are worth defending in the report:
 
 `GET /events/revenue/summary` (`revenueService.js`) answers two questions the product could not previously answer at all: *what has this event earned me, net of the platform fee*, and *what has the platform earned across every event*. Before it, the only financial figure anywhere was a per-event "Gross Sales" total on one page, with no concept of the fee and no aggregation - the codebase contained no `aggregate()` call at all.
 
-| Audience | Scope | Shows |
+**The two questions are kept apart, because they have different answers.** An admin is usually also an organiser, so a single merged figure would be wrong for both: `?scope=own` (the default) reports events the caller organises, `?scope=platform` reports the whole platform. The UI presents them as tabs.
+
+| Scope | Audience | The headline figure |
 |---|---|---|
-| Organiser (`creator`) | Their own events | Gross, platform fee, net, tickets sold, transactions |
-| Administrator | **Every** event | The same, plus the organiser's name and the platform's total fee income |
+| `own` | Anyone | **Net** — what the organiser is due after the fee |
+| `platform` | **Admin only** | **The platform fee alone** — TicketFlow's income |
 
-Four decisions worth citing:
+**Reporting gross or net as "platform revenue" would overstate it by more than an order of magnitude**, and the page previously led with those. Gross belongs to the organisers; net is what is paid away to them. Only the fee is the platform's, and on the platform tab it is the emphasised tile with gross and net demoted to context.
 
-1. **Scope is derived from the caller's role inside the service**, never passed in by the request, so there is no parameter an organiser could manipulate to widen it. Covered by tests asserting that one organiser cannot see another's takings.
+Five decisions worth citing:
+
+1. **Scope is authorised inside the service, not on the route.** `platform` is refused with 403 for any non-admin and an unrecognised scope is a 400 rather than a silent default, so no other caller of the service can bypass the check either. Covered by tests asserting that one organiser cannot see another's takings.
 2. **The fee is summed per transaction, not taken as a percentage of the grand total.** `platformFeeMinor` rounds down, so the two differ in general, and Paystack deducts per transaction. A report derived differently from the way the money actually moved produces a statement that never reconciles with the provider's.
 3. **Only confirmed payments count.** Pending holds have not been paid and expired ones never will be; including either would report revenue that does not exist.
 4. **Archived events are included.** Money an archived event took is still money the platform took, so dropping those rows would make the report impossible to reconcile.
+5. **A daily series accompanies the totals**, dated by the booking's `createdAt` — there is no `paidAt` on a booking, and confirmation follows reservation within minutes, so it is the closest honest proxy. Days with no sales are **filled with zeroes rather than omitted**: a line chart that skips empty days silently compresses time and makes a quiet week look like continuous trading. A test asserts the series sums exactly to the totals shown above it, because a chart that disagrees with its own headline is worse than no chart.
 
 **Two limits are stated in the UI rather than hidden.** "Net" is before Paystack's own processing charge - the organiser bears it (`bearer: 'subaccount'`) and TicketFlow never sees it, so reporting it would mean inventing a number. And these figures are what was *instructed and charged*, not what was confirmed *settled*; settlement reconciliation is limitation 9c.
+
+### 5.6.3 What the buyer is charged
+
+The advertised ticket price, with **no booking fee added at checkout** - the platform fee is deducted from the organiser's settlement, not added to the buyer's bill.
+
+This had to be corrected. `calculateFinalPrice` in the frontend grossed the displayed total up by a hardcoded **5% + 100**, so a 5,000 ticket read as 5,380. It was a legacy fee model, and by the time it was found it was wrong twice over: the fee is 3% and comes from the other side of the transaction, and the amount charged is computed server-side from the event's tiers - so the inflated figure was not even what Paystack took. **The page was quoting a price nobody was charging.** The helper is deleted, and the checkout total now shows the plain sum with its currency.
+
+If a buyer-visible booking fee is ever wanted, it must be added on the server where the charge is built, never re-derived in the browser.
+
+### 5.6.4 Currency
+
+Ticket prices are charged in one of the currencies the payment provider can settle:
+
+| | |
+|---|---|
+| Supported | `NGN`, `GHS`, `ZAR`, `KES`, `USD`, `XOF` |
+| Enforced by | `pricingService.SUPPORTED_CURRENCIES`, an `enum` on `Event.currency` |
+| Chosen | explicitly by the organiser at creation and edit |
+
+**This is a provider constraint, not a preference**, and it was previously violated silently. Currency was derived from the event's country - United Kingdom to GBP, Germany/France to EUR - and Paystack settles neither. Such an event was created happily, listed happily, and then rejected the charge *at the gateway, after the buyer had committed*. Restricting the field at the point of creation converts a payment-time failure into a form-time one.
+
+Two supporting decisions: the field is `uppercase` so `ngn` and `NGN` are one currency, and changing the country on an existing event no longer overwrites its currency - doing so silently repriced a published event whenever an organiser corrected its location.
 
 ### 5.7 Administration - bootstrap, role change and soft delete
 
@@ -542,9 +573,9 @@ All routes are mounted under `/api/v1` (`backend/app.js:95–98`): `/events`, `/
 | `POST` | `/create` | Protected | Create event (multipart cover image) |
 | `POST` | `/:eventId/network/guest/request` | **Public** | Email a one-time code to a guest holding a booking on this event |
 | `POST` | `/:eventId/network/guest/verify` | **Public** | Exchange that code for an ordinary session |
-| `GET` | `/my/events` | Protected | Events owned by caller (**all** events when the caller is an admin) |
+| `GET` | `/my/events` | Protected | Events owned by the caller. `?scope=all` widens to every event **for an admin only** — ignored for anyone else |
 | `GET` | `/my/assigned-events` | Protected | Events the caller works as door staff (empty list for everyone else) |
-| `GET` | `/revenue/summary` | Protected | Revenue per event plus totals - own events for an organiser, **all** events for an admin |
+| `GET` | `/revenue/summary?scope=own\|platform` | Protected | Revenue per event plus totals - own events for an organiser, **all** events for an admin |
 | `PATCH` | `/update/:eventId` | Protected † | Edit event |
 | `DELETE` | `/:eventId` | **Admin** | Archive an event (`isActive: false`); bookings, guests, chat and audit rows are kept, assigned ushers are unassigned |
 | `GET` | `/:eventId/dashboard` | Protected † | Live dashboard snapshot |
@@ -687,7 +718,7 @@ Regression cover: `tests/integration/admission.lookup.test.js` (8 tests), verifi
 
 Testing is deliberately split by **what a mock can and cannot prove**. Pure decision logic is unit-tested in isolation; anything whose correctness depends on database concurrency semantics is tested against a **real MongoDB replica set**, because a mocked transaction would falsely validate exactly the code that is hardest to get right.
 
-### 8.2 Backend unit tests - `backend/tests/unit/` (23 files, 180 tests, no database)
+### 8.2 Backend unit tests - `backend/tests/unit/` (23 files, 187 tests, no database)
 
 | File | What it proves |
 |---|---|
@@ -703,7 +734,7 @@ Testing is deliberately split by **what a mock can and cannot prove**. Pure deci
 | `retention.test.js` | GDPR erasure logic |
 | `models.test.js` | Schema validation rules, including conditional `requiredForPurchase` |
 | `role.authz.test.js` | `SIGNUP_ROLES` whitelist, `canChangeRole` and `canDeleteUser` - self-change, non-root admin grant, root-admin demotion and root-admin deletion are all refused |
-| `pricing.test.js` | Fee arithmetic (rounding down, clamping a misconfigured percentage, free tickets), price authority (a client-supplied price and currency are discarded), and that the split always sends an explicit `transaction_charge` |
+| `pricing.test.js` | Fee arithmetic (rounding down, clamping a misconfigured percentage, free tickets), price authority (a client-supplied price and currency are discarded), that the split always sends an explicit `transaction_charge`, and that only currencies the provider can settle are accepted |
 | `payout.test.js` | Bank list narrowing, account-number validation before any network call, Paystack's own error text surfaced, provider failures as 502 not 400, and that the subaccount code never reaches a response |
 | `capacity.test.js` | `capacityDecision` at, under and over capacity, and with an explicit override |
 | `eventLiveness.test.js` | `isLive`, including the single-day event that the previous zero-length window never marked live |
@@ -715,7 +746,7 @@ Testing is deliberately split by **what a mock can and cannot prove**. Pure deci
 | `chatbot.llmProvider.test.js` | OpenAI-primary / Gemini-fallback selection and error handling |
 | `ticketEmail.test.js` | Ticket email renders an inline `cid:` QR rather than a `data:` URI (Gmail strips those) |
 
-### 8.3 Backend integration tests - `backend/tests/integration/` (15 files, replica set required)
+### 8.3 Backend integration tests - `backend/tests/integration/` (17 files, replica set required)
 
 | File | What it proves |
 |---|---|
@@ -733,6 +764,8 @@ Testing is deliberately split by **what a mock can and cannot prove**. Pure deci
 | `revenue.summary.test.js` | Scope (an organiser never sees another's takings; an admin sees all), per-transaction fee arithmetic, and that unpaid reservations are excluded |
 | `admission.lookup.test.js` | Case/hash-insensitive code entry, that the capacity fields are actually selected, that capacity is enforced and overridable, and that an archived event reports as archived rather than as a forgery |
 | `checkout.split.test.js` | The split routes to the organiser's subaccount with the 3% charge; a client-supplied price never reaches the persisted booking; an organiser with no payout account cannot sell; and the `select: false` subaccount code is actually loaded |
+| `coverage.both-sources.test.js` | The live-event notification reaches **both** invited guests and ticket buyers, and no-show prediction scores both - with an invited guest's VIP status and plus-ones reaching the model |
+| `events.scope.test.js` | An admin defaults to their own events, can widen to all, and a non-admin asking to widen still gets only their own |
 | `chatbot.tools.test.js` | Concierge tool calls resolve against real seeded events |
 
 Both concurrency-sensitive money paths - overselling inventory and double-admitting a ticket - are covered by tests that issue genuinely simultaneous operations, which is the specific class of defect a mocked database cannot detect.
@@ -779,8 +812,8 @@ That omission is a decision, not an oversight. A minimum set before the baseline
 
 | Suite | Lines | Branches | Functions |
 |---|---|---|---|
-| Backend (`npm run test:coverage`, unit only) | **72.61%** | **85.03%** | **37.92%** |
-| Frontend (`npm run test:coverage`) | **2.16%** | **15.58%** | **7.08%** |
+| Backend (`npm run test:coverage`, unit only) | **72.66%** | **85.28%** | **38.15%** |
+| Frontend (`npm run test:coverage`) | **2.16%** | **16.56%** | **7.75%** |
 
 The asymmetry is expected and worth stating plainly rather than hiding: the logic that decides money, admission and authorisation is on the backend and is covered by pure-function unit tests, which is why line and branch coverage there are high. Function coverage is lower because the unit run never touches controllers, repositories or the mail/Cloudinary adapters - those are exercised by the integration suite, whose execution is not counted in this figure. The frontend number is low for a structural reason: only two components have Vitest tests, and the rest of the UI is covered by Playwright end-to-end runs, which likewise contribute nothing to a V8 unit-coverage report. The honest reading is that **this table measures unit-level coverage only, and understates total tested behaviour**.
 
@@ -794,19 +827,20 @@ Triggers on **push and pull request to both `main` and `dev`**, on Node 22, as t
 
 | Job | Steps |
 |---|---|
-| **Backend tests** | `npm ci` → **`npm run lint`** → start `mongo:7` with `--replSet rs0` via `docker run` → poll until `rs.status().myState == 1` → `node --test --test-concurrency=1` over the full suite → coverage (`continue-on-error`) → upload `lcov.info` → report to Coveralls → tear down Mongo |
-| **Frontend typecheck & lint** | `npm ci` → `npx tsc --noEmit` → `npm run lint` → `npm run test:coverage` → upload `lcov.info` → report to Coveralls |
-| **Publish combined coverage** | `needs: [backend, frontend]`, `if: always()` → close the parallel Coveralls build |
+| **Backend tests** | `npm ci` → **`npm run lint`** → start `mongo:7` with `--replSet rs0` via `docker run` → poll until `rs.status().myState == 1` → `node --test --test-concurrency=1` over the full suite → coverage (`continue-on-error`) → upload `lcov.info` → report to Codecov (opt-in) → tear down Mongo |
+| **Frontend typecheck & lint** | `npm ci` → `npx tsc --noEmit` → `npm run lint` → `npm run test:coverage` → upload `lcov.info` → report to Codecov (opt-in) |
 | **Publish container images** | `needs: [backend, frontend]`, `main` pushes only → log in to GHCR → build and push `backend` and `frontend` images tagged `latest` and the commit SHA |
 
 Two ordering decisions are deliberate. Lint runs **before** the database is provisioned, since it needs nothing but `node_modules` and a lint failure should not cost the time of spinning up a replica set. And the backend was previously **never linted in CI at all**, which is how 76 errors accumulated unnoticed; adding the step immediately caught a real defect - a route registered against a controller export that did not exist, which would have crashed the server on boot.
 
-**What blocks a merge:** lint, typecheck and tests. **What does not:** coverage, which is measurement only (§8.8), marked `continue-on-error`, uploaded as a build artifact and published to Coveralls.
+**What blocks a merge:** lint, typecheck and tests. **What does not:** coverage, which is measurement only (§8.8), marked `continue-on-error`, uploaded as a build artifact and published to Codecov.
 
-**Why Coveralls rather than Codecov.** Codecov now requires an upload token that only a repository *owner* can issue, which the people working on this repository are not. Coveralls' action authenticates with the workflow's built-in `GITHUB_TOKEN`, so it needs no secret and no owner-level enrolment - any contributor's push publishes coverage. Two implementation details matter and were not obvious:
+**Coverage publishing is opt-in, and that is the design.** Both upload steps are gated on a `CODECOV_TOKEN` repository secret and skipped when it is absent. Publishing coverage is a *report*, never something a build should fail on — so an unconfigured integration has to be **skipped** rather than left permanently red for a condition nobody intends to fix. `lcov.info` is uploaded as a build artifact regardless, so the data is never lost; only its publication is optional. Both steps additionally carry `continue-on-error` and `fail_ci_if_error: false`, so an outage at the provider cannot turn a green test run red.
 
-- **`base-path` is required, not cosmetic.** Both `lcov.info` files address their sources as `src/…` relative to their own package. Uploaded as-is, the backend's `src/` and the frontend's `src/` would merge into one incoherent tree and every file link would break. `base-path: backend` / `base-path: frontend` re-roots them.
-- **The upload is a *parallel* build.** Each job reports with `parallel: true` under its own flag, and a third job with `parallel-finished: true` closes it. Without that, the badge would show whichever job happened to finish last rather than a combined figure.
+Two implementation details matter:
+
+- **Separate flags per package.** `backend` and `frontend` are reported under their own flags. A single merged figure would blend a ~73% backend with a ~2% frontend into a number that describes neither.
+- **Enrolment needs repository-admin rights.** Adding the repo on Codecov and creating the secret are both owner-level actions. The CI wiring is in place and begins working the moment the secret exists, which keeps the pipeline honest in the meantime rather than red.
 
 The README badge therefore reports a **blended** number well below the backend's 73%. That is a real limitation of a single badge over a two-package monorepo, and the per-suite table in §8.8 remains the honest breakdown - the badge evidences that coverage is tracked, not that the code is good.
 
@@ -910,7 +944,7 @@ Identifying weaknesses with proposed remedies is explicitly rewarded by the mark
 | 4 | **Silent invite-email failure** - `guestService.issueInvite` swallows send errors with an empty `catch` and no logging, so a misconfigured mailer is invisible | `guestService.js:136` | Log the failure and surface a "resend invite" affordance on the guest-list UI, mirroring the logging `confirmReservation` already does |
 | 5 | **Misleading module names** - `generatePdf.js` / `pdfTemplate` send HTML email and generate no PDF | §5.6 | Rename to `sendTicketEmail.js` / `ticketEmailTemplate` |
 | 6 | **Frontend unit coverage is very thin - 2.16% of lines** - only two components have Vitest specs, so the coverage report understates real assurance but also reflects a genuine gap in cheap regression cover | §8.8; `digital-ticket.test.tsx` and `scanner.test.tsx` are the only specs | Extend to checkout form validation and the reservation state handling in `usePaystack`, then set a threshold just under the resulting figure |
-| 7 | **Backend function coverage is 37.92%** - high line and branch coverage sits on pure decision functions; controllers, repositories and adapters are only reached by the integration suite, which the figure does not include | §8.8 | Merge integration-run coverage into the same lcov report so the published number reflects the suite that actually exercises those layers |
+| 7 | **Backend function coverage is 38.15%** - high line and branch coverage sits on pure decision functions; controllers, repositories and adapters are only reached by the integration suite, which the figure does not include | §8.8 | Merge integration-run coverage into the same lcov report so the published number reflects the suite that actually exercises those layers |
 | 8 | **Load testing covers reads only** - the recorded figures are for the event list and detail endpoints; the concurrency-critical write paths were never measured under load | `scripts/load-test.sh` §9.1.1 | Extend the harness to `/bookings/create` and `/bookings/scan` reporting p50/p95, which is where contention would actually show |
 | 9 | **No dependency vulnerability scanning** - `npm audit` is not in CI | `.github/workflows/ci.yml` | Add `npm audit --audit-level=high` and enable Dependabot |
 | 9c | **Payouts are not reconciled.** The split is instructed at checkout and Paystack settles it, but nothing reads settlement back: the platform cannot show an organiser what they were actually paid, nor detect a transaction that settled differently from the instruction | `services/payoutService.js` has no settlement read | Consume Paystack's `transfer`/`settlement` webhooks into a ledger, and show organisers a statement per event. Instructed ≠ settled, and only the second is evidence |

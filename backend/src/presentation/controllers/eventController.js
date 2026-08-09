@@ -36,9 +36,12 @@ export const getAllEventsLength = catchAsync(async (req, res) => {
 });
 
 export const getMyEvents = catchAsync(async (req, res) => {
-  // The whole user is passed, not just the id: the service widens the scope to every event
-  // when the caller is an admin.
-  const events = await eventService.getMyEvents(req.user, req.query);
+  // `scope=all` is a request, not an entitlement: the service widens to every event only
+  // for an admin and silently ignores it for anyone else.
+  const { scope, ...queryParams } = req.query;
+  const events = await eventService.getMyEvents(req.user, queryParams, {
+    scope: scope === 'all' ? 'all' : 'own',
+  });
 
   res.status(200).json({
     status: 'success',
@@ -122,7 +125,11 @@ export const getUpcomingEvents = catchAsync(async (req, res) => {
  * route on `admin` would have hidden organisers' own earnings from them.
  */
 export const getRevenueSummary = catchAsync(async (req, res) => {
-  const summary = await revenueService.getRevenueSummary(req.user);
+  // `scope` is a request preference, not an authorisation claim: revenueService refuses
+  // 'platform' for anyone who is not an admin, so asking for it is not the same as getting it.
+  const summary = await revenueService.getRevenueSummary(req.user, {
+    scope: req.query.scope === 'platform' ? 'platform' : 'own',
+  });
 
   res.status(200).json({ status: 'success', data: summary });
 });

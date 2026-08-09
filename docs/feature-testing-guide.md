@@ -1,6 +1,6 @@
 # TicketFlow — Feature List and Testing Guide
 
-**Document version:** 2.0 · **Verified against:** branch `dev`, 7 August 2026
+**Document version:** 2.1 · **Verified against:** branch `dev`, 9 August 2026
 
 > **Purpose.** Every feature the application actually has, and step-by-step instructions to
 > exercise each one by hand. Written to be used two ways: as a demo script (Task 1.2 asks for
@@ -116,6 +116,7 @@ Network → edit and replay the signup request, or `curl`). The account is creat
 | 2.7 | Edit event | `/edit-event/:id` |
 | 2.8 | Discovery: browse, search, filter, trending, upcoming | `/explore-events` |
 | 2.9 | Location fields: Country → **State/County** → City → Postcode | Step 1 |
+| 2.10 | **Ticket currency**, chosen explicitly | Step 1 |
 
 ### How to test
 
@@ -147,6 +148,12 @@ purchase.
 **2.8** On `/explore-events`: search by name, filter by category, and check the **Trending**
 and **Upcoming** carousels on the home page return real events.
 
+**2.10 — currency.** The **Ticket currency** dropdown offers only currencies the payment
+provider can settle: **NGN, GHS, ZAR, KES, USD, XOF**. Picking a country *suggests* one but
+does not lock it — a UK event charging in USD is valid and, in fact, necessary: **GBP and EUR
+are absent because Paystack cannot settle them**. Confirm the field is also on the edit form,
+and that changing an event's country afterwards does **not** silently change its currency.
+
 **2.9** Choose **United Kingdom** → the *State/County* dropdown offers **West Midlands** among
 other counties. The field is labelled *State/County*, not *State*, because "state" is
 meaningless for a UK address. City remains a free-text field.
@@ -166,6 +173,7 @@ meaningless for a UK address. City remains a free-text field.
 | 3.7 | **Server-authoritative pricing** | — |
 | 3.8 | Free events skip payment entirely | — |
 | 3.9 | My Tickets, with a downloadable QR ticket | Profile → Tickets |
+| 3.10 | **Checkout total equals the ticket price** — no booking fee added | Checkout |
 
 Test card: **`4084 0840 8408 4081`**, any future expiry, CVV **`408`**.
 
@@ -205,6 +213,12 @@ booking is confirmed inline and the ticket emails immediately.
 **3.9** Profile → Tickets → open a ticket. The QR renders on screen and can be downloaded as
 an image for printing.
 
+**3.10 — the total must be the truth.** Put a ₦5,000 ticket in the basket. The checkout page
+must show **₦5,000**, with its currency, and say no booking fee is added. Then confirm the
+Paystack popup asks for the same figure. This previously displayed ₦5,380 — a legacy "5% +
+₦100" markup — while the server charged ₦5,000, so the page quoted a price nobody was
+charging.
+
 ---
 
 ## 4. Money: platform fee and payouts
@@ -217,6 +231,8 @@ an image for printing.
 | 4.4 | **Paid events refuse to sell without a payout account** | — |
 | 4.5 | Organiser revenue: gross / fee / net per event and in total | Profile → Revenue |
 | 4.6 | Admin sees platform-wide revenue and fee income | Profile → Revenue |
+| 4.7 | **Platform revenue is the 3% fee alone**, not gross or net | Profile → Revenue |
+| 4.8 | **Daily earnings trend** with a table view | Profile → Revenue |
 
 ### How to test
 
@@ -238,6 +254,18 @@ invisibly.
 **4.5** Profile → **Revenue** as the organiser. Each event shows tickets sold, **gross**,
 **platform fee** and **net**, with totals. Confirm that an **unpaid/abandoned** reservation
 does *not* appear in the figures — only confirmed payments count.
+
+**4.7 — the number that matters.** On the admin's **Platform** tab, the emphasised figure is
+**Platform revenue = the total 3% fees**, not gross sales and not what organisers were paid.
+Check the arithmetic yourself on one event: 3% of its gross should equal the fee column, and
+gross should equal fee + net. Reporting gross or net here would overstate TicketFlow's income
+by more than an order of magnitude.
+
+**4.8 — the trend.** Below the tiles, a daily line chart plots *your net* on the My events tab
+and *platform fee income* on the Platform tab. Hover any day for its exact figure, and open
+**View as table** — the chart is never the only route to the numbers. Days with no sales
+appear as zero rather than being skipped, so a quiet week does not masquerade as continuous
+trading.
 
 **4.6** Profile → **Revenue** as the **admin**. The heading changes to *Platform revenue*, an
 **Organiser** column appears, and every event on the platform is listed — with "Platform fee"
@@ -368,6 +396,7 @@ It anonymises guests for events past their retention window and is safe to re-ru
 | 7.4 | FAQ / general site help | — |
 | 7.5 | Graceful degradation with no API key | Canned reply, never an error |
 | 7.6 | Rate limited independently of the rest of the API | 20/hour by default |
+| 7.7 | **One question returns everything** — details *and* weather *and* safety | Single tool call |
 
 ### How to test
 
@@ -401,6 +430,16 @@ anything → a fixed, polite reply. **Never** a 500. Restore the keys afterwards
 
 **7.6** Send more than 20 messages in an hour → rate-limited, while the rest of the site keeps
 working. The chat endpoint carries its own limiter because model calls cost money.
+
+**7.7 — a complete answer in one reply.** Ask simply *"tell me about &lt;your event&gt;"* —
+not about the weather. The reply should still cover the venue and tickets **and** the forecast
+for the day **and** the practical safety notes. If the event finishes at 21:00 or later, it
+must say so and pass on the advice about arranging a route home in advance.
+
+This needed fixing: the loop runs exactly **one** tool call, so a model that answered by
+fetching event details could never then reach the weather tool — the reply came back with
+venue and prices and nothing about arriving or leaving. Details now carry the conditions with
+them, and fail soft: if Open-Meteo is unreachable you still get the event, with a note.
 
 > **Precision for the report:** this is the **only** feature that calls an external model.
 > Anomaly detection (§8.3) is rule thresholds, no-show prediction (§8.4) is a local trained
@@ -515,6 +554,7 @@ Run it twice — it re-sends rather than silently skipping, which is intentional
 | 10.3 | Deactivate a user (soft) | Admin → Users |
 | 10.4 | Archive an event (soft, reversible) | My Events |
 | 10.5 | Platform-wide revenue | Profile → Revenue |
+| 10.6 | **My events / All events tabs** | My Events |
 
 ### How to test
 
@@ -540,14 +580,21 @@ the root admin.
 
 **10.5** See §4.6.
 
+**10.6 — scoping.** As an admin open **Events** (the profile dropdown says *Events* rather
+than *My events* for you, because the page is not limited to yours). It **defaults to your
+own** events; switch to **All events** for the whole platform, and watch the heading and
+count change with it. Previously an admin only ever got every event, with their own buried
+among them and the heading "Events you created" plainly wrong. Then confirm the boundary: as
+a non-admin, adding `?scope=all` to the request does **not** widen the list.
+
 ---
 
 ## 11. Quality engineering
 
 | # | Feature | Command |
 |---|---|---|
-| 11.1 | 180 backend unit tests, no database needed | `npm run test:unit` |
-| 11.2 | 15 integration suites against a real replica set | `MONGO_TEST_URI=… npm test` |
+| 11.1 | 187 backend unit tests, no database needed | `npm run test:unit` |
+| 11.2 | 17 integration suites against a real replica set | `MONGO_TEST_URI=… npm test` |
 | 11.3 | Frontend component tests | `npm run test` (frontend) |
 | 11.4 | Playwright end-to-end | `npm run test:e2e` |
 | 11.5 | Coverage, measured but not gated | `npm run test:coverage` |
@@ -560,7 +607,7 @@ the root admin.
 **11.1–11.4** Run each command and confirm it passes. Unit tests need no database; integration
 tests **skip cleanly** if `MONGO_TEST_URI` is unset rather than failing.
 
-**11.5** `npm run test:coverage` in each package. Backend ≈ **72.6% lines / 85.0% branches**;
+**11.5** `npm run test:coverage` in each package. Backend ≈ **72.66% lines / 85.28% branches**;
 frontend ≈ **2.2%**, which is low because the UI is covered by Playwright instead — state that
 honestly rather than quoting the badge.
 

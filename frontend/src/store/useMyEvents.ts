@@ -3,14 +3,27 @@ import { getCookie } from "cookies-next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 
-export const useMyEvents = (query?: string | null) => {
+/**
+ * The caller's events. `scope` is only meaningful for an admin: the server ignores "all"
+ * for anyone else rather than honouring it, so a non-admin cannot widen their view by
+ * editing the query string.
+ */
+export const useMyEvents = (
+  query?: string | null,
+  scope: "own" | "all" = "own",
+) => {
   const jwt = getCookie("jwt");
 
   return useQuery({
-    queryKey: ["events", query],
+    queryKey: ["events", query, scope],
     queryFn: async () => {
-      let url = API_URLS.events.myEvents;
-      if (query) url = `${API_URLS.events.myEvents}?eventName=${query}`;
+      const params = new URLSearchParams();
+      if (query) params.set("eventName", query);
+      if (scope === "all") params.set("scope", "all");
+      const qs = params.toString();
+      const url = qs
+        ? `${API_URLS.events.myEvents}?${qs}`
+        : API_URLS.events.myEvents;
 
       const res = await axios.get(url, {
         headers: {

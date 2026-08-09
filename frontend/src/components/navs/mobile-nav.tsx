@@ -15,6 +15,9 @@ import Button from "../ui/cta-btn";
 
 type UserData = {
   photo?: string;
+  // Needed to label the events link: an admin's list spans the whole platform, so it is
+  // "Events" for them and "My events" for everyone else.
+  role?: string;
 } | null;
 
 type NavProps = {
@@ -177,7 +180,12 @@ export default function MobileNav({ data }: NavProps) {
                           shown links that middleware bounced to /login. */}
                       {(
                         [
-                          ["/my-events", "My events"],
+                          [
+                            "/my-events",
+                            // Same reasoning as the desktop menu: an admin's list spans the
+                            // whole platform, not only what they organise.
+                            data.data.user.role === "admin" ? "Events" : "My events",
+                          ],
                           ["/my-profile/tickets", "My tickets"],
                         ] as [string, string][]
                       ).map(([href, label]) => (

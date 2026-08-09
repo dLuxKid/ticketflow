@@ -24,6 +24,7 @@ if (skipReason) {
 
   let aliceEventId;
   let bobEventId;
+  let adminEventId;
 
   const paidBooking = (eventId, reference, price) =>
     Booking.create({
@@ -85,12 +86,26 @@ if (skipReason) {
     });
 
     await paidBooking(bobEventId, 444444, 20000);
+
+    // The admin also organises. Their OWN revenue and the PLATFORM's revenue are different
+    // questions with different answers, which is the whole point of `scope`.
+    const adminEvent = await Event.create(
+      buildEvent({
+        eventName: 'Admin Own Event',
+        user: admin._id,
+        currency: 'NGN',
+      }),
+    );
+    adminEventId = adminEvent._id;
+    await paidBooking(adminEventId, 555555, 8000);
   });
 
   after(async () => {
     await Promise.all([
       Event.deleteMany({
-        eventName: { $in: ['Alice Revenue Event', 'Bob Revenue Event'] },
+        eventName: {
+          $in: ['Alice Revenue Event', 'Bob Revenue Event', 'Admin Own Event'],
+        },
       }),
       Booking.deleteMany({ email: 'revenue@example.com' }),
     ]);
@@ -140,7 +155,9 @@ if (skipReason) {
   });
 
   test('an admin sees every event on the platform', async () => {
-    const summary = await revenueService.getRevenueSummary(admin);
+    const summary = await revenueService.getRevenueSummary(admin, {
+      scope: 'platform',
+    });
 
     assert.equal(summary.scope, 'platform');
     const names = summary.events.map((e) => e.eventName);
@@ -149,7 +166,9 @@ if (skipReason) {
   });
 
   test("the admin total is the platform's fee income across all events", async () => {
-    const summary = await revenueService.getRevenueSummary(admin);
+    const summary = await revenueService.getRevenueSummary(admin, {
+      scope: 'platform',
+    });
 
     const alicePart = summary.events.find(
       (e) => e.eventName === 'Alice Revenue Event',
@@ -183,6 +202,90 @@ if (skipReason) {
     assert.deepEqual(summary.events, []);
     assert.equal(summary.totals.grossMinor, 0);
   });
-}
 
-const toMinor = (n) => Math.round(n * 100);
+  const toMinor = (n) => Math.round(n * 100);
+
+  // ─── Scope: platform revenue is the FEE, not the gross or the net ────────────
+
+  test('platform revenue is the platform fee alone', async () => {
+    const summary = await revenueService.getRevenueSummary(admin, {
+      scope: 'platform',
+    });
+
+    // The distinction this whole feature exists for. Gross belongs to organisers; net is
+    // what is paid away to them. Only the fee is TicketFlow's income, and reporting either
+    // of the others as platform revenue overstates it by more than an order of magnitude.
+    assert.equal(
+      summary.totals.platformFeeMinor,
+      summary.events.reduce((s, e) => s + e.platformFeeMinor, 0),
+    );
+    assert.ok(
+      summary.totals.platformFeeMinor < summary.totals.netMinor,
+      'the fee must be far smaller than what organisers are paid',
+    );
+    assert.ok(
+      summary.totals.grossMinor >
+        summary.totals.platformFeeMinor + summary.totals.netMinor - 1,
+      'gross must reconcile as fee + net',
+    );
+  });
+
+  test("an admin's own scope excludes other organisers' events", async () => {
+    const own = await revenueService.getRevenueSummary(admin, { scope: 'own' });
+    const names = own.events.map((e) => e.eventName);
+
+    assert.equal(own.scope, 'own');
+    assert.ok(names.includes('Admin Own Event'));
+    assert.ok(!names.includes('Alice Revenue Event'));
+    assert.ok(!names.includes('Bob Revenue Event'));
+  });
+
+  test('a non-admin cannot request platform scope', async () => {
+    // Enforced in the service, not the route, so no other caller can bypass it.
+    await assert.rejects(
+      () => revenueService.getRevenueSummary(alice, { scope: 'platform' }),
+      (err) => err.statusCode === 403,
+    );
+  });
+
+  test('an unknown scope is refused rather than silently defaulted', async () => {
+    await assert.rejects(
+      () => revenueService.getRevenueSummary(admin, { scope: 'everything' }),
+      (err) => err.statusCode === 400,
+    );
+  });
+
+  // ─── Daily series ─────────────────────────────────────────────────────────────
+
+  test('the daily series reconciles with the totals', async () => {
+    const summary = await revenueService.getRevenueSummary(admin, {
+      scope: 'platform',
+    });
+
+    const seriesGross = summary.series.reduce((s, d) => s + d.grossMinor, 0);
+    const seriesFee = summary.series.reduce(
+      (s, d) => s + d.platformFeeMinor,
+      0,
+    );
+
+    // A chart that disagrees with the headline figure above it is worse than no chart.
+    assert.equal(seriesGross, summary.totals.grossMinor);
+    assert.equal(seriesFee, summary.totals.platformFeeMinor);
+  });
+
+  test('days with no sales are present as zeroes, not skipped', async () => {
+    const summary = await revenueService.getRevenueSummary(admin, {
+      scope: 'platform',
+    });
+
+    // Omitting empty days silently compresses time and makes a quiet week look like
+    // continuous trading. Every date between the first and last sale must appear.
+    const dates = summary.series.map((d) => d.date);
+    assert.deepEqual(dates, [...dates].sort(), 'series must be chronological');
+
+    for (let i = 1; i < dates.length; i += 1) {
+      const gap = (new Date(dates[i]) - new Date(dates[i - 1])) / 86_400_000;
+      assert.equal(gap, 1, `gap between ${dates[i - 1]} and ${dates[i]}`);
+    }
+  });
+}

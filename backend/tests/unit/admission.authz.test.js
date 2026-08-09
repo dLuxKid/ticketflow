@@ -73,3 +73,36 @@ test('rejectionReasonForStatus maps status to an audit reason', () => {
   assert.equal(rejectionReasonForStatus('revoked'), 'revoked');
   assert.equal(rejectionReasonForStatus('issued'), 'not_admittable');
 });
+
+// ─── Ownership is independent of role ──────────────────────────────────────────
+
+test('an owner whose role is plain "user" can still scan their own event', () => {
+  // The real-world case this protects. Signup grants only `user` or `creator`, and creating
+  // an event does not promote anyone — so an organiser who signed up as a plain user owns
+  // events they must still be able to work the door for. A `restrictTo('usher','creator',
+  // 'admin')` on the scan route used to reject them before this rule ever ran, with a
+  // generic "you do not have permission"; an admin worked, which made it look like an
+  // ownership bug rather than a routing one.
+  const ownerId = oid();
+  const event = { _id: oid(), user: ownerId };
+
+  assert.deepEqual(authorizeScan({ _id: ownerId, role: 'user' }, event), {
+    ok: true,
+  });
+});
+
+test('an owner with no role at all can still scan their own event', () => {
+  const ownerId = oid();
+  const event = { _id: oid(), user: ownerId };
+  assert.equal(authorizeScan({ _id: ownerId }, event).ok, true);
+});
+
+test('a plain user who owns nothing still cannot scan', () => {
+  // Removing the route's role gate must not open the endpoint up: this rule is now the
+  // only thing standing in front of it.
+  const event = { _id: oid(), user: oid() };
+  const result = authorizeScan({ _id: oid(), role: 'user' }, event);
+
+  assert.equal(result.ok, false);
+  assert.equal(result.httpStatus, 403);
+});

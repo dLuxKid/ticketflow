@@ -12,12 +12,38 @@ export const timzezones: reactSelectOptions[] = [
   { value: "WET", label: "WET (Western European Time)" },
 ];
 
+/**
+ * Currencies the payment provider can actually settle.
+ *
+ * Mirrors `SUPPORTED_CURRENCIES` in the backend's `pricingService`, which is the authority —
+ * the Event schema rejects anything outside it. Keep the two in step: widening one alone
+ * only moves the failure from the form to the payment gateway.
+ */
+export const supportedCurrencies = [
+  { label: "NGN — Nigerian naira", value: "NGN" },
+  { label: "GHS — Ghanaian cedi", value: "GHS" },
+  { label: "ZAR — South African rand", value: "ZAR" },
+  { label: "KES — Kenyan shilling", value: "KES" },
+  { label: "USD — US dollar", value: "USD" },
+  { label: "XOF — West African CFA franc", value: "XOF" },
+];
+
+/**
+ * `currency` here is only a **suggested default** for the country, not a constraint — the
+ * organiser picks the currency explicitly and may charge in any supported one regardless of
+ * where the event is held. A UK event charging in USD is perfectly reasonable, and was
+ * previously impossible: the country mapping forced GBP, which Paystack cannot settle, so
+ * those events silently could not sell a single ticket.
+ */
 export const hardcodedCountries = [
-  { label: "United Kingdom", value: "United Kingdom", id: "GB", currency: "GBP" },
+  { label: "United Kingdom", value: "United Kingdom", id: "GB", currency: "USD" },
   { label: "United States", value: "United States", id: "US", currency: "USD" },
   { label: "Nigeria", value: "Nigeria", id: "NG", currency: "NGN" },
-  { label: "Germany", value: "Germany", id: "DE", currency: "EUR" },
-  { label: "France", value: "France", id: "FR", currency: "EUR" },
+  { label: "Ghana", value: "Ghana", id: "GH", currency: "GHS" },
+  { label: "Kenya", value: "Kenya", id: "KE", currency: "KES" },
+  { label: "South Africa", value: "South Africa", id: "ZA", currency: "ZAR" },
+  { label: "Germany", value: "Germany", id: "DE", currency: "USD" },
+  { label: "France", value: "France", id: "FR", currency: "USD" },
 ];
 
 export const hardcodedStates: Record<string, reactSelectOptions[]> = {
@@ -35,6 +61,21 @@ export const hardcodedStates: Record<string, reactSelectOptions[]> = {
     { label: "London", value: "London" },
     { label: "Manchester", value: "Manchester" },
     { label: "Birmingham", value: "Birmingham" },
+  ],
+  Ghana: [
+    { label: "Greater Accra", value: "Greater Accra" },
+    { label: "Ashanti", value: "Ashanti" },
+    { label: "Western", value: "Western" },
+  ],
+  Kenya: [
+    { label: "Nairobi", value: "Nairobi" },
+    { label: "Mombasa", value: "Mombasa" },
+    { label: "Kisumu", value: "Kisumu" },
+  ],
+  "South Africa": [
+    { label: "Gauteng", value: "Gauteng" },
+    { label: "Western Cape", value: "Western Cape" },
+    { label: "KwaZulu-Natal", value: "KwaZulu-Natal" },
   ],
   "United States": [
     { label: "New York", value: "New York" },

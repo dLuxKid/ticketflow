@@ -39,11 +39,29 @@ export const getAllEventsCount = async () => {
  *
  * @param {object} user - req.user (role decides the scope)
  */
-export const getMyEvents = (user, queryParams) =>
-  eventRepository.findByUserWithFeatures(
-    user?.role === 'admin' ? null : (user?.id ?? user?._id),
+/**
+ * The caller's events.
+ *
+ * An admin used to get *every* event here unconditionally, which left them no way to see
+ * only the ones they organise themselves — their own events were buried among everyone
+ * else's, and "Events you created" was plainly the wrong heading for that list. `scope` now
+ * makes the choice explicit, defaulting to `own` so the answer matches the question the
+ * page is asking. Only an admin may widen it; for anyone else the parameter is ignored
+ * rather than honoured, so it cannot be used to read another organiser's events.
+ *
+ * @param {object} user - req.user
+ * @param {object} queryParams - filtering/sorting passthrough
+ * @param {{scope?: 'own'|'all'}} [options]
+ */
+export const getMyEvents = (user, queryParams, { scope = 'own' } = {}) => {
+  const isAdmin = user?.role === 'admin';
+  const wantsAll = isAdmin && scope === 'all';
+
+  return eventRepository.findByUserWithFeatures(
+    wantsAll ? null : (user?.id ?? user?._id),
     queryParams,
   );
+};
 
 /**
  * Events the caller works as door staff.

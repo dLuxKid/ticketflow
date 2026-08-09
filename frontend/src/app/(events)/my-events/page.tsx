@@ -36,7 +36,12 @@ function MyEventContent() {
   const searchParams = useSearchParams();
   const query = searchParams.get("query") || undefined;
 
-  const { data: events, isLoading, error } = useMyEvents(query);
+  // Admin-only scope switch. An admin is usually also an organiser, so "all events" must
+  // not be the only view available to them — their own events were previously buried among
+  // everyone else's with no way to narrow the list.
+  const [scope, setScope] = useState<"own" | "all">("own");
+
+  const { data: events, isLoading, error } = useMyEvents(query, scope);
   const { data: assigned } = useAssignedEvents();
   const { data: me } = useUser();
 
@@ -99,12 +104,12 @@ function MyEventContent() {
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-main-black md:text-3xl">
-                {isAdmin ? "All events" : "Your events"}
+                {isAdmin && scope === "all" ? "All events" : "Your events"}
               </h1>
               <p className="mt-1 text-sm text-sec-black/65">
                 {isLoading
                   ? "Loading your events…"
-                  : isAdmin
+                  : isAdmin && scope === "all"
                     ? `${total} ${total === 1 ? "event" : "events"} across the platform`
                     : `${total} ${total === 1 ? "event" : "events"} created`}
               </p>
@@ -129,6 +134,35 @@ function MyEventContent() {
               Create event
             </Link>
           </div>
+
+          {isAdmin && (
+            <div
+              role="group"
+              aria-label="Which events to show"
+              className="mt-6 flex w-fit gap-1 rounded-full bg-main-grey-bg p-1"
+            >
+              {(
+                [
+                  ["own", "My events"],
+                  ["all", "All events"],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={scope === value}
+                  onClick={() => setScope(value)}
+                  className={`rounded-full px-5 py-1.5 text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-main-purple/40 ${
+                    scope === value
+                      ? "bg-main-white text-main-purple shadow-sm"
+                      : "text-sec-black/70 hover:text-main-black"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
 
           <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
             <div
@@ -192,7 +226,7 @@ function MyEventContent() {
 
           {assignedEvents.length > 0 && (
             <h2 className="mb-4 text-lg font-bold text-main-black">
-              {isAdmin ? "All events" : "Events you created"}
+              {isAdmin && scope === "all" ? "All events" : "Events you created"}
             </h2>
           )}
 

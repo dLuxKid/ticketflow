@@ -7,6 +7,7 @@ import {
   geocode,
   getDailyForecast,
   __setFetchForTesting,
+  SAFETY_DISCLAIMER,
 } from '../../src/services/weatherService.js';
 
 /**
@@ -158,4 +159,51 @@ test('with no forecast and no dress code, advice says so instead of inventing on
   const { dressCode } = buildAdvice({ forecast: null, event: {} });
   assert.equal(dressCode.length, 1);
   assert.match(dressCode[0], /No dress code was set/i);
+});
+
+// ─── Late-finishing events ─────────────────────────────────────────────────────
+
+test('an event finishing late carries a get-home-safely note', () => {
+  // The most useful safety signal available, and genuinely knowable from the data — unlike
+  // any claim about the neighbourhood. Someone deciding whether to book needs it beforehand.
+  const lateNight = new Date('2026-09-01T23:30:00Z');
+  const { safety } = buildAdvice({
+    forecast: null,
+    event: { endTime: lateNight },
+  });
+
+  assert.ok(
+    safety.some((s) => /runs late|route home/i.test(s)),
+    'a 23:30 finish should warn about getting home',
+  );
+});
+
+test('an event finishing in the small hours also warns', () => {
+  const afterMidnight = new Date('2026-09-02T02:00:00Z');
+  const { safety } = buildAdvice({
+    forecast: null,
+    event: { endTime: afterMidnight },
+  });
+  assert.ok(safety.some((s) => /runs late|route home/i.test(s)));
+});
+
+test('an afternoon event does not warn about running late', () => {
+  // The warning has to stay meaningful: attaching it to a 3pm finish would train people to
+  // ignore it on the events where it matters.
+  const afternoon = new Date('2026-09-01T15:00:00Z');
+  const { safety } = buildAdvice({
+    forecast: null,
+    event: { endTime: afternoon },
+  });
+
+  assert.equal(
+    safety.some((s) => /runs late|route home/i.test(s)),
+    false,
+  );
+});
+
+test('safety advice always carries the not-a-crime-rating disclaimer alongside it', () => {
+  // The disclaimer is a separate constant returned with every conditions payload; this pins
+  // that it exists and says what it must, so it cannot be quietly dropped.
+  assert.match(SAFETY_DISCLAIMER, /not a crime|neighbourhood/i);
 });

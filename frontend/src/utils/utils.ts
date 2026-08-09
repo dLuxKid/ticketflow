@@ -121,9 +121,17 @@ export const generatePagination = (currentPage: number, totalPages: number) => {
   ];
 };
 
-export function calculateFinalPrice(ticketPrice: number) {
-  const combinedFee = 0.05 + 100 / ticketPrice;
-  const finalPrice = ticketPrice / (1 - combinedFee);
-
-  return Math.ceil(finalPrice / 10) * 10;
-}
+/**
+ * REMOVED: `calculateFinalPrice`.
+ *
+ * It grossed a ticket price up by a hardcoded "5% + 100" markup and rounded to the nearest
+ * 10, so the checkout page displayed ₦5,380 for a ₦5,000 ticket. That was a legacy fee model
+ * from before the platform fee existed, and by the time it was found it was wrong twice over:
+ * the fee is now 3%, and it is deducted from the organiser's settlement rather than added to
+ * the buyer's bill (see `pricingService` on the backend). The amount charged is computed
+ * server-side from the event's own tiers, so this figure was not even the one Paystack took —
+ * the page quoted a price nobody was charging.
+ *
+ * The buyer pays the advertised ticket price. If a buyer-visible booking fee is ever wanted,
+ * it must be added on the server where the charge is built, not re-derived in the browser.
+ */

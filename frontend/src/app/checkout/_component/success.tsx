@@ -60,15 +60,32 @@ export default function Success({ bookings, event }: Props) {
     if (showTickets) return downloadTickets();
   }, [showTickets]);
 
+  // The wrapper below is the page's grey background, not a white card. The tickets are
+  // white, so a white container flattened them into one shape — and the perforation notches
+  // are drawn in the background colour, so they only read as torn edges against grey.
   if (showTickets)
     return (
-      <div className="relative flex-center p-[5%]">
-        <div className="bg-main-white rounded-[1.25rem] p-4 w-full flex-center gap-6 flex-wrap">
-          {bookings.map((booking, i) => (
-            <div className="ticket" key={i}>
-              <DigitalTicket ticketBodyDetails={{ ...booking, ...event }} />
-            </div>
-          ))}
+      <div className="relative px-[5%] py-10">
+        <div className="mx-auto max-w-screen-xl">
+          <header className="mb-8 text-center">
+            <h1 className="text-2xl font-bold text-main-black md:text-3xl">
+              {bookings.length > 1
+                ? `Your ${bookings.length} tickets`
+                : "Your ticket"}
+            </h1>
+            <p className="mt-2 text-sm text-sec-black/70">
+              A copy has been emailed to you. Show the QR code at the door — each
+              ticket admits one person once.
+            </p>
+          </header>
+
+          <div className="flex flex-wrap items-start justify-center gap-8">
+            {bookings.map((booking, i) => (
+              <div className="ticket" key={i}>
+                <DigitalTicket ticketBodyDetails={{ ...booking, ...event }} />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );

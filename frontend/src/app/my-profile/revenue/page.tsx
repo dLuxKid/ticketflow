@@ -1,15 +1,23 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
+
+import EarningsTrend from "@/components/ui/earnings-trend";
 import { useRevenue, type RevenueRow } from "@/store/useRevenue";
+import { useUser } from "@/store/useUser";
 
 /**
- * Revenue report - per event and in total, net of the platform fee.
+ * Revenue reporting.
  *
- * One page serves both audiences because the underlying question is the same ("what has
- * been earned, and what was deducted"); only the scope differs, and the server decides that
- * from the caller's role. An admin sees every event and the platform's fee income; an
- * organiser sees their own events and what they are due.
+ * **The distinction this page exists to make.** An organiser's revenue is the *net* after
+ * the platform fee. The platform's revenue is the **fee alone** — not the gross (which
+ * belongs to organisers) and not the net (which is paid away to them). Reporting either of
+ * those as platform income overstates it by more than an order of magnitude.
+ *
+ * An admin is usually also an organiser, so the two are separate tabs rather than one merged
+ * figure: "My events" answers *what am I owed*, "Platform" answers *what did TicketFlow
+ * earn*. Non-admins only ever see the first, and the server enforces that independently.
  */
 
 const money = (minor: number, currency: string) =>
@@ -48,7 +56,11 @@ function Stat({
 }
 
 export default function RevenuePage() {
-  const { data, isLoading, error } = useRevenue();
+  const { data: me } = useUser();
+  const isAdmin = me?.data?.user?.role === "admin";
+
+  const [scope, setScope] = useState<"own" | "platform">("own");
+  const { data, isLoading, error } = useRevenue(scope);
 
   if (isLoading)
     return <p className="body-text text-sec-black/70">Loading revenue…</p>;
@@ -63,57 +75,127 @@ export default function RevenuePage() {
   if (!data) return null;
 
   const isPlatform = data.scope === "platform";
-  // Reports mixing currencies cannot be summed into one figure honestly. Where every event
-  // shares a currency the totals are shown in it; otherwise the per-event rows still carry
-  // their own and the total is labelled as mixed rather than quietly wrong.
+
+  // Totals across mixed currencies cannot honestly be summed into one figure. Where every
+  // event shares a currency the totals use it; otherwise they are labelled "Mixed" and the
+  // per-event rows keep their own, rather than quietly adding naira to dollars.
   const currencies = new Set(data.events.map((e) => e.currency || "NGN"));
   const single = currencies.size <= 1 ? [...currencies][0] || "NGN" : null;
+  const fmt = (minor: number) => (single ? money(minor, single) : "Mixed");
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <header>
-        <h1 className="sub-title-text text-main-black">
-          {isPlatform ? "Platform revenue" : "Your revenue"}
-        </h1>
+        <h1 className="sub-title-text text-main-black">Revenue</h1>
         <p className="body-text mt-1 text-sec-black/70">
           {isPlatform
-            ? "Every event on the platform, with the fee income TicketFlow earned."
+            ? "What TicketFlow earned in platform fees across every event."
             : "What your events have taken, and what you are due after the platform fee."}
         </p>
       </header>
 
+      {isAdmin && (
+        <div
+          role="group"
+          aria-label="Revenue scope"
+          className="flex w-fit gap-1 rounded-full bg-main-grey-bg p-1"
+        >
+          {(
+            [
+              ["own", "My events"],
+              ["platform", "Platform"],
+            ] as const
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={scope === value}
+              onClick={() => setScope(value)}
+              className={`rounded-full px-5 py-1.5 text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-main-purple/40 ${
+                scope === value
+                  ? "bg-main-white text-main-purple shadow-sm"
+                  : "text-sec-black/70 hover:text-main-black"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* The headline figure changes with the scope, because the question does. On the
+          platform tab the fee leads and is the emphasised tile; gross and "paid to
+          organisers" are context, not income. */}
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat
-          label="Gross sales"
-          value={single ? money(data.totals.grossMinor, single) : "Mixed"}
-          hint={`${data.totals.transactions} transaction(s)`}
-        />
-        <Stat
-          label="Platform fee"
-          value={single ? money(data.totals.platformFeeMinor, single) : "Mixed"}
-          hint={isPlatform ? "TicketFlow's income" : "Deducted from your sales"}
-          emphasis={isPlatform}
-        />
-        <Stat
-          label={isPlatform ? "Paid to organisers" : "Your net"}
-          value={single ? money(data.totals.netMinor, single) : "Mixed"}
-          hint="Before the payment provider's own charge"
-          emphasis={!isPlatform}
-        />
-        <Stat
-          label="Tickets sold"
-          value={String(data.totals.ticketsSold)}
-          hint={`${data.totals.eventsWithSales} of ${data.totals.events} event(s) with sales`}
-        />
+        {isPlatform ? (
+          <>
+            <Stat
+              label="Platform revenue"
+              value={fmt(data.totals.platformFeeMinor)}
+              hint="Total earned from platform fees"
+              emphasis
+            />
+            <Stat
+              label="Ticket sales processed"
+              value={fmt(data.totals.grossMinor)}
+              hint={`${data.totals.transactions} transaction(s)`}
+            />
+            <Stat
+              label="Paid to organisers"
+              value={fmt(data.totals.netMinor)}
+              hint="Settled directly by Paystack"
+            />
+            <Stat
+              label="Tickets sold"
+              value={String(data.totals.ticketsSold)}
+              hint={`across ${data.totals.eventsWithSales} event(s) with sales`}
+            />
+          </>
+        ) : (
+          <>
+            <Stat
+              label="Your earnings"
+              value={fmt(data.totals.netMinor)}
+              hint="After the platform fee"
+              emphasis
+            />
+            <Stat
+              label="Gross sales"
+              value={fmt(data.totals.grossMinor)}
+              hint={`${data.totals.transactions} transaction(s)`}
+            />
+            <Stat
+              label="Platform fee"
+              value={fmt(data.totals.platformFeeMinor)}
+              hint="Deducted from your sales"
+            />
+            <Stat
+              label="Tickets sold"
+              value={String(data.totals.ticketsSold)}
+              hint={`across ${data.totals.eventsWithSales} of ${data.totals.events} event(s)`}
+            />
+          </>
+        )}
       </section>
 
-      {/* Stated rather than left for the reader to discover: the organiser bears Paystack's
-          processing charge, which this system never sees, so "net" here is provider-gross. */}
+      <EarningsTrend
+        points={data.series}
+        metric={isPlatform ? "platformFeeMinor" : "netMinor"}
+        title={isPlatform ? "Platform fee income" : "Your daily earnings"}
+        subtitle={
+          isPlatform
+            ? "Fees earned per day, from confirmed payments"
+            : "Net of the platform fee, per day, from confirmed payments"
+        }
+        currency={single ?? "NGN"}
+      />
+
       <p className="rounded-big border border-main-light-grey/70 bg-main-grey-bg p-4 text-sm text-sec-black/70">
-        Figures cover <strong>confirmed payments only</strong> - reservations that were never
-        paid are excluded. The platform fee is calculated per transaction. Amounts shown as
-        net are before the payment provider&apos;s own processing charge, which is deducted
-        by Paystack at settlement and is not visible to TicketFlow.
+        Figures cover <strong>confirmed payments only</strong> — reservations that
+        were never paid are excluded. The platform fee is calculated per
+        transaction. Amounts shown as net are before the payment provider&apos;s
+        own processing charge, which Paystack deducts at settlement and TicketFlow
+        never sees.
       </p>
 
       <section>
@@ -121,21 +203,35 @@ export default function RevenuePage() {
 
         {data.events.length === 0 ? (
           <p className="body-text text-sec-black/70">
-            No events yet - revenue appears here once tickets are sold.
+            {isPlatform
+              ? "No events on the platform yet."
+              : "No events yet — revenue appears here once tickets are sold."}
           </p>
         ) : (
           <div className="overflow-x-auto rounded-big border border-main-light-grey/70">
             <table className="w-full min-w-[46rem] text-left text-sm">
               <thead className="bg-main-grey-bg text-xs uppercase tracking-wider text-sec-black/70">
                 <tr>
-                  <th scope="col" className="px-4 py-3">Event</th>
+                  <th scope="col" className="px-4 py-3">
+                    Event
+                  </th>
                   {isPlatform && (
-                    <th scope="col" className="px-4 py-3">Organiser</th>
+                    <th scope="col" className="px-4 py-3">
+                      Organiser
+                    </th>
                   )}
-                  <th scope="col" className="px-4 py-3 text-right">Sold</th>
-                  <th scope="col" className="px-4 py-3 text-right">Gross</th>
-                  <th scope="col" className="px-4 py-3 text-right">Fee</th>
-                  <th scope="col" className="px-4 py-3 text-right">Net</th>
+                  <th scope="col" className="px-4 py-3 text-right">
+                    Sold
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-right">
+                    Gross
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-right">
+                    {isPlatform ? "Our fee" : "Fee"}
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-right">
+                    {isPlatform ? "To organiser" : "Your net"}
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-main-light-grey/60 bg-main-white">
@@ -151,7 +247,7 @@ export default function RevenuePage() {
                     </td>
                     {isPlatform && (
                       <td className="px-4 py-3 text-sec-black/70">
-                        {row.organiser ?? "-"}
+                        {row.organiser ?? "—"}
                       </td>
                     )}
                     <td className="px-4 py-3 text-right tabular-nums">
@@ -160,10 +256,22 @@ export default function RevenuePage() {
                     <td className="px-4 py-3 text-right tabular-nums">
                       {money(row.grossMinor, row.currency)}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-sec-black/70">
+                    <td
+                      className={`px-4 py-3 text-right tabular-nums ${
+                        isPlatform
+                          ? "font-semibold text-main-black"
+                          : "text-sec-black/70"
+                      }`}
+                    >
                       {money(row.platformFeeMinor, row.currency)}
                     </td>
-                    <td className="px-4 py-3 text-right font-semibold tabular-nums text-main-black">
+                    <td
+                      className={`px-4 py-3 text-right tabular-nums ${
+                        isPlatform
+                          ? "text-sec-black/70"
+                          : "font-semibold text-main-black"
+                      }`}
+                    >
                       {money(row.netMinor, row.currency)}
                     </td>
                   </tr>

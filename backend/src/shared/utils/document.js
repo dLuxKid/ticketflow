@@ -71,7 +71,25 @@ const pdfTemplate = async (t) => {
 
           <!-- Header band -->
           <tr>
-            <td style="background-color:#6c5ce7;padding:28px 28px 22px 28px;" align="center">
+            <!--
+              Glitter on the header band.
+
+              Delivered as a CSS gradient layered over the SAME background-color, never
+              instead of it: Outlook's Word rendering engine ignores background-image
+              entirely, and several clients strip it. Every one of them still applies the
+              background-color, so the worst case is the plain purple band that was there
+              before — the decoration degrades to nothing rather than to a white box with
+              unreadable white text.
+
+              A background *image* would have been the other option, but it would need
+              hosting or a second inline attachment, and Gmail's proxy re-encodes remote
+              images — a cost that is not worth paying for sparkle.
+            -->
+            <td
+              style="background-color:#6c5ce7;background-image:radial-gradient(circle at 12% 22%, rgba(255,255,255,0.55) 0 1px, transparent 2px),radial-gradient(circle at 27% 68%, rgba(255,255,255,0.40) 0 1px, transparent 2px),radial-gradient(circle at 41% 14%, rgba(255,255,255,0.30) 0 2px, transparent 3px),radial-gradient(circle at 58% 82%, rgba(255,255,255,0.45) 0 1px, transparent 2px),radial-gradient(circle at 73% 30%, rgba(255,255,255,0.50) 0 1px, transparent 2px),radial-gradient(circle at 86% 62%, rgba(255,255,255,0.35) 0 1px, transparent 2px),radial-gradient(circle at 94% 18%, rgba(255,255,255,0.45) 0 1px, transparent 2px),radial-gradient(circle at 19% 90%, rgba(255,255,255,0.28) 0 2px, transparent 3px),radial-gradient(ellipse at 20% -10%, rgba(255,255,255,0.18), transparent 60%);padding:28px 28px 22px 28px;"
+              bgcolor="#6c5ce7"
+              align="center"
+            >
               <p style="margin:0 0 6px 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:bold;letter-spacing:3px;text-transform:uppercase;color:#ffffff;opacity:0.75;">
                 ${eventCategory || 'Event'} &bull; TicketFlow
               </p>

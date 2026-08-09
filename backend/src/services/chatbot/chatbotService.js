@@ -22,11 +22,19 @@ event by its slug, check the weather and practical advice for an event, and answ
 frequently asked questions about how TicketFlow works (payment, refunds, missing tickets,
 etc).
 
-If the user names an event, search for it first, then use its slug with the detail tools.
+If the user names an event, call get_event_details with that name directly - you do not
+need to search first.
+
+When you describe an event, give a COMPLETE picture in one reply, not a bare listing. Cover
+what it is, when and where, what tickets cost, and then what the 'conditions' field returns:
+the weather forecast for the day, what to wear, and the practical safety notes. If those
+notes say the event finishes late, say so explicitly and pass on the advice about arranging
+a route home in advance - someone deciding whether to attend needs that before they book,
+not after.
 
 For anything about weather, temperature, what to wear, dress code, parking, accessibility,
-age limits, or whether an event is safe to attend, you MUST call get_event_conditions and
-answer only from what it returns. Never guess a forecast, a dress code, or parking
+age limits, or whether an event is safe to attend, answer only from the 'conditions' returned
+by get_event_details (or get_event_conditions, which returns the same thing on its own). Never guess a forecast, a dress code, or parking
 arrangements - if the tool says no forecast is available, say exactly that. When you pass on
 safety notes, present them as practical attendance advice; never imply they are a crime or
 neighbourhood-safety rating, because TicketFlow has no such data.
@@ -55,7 +63,7 @@ export const TOOLS = [
   {
     name: 'get_event_details',
     description:
-      'Get venue, dates, ticket tiers/prices, dress code, parking, accessibility and refund policy for one specific event. Give its name directly - you do not need to search first.',
+      'Everything known about one specific event: venue, dates and times, ticket tiers and prices, dress code, parking, accessibility, age limit, refund policy, AND the weather forecast for the day plus practical attendance and safety notes. Use this for any general question about an event. Give its name directly - you do not need to search first.',
     parameters: {
       type: 'object',
       properties: {
@@ -125,12 +133,34 @@ const executeTool = async (name, args = {}) => {
     }
     case 'get_event_details': {
       const event = await resolveEvent(args);
+
+      // Conditions are folded into the details response rather than left to a second tool.
+      // The loop runs exactly ONE function-calling round, so a model that answered "tell me
+      // about X" by calling get_event_details could never then reach get_event_conditions —
+      // the reply came back with venue and prices but no forecast, and no safety note about
+      // an event finishing at 2am. Asking about an event should surface everything known
+      // about attending it, which is what a person means by the question.
+      //
+      // Fail-soft: the forecast is a third-party call, and Open-Meteo being unreachable must
+      // not turn "tell me about this event" into an error. The factual half is local data and
+      // always available.
+      let conditions = null;
+      try {
+        conditions = await getEventConditions(event);
+      } catch (err) {
+        conditions = {
+          note: `Weather and attendance advice are unavailable right now (${err.message}).`,
+        };
+      }
+
       return {
         name: event.eventName,
         description: event.eventDescription,
         venue: event.eventLocation,
         startDate: event.startDate,
         endDate: event.endDate,
+        startTime: event.startTime,
+        endTime: event.endTime,
         accessMode: event.accessMode,
         refundPolicy: event.refundPolicy,
         venueName: event.venueName,
@@ -143,6 +173,7 @@ const executeTool = async (name, args = {}) => {
           price: t.ticketPrice,
           available: t.ticketQuantity,
         })),
+        conditions,
       };
     }
     case 'get_event_conditions': {

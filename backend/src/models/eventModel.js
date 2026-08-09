@@ -1,5 +1,9 @@
 import mongoose from 'mongoose';
 import slugify from 'slugify';
+import {
+  SUPPORTED_CURRENCIES,
+  DEFAULT_CURRENCY,
+} from '../services/pricingService.js';
 
 // True when the event sells tickets (public/hybrid) - used to make sales-date fields
 // required only for those, since an invite_only event has no ticket sales at all.
@@ -73,7 +77,20 @@ const eventSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Event must have a description'],
     },
-    currency: String,
+    // Constrained to what Paystack can settle. Previously a free String derived from the
+    // event's country, which let an organiser create a GBP or EUR event whose tickets could
+    // never actually be bought — the charge is rejected at the gateway, after the buyer has
+    // committed. `uppercase` normalises input so 'ngn' and 'NGN' are the same currency.
+    currency: {
+      type: String,
+      uppercase: true,
+      trim: true,
+      enum: {
+        values: SUPPORTED_CURRENCIES,
+        message: 'Payments cannot be taken in {VALUE}',
+      },
+      default: DEFAULT_CURRENCY,
+    },
     eventLocation: {
       type: {
         address: {

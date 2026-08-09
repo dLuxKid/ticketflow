@@ -221,7 +221,10 @@ export default function DeskopNav({ data }: NavProps) {
                       [
                         [
                           "/my-events",
-                          "My events",
+                          // An admin's list is not limited to events they organise - the page
+                          // carries a My events / All events switch - so "My events" would be
+                          // an understatement of what is behind the link.
+                          data.data.user.role === "admin" ? "Events" : "My events",
                           "M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z",
                         ],
                         [

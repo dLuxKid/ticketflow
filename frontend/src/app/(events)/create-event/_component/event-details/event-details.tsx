@@ -3,7 +3,11 @@ import { subDays } from "date-fns";
 import ReactDatePicker from "react-datepicker";
 import Select, { SingleValue } from "react-select";
 
-import { categories, timzezones } from "@/assets/data/react-select-options";
+import {
+  categories,
+  timzezones,
+  supportedCurrencies,
+} from "@/assets/data/react-select-options";
 
 import Button from "@/components/ui/submit-btn";
 
@@ -475,6 +479,40 @@ export function EventDetails({
             value={eventData.eventLocation.postalCode}
             onChange={handleEventLocation}
           />
+        </div>
+
+        {/* Currency is chosen explicitly rather than inferred from the country. It used to be
+            derived from the country alone, which forced GBP for a UK event and EUR for a
+            German one — neither of which the payment provider can settle, so those events
+            could never sell a ticket. Selecting the country still *suggests* a currency, but
+            the organiser decides. */}
+        <div className="mt-4 max-w-sm">
+          <p className="text-sm font-semibold text-main-black mb-1">
+            Ticket currency
+          </p>
+          <Select
+            styles={categoriesStyles}
+            value={
+              supportedCurrencies.find(
+                (option) => option.value === eventData.currency,
+              ) || null
+            }
+            classNamePrefix="select"
+            options={supportedCurrencies}
+            onChange={(currency: SingleValue<reactSelectOptions>) => {
+              setEventData((prev) => ({
+                ...prev,
+                currency: currency?.value as string,
+              }));
+            }}
+            isSearchable={true}
+            name="currency"
+            placeholder="Select currency"
+          />
+          <p className="text-xs text-main-black/60 mt-1">
+            All ticket prices for this event are charged in this currency. Only
+            currencies the payment provider can settle are listed.
+          </p>
         </div>
         <label className="bg-sec-grey rounded-md h-12 w-full px-4 text-main-black flex items-center border border-main-purple mt-4">
           <input
