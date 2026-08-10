@@ -6,6 +6,8 @@
  *
  * Conventions, matching the notation used in the report:
  *   - stick figures are actors; a solid line is an actor association (no arrowhead)
+ *   - association lines are COLOURED BY ACTOR, so a bundle can be traced across the page
+ *     without following it back to its origin by eye
  *   - ellipses are use cases, grouped into the subsystem that owns them
  *   - dashed arrows are <<include>> / <<extend>> dependencies, labelled
  *   - human actors sit on the left, external systems on the right, so every association
@@ -41,6 +43,16 @@ digraph TicketFlowUseCases {
     margin    = "0.12,0.055",
   ];
 
+  /* Actor colours. Four hues, not six, and that is a measured limit rather than a
+     preference: this layout puts any two lines next to each other somewhere on the page, so
+     the palette has to survive an all-pairs check, and six hues fail it. Blue, orange,
+     violet and aqua pass every gate (lightness band, chroma floor, colour-vision separation
+     and normal-vision separation) at four slots.
+
+     Door staff and Root admin therefore stay neutral grey. Between them they have three
+     associations, so they need no disambiguating, and greying them is the emphasis pattern:
+     colour the traffic that needs tracing, leave the rest quiet. Colour is a navigation aid
+     here, never the encoding. Every line still ends at a named stick figure. */
   edge [
     color     = "#3b3b3b",
     penwidth  = 0.9,
@@ -185,53 +197,53 @@ digraph TicketFlowUseCases {
 
   /* ── Actor associations (solid, no arrowhead) ─────────────────────────────── */
 
-  edge [dir = none, style = solid];
+  edge [dir = none, style = solid, penwidth = 1.9];
 
-  VISITOR -> UC_BROWSE;
-  VISITOR -> UC_VIEW;
-  VISITOR -> UC_SIGNUP;
-  VISITOR -> UC_RESET;
-  VISITOR -> UC_BUY;
-  VISITOR -> UC_OTP;
-  VISITOR -> UC_ASK;
+  VISITOR -> UC_BROWSE [color = "#2a78d6"];
+  VISITOR -> UC_VIEW [color = "#2a78d6"];
+  VISITOR -> UC_SIGNUP [color = "#2a78d6"];
+  VISITOR -> UC_RESET [color = "#2a78d6"];
+  VISITOR -> UC_BUY [color = "#2a78d6"];
+  VISITOR -> UC_OTP [color = "#2a78d6"];
+  VISITOR -> UC_ASK [color = "#2a78d6"];
 
-  ATTENDEE -> UC_VIEW;
-  ATTENDEE -> UC_BUY;
-  ATTENDEE -> UC_MYTIX;
-  ATTENDEE -> UC_PROFILE;
-  ATTENDEE -> UC_DELME;
-  ATTENDEE -> UC_JOIN;
-  ATTENDEE -> UC_OPTIN;
-  ATTENDEE -> UC_CHAT;
-  ATTENDEE -> UC_DM;
-  ATTENDEE -> UC_ASK;
+  ATTENDEE -> UC_VIEW [color = "#eb6834"];
+  ATTENDEE -> UC_BUY [color = "#eb6834"];
+  ATTENDEE -> UC_MYTIX [color = "#eb6834"];
+  ATTENDEE -> UC_PROFILE [color = "#eb6834"];
+  ATTENDEE -> UC_DELME [color = "#eb6834"];
+  ATTENDEE -> UC_JOIN [color = "#eb6834"];
+  ATTENDEE -> UC_OPTIN [color = "#eb6834"];
+  ATTENDEE -> UC_CHAT [color = "#eb6834"];
+  ATTENDEE -> UC_DM [color = "#eb6834"];
+  ATTENDEE -> UC_ASK [color = "#eb6834"];
 
-  ORG -> UC_CREATE;
-  ORG -> UC_UPDATE;
-  ORG -> UC_MYEV;
-  ORG -> UC_CURR;
-  ORG -> UC_PAYOUT;
-  ORG -> UC_REV;
-  ORG -> UC_STAFF;
-  ORG -> UC_IMPORT;
-  ORG -> UC_GLIST;
-  ORG -> UC_LIVE;
-  ORG -> UC_SCAN;
-  ORG -> UC_MANUAL;
-  ORG -> UC_ERASE;
+  ORG -> UC_CREATE [color = "#4a3aa7"];
+  ORG -> UC_UPDATE [color = "#4a3aa7"];
+  ORG -> UC_MYEV [color = "#4a3aa7"];
+  ORG -> UC_CURR [color = "#4a3aa7"];
+  ORG -> UC_PAYOUT [color = "#4a3aa7"];
+  ORG -> UC_REV [color = "#4a3aa7"];
+  ORG -> UC_STAFF [color = "#4a3aa7"];
+  ORG -> UC_IMPORT [color = "#4a3aa7"];
+  ORG -> UC_GLIST [color = "#4a3aa7"];
+  ORG -> UC_LIVE [color = "#4a3aa7"];
+  ORG -> UC_SCAN [color = "#4a3aa7"];
+  ORG -> UC_MANUAL [color = "#4a3aa7"];
+  ORG -> UC_ERASE [color = "#4a3aa7"];
 
   USHER -> UC_SCAN;
   USHER -> UC_MANUAL;
 
-  ADMIN -> UC_USERS;
-  ADMIN -> UC_DEACT;
-  ADMIN -> UC_ARCH;
-  ADMIN -> UC_PLAT;
-  ADMIN -> UC_GLIST;
-  ADMIN -> UC_LIVE;
-  ADMIN -> UC_STAFF;
-  ADMIN -> UC_SCAN;
-  ADMIN -> UC_ERASE;
+  ADMIN -> UC_USERS [color = "#1baf7a"];
+  ADMIN -> UC_DEACT [color = "#1baf7a"];
+  ADMIN -> UC_ARCH [color = "#1baf7a"];
+  ADMIN -> UC_PLAT [color = "#1baf7a"];
+  ADMIN -> UC_GLIST [color = "#1baf7a"];
+  ADMIN -> UC_LIVE [color = "#1baf7a"];
+  ADMIN -> UC_STAFF [color = "#1baf7a"];
+  ADMIN -> UC_SCAN [color = "#1baf7a"];
+  ADMIN -> UC_ERASE [color = "#1baf7a"];
 
   ROOT -> UC_ROLE;
 
@@ -291,6 +303,23 @@ digraph TicketFlowUseCases {
   UC_DEACT  -> UC_USERS   [label = "extends"];
   UC_CURR   -> UC_CREATE  [label = "extends"];
   UC_CURR   -> UC_UPDATE  [label = "extends"];
+
+  /* A legend is present because colour carries meaning here. Without it the reader has to
+     infer the mapping from the lines themselves, which is exactly the work the colour was
+     added to save. */
+  subgraph cluster_legend {
+    label = "ACTOR COLOUR KEY";
+    bgcolor = "#f4f4f6";
+    LEGEND [shape = plaintext, fillcolor = "none", color = "none", label = <
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="2" CELLPADDING="3">
+        <TR><TD BGCOLOR="#2a78d6" WIDTH="26"> </TD><TD ALIGN="LEFT">Visitor</TD></TR>
+        <TR><TD BGCOLOR="#eb6834" WIDTH="26"> </TD><TD ALIGN="LEFT">Attendee</TD></TR>
+        <TR><TD BGCOLOR="#4a3aa7" WIDTH="26"> </TD><TD ALIGN="LEFT">Event Organiser</TD></TR>
+        <TR><TD BGCOLOR="#1baf7a" WIDTH="26"> </TD><TD ALIGN="LEFT">Admin User</TD></TR>
+        <TR><TD BGCOLOR="#3b3b3b" WIDTH="26"> </TD><TD ALIGN="LEFT">Door Staff, Root Admin</TD></TR>
+        <TR><TD BGCOLOR="#8a8a8a" WIDTH="26"> </TD><TD ALIGN="LEFT">includes / extends</TD></TR>
+      </TABLE>>];
+  }
 
   /* The rule this diagram is most often read for: only invite-only and hybrid events
      have a guest list at all, so every use case in that cluster is conditional on the
