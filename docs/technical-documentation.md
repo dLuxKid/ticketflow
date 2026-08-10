@@ -221,7 +221,9 @@ erDiagram
         string   email UK
         string   role "user|creator|admin|usher"
         boolean  isRootAdmin "select:false, bootstrap admin"
+        string   photo "Cloudinary URL"
         ObjectId assignedEvents "array, usher scope"
+        object   payout "subaccountCode select:false, masked bank detail"
         string   password "bcrypt, select:false"
         boolean  isActive "soft delete"
     }
@@ -352,35 +354,7 @@ erDiagram
 
 Checkout is a three-phase flow. The ordering is the design point: seats are held **before** the buyer reaches Paystack, so a charge can never exist without a booking behind it.
 
-```mermaid
-sequenceDiagram
-    participant B as Buyer
-    participant F as Frontend
-    participant A as API
-    participant P as Paystack
-
-    B->>F: Continue to checkout
-    F->>A: POST /bookings/create
-    Note over A: reserveBooking - transaction:<br/>reserve inventory + insert bookings<br/>status pending, 15-min hold<br/>server issues reference + ticketId
-    A-->>F: { reference, bookings, requiresPayment }
-    alt Free event
-        Note over A: confirmed inline - no charge to wait for
-    else Paid event
-        F->>P: open checkout with server reference
-        P-->>F: success callback
-        F->>A: POST /bookings/confirm { reference }
-        A->>P: verifyTransaction(reference)
-        P-->>A: charge status
-        Note over A: confirmReservation - guarded update,<br/>emails tickets exactly once
-        P->>A: webhook (retried, idempotent)
-    end
-```
-
-<!-- Rendered image. Regenerate with: node docs/diagrams/render.mjs -->
-![technical-documentation diagram 3](diagrams/mermaid/technical-documentation-3.png)
-
-*[Full-resolution SVG](diagrams/mermaid/technical-documentation-3.svg)*
-
+> **Diagram:** see the purchase sequence in [`architecture-diagram.md` §5](architecture-diagram.md). It is drawn once, there, so the two documents cannot describe different flows.
 
 **Why it was restructured.** The earlier flow charged the buyer first and only then asked the API to create the booking. A closed tab, a dropped connection, or a tier selling out between payment and callback left a buyer charged with no ticket; and because inventory was decremented only after payment, two buyers could both pay for the last seat.
 
@@ -883,7 +857,9 @@ Two decisions are documented inline in the workflow and are worth citing:
 
 ### 9.2 Local orchestration - `docker-compose.yml`
 
-Four services: `mongo` (`mongo:7`, started with `--replSet rs0`), `mongo-init` (one-shot `rs.initiate()` gated on a healthcheck), `backend`, and `frontend`. Detailed usage is in `docs/docker.md`.
+Four services: `mongo` (`mongo:7`, started with `--replSet rs0`), `mongo-init` (one-shot `rs.initiate()` gated on a healthcheck), `backend`, and `frontend`.
+
+To run it: copy `backend/.env.docker.example` to `backend/.env.docker`, fill in `JWT_SECRET`, the `GMAIL_*` mail credentials, the `CLOUDINARY_*` upload credentials and `PAYSTACK_SECRET_KEY`, then `docker compose up --build`. `backend/.env.docker` is gitignored and must never be committed with real values. The compose file and Dockerfiles are provided here; installing and running Docker itself is the operator's job and was not exercised as part of authoring them.
 
 ### 9.3 Reproducing the system
 

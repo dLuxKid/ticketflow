@@ -505,7 +505,6 @@ cp backend/.env.docker.example backend/.env.docker   # fill in real values
 docker compose up --build                            # frontend :3000, backend :4000, mongo replica set
 ```
 
-See `docs/docker.md` for details.
 
 ---
 
@@ -525,6 +524,3 @@ See `docs/docker.md` for details.
 | [`docs/market-analysis.md`](docs/market-analysis.md)            | Competitor comparison, pricing position and barriers                |
 | [`docs/agile-sprint-plan.md`](docs/agile-sprint-plan.md)        | Sprints, backlog and per-member contribution                        |
 | [`docs/accessibility.md`](docs/accessibility.md)                | WCAG pass (scope + findings)                                        |
-| [`docs/docker.md`](docs/docker.md)                              | Container stack                                                     |
-| [`docs/phase-0-changes-and-tests.md`](docs/phase-0-changes-and-tests.md) | Change log & test plan                                     |
-| [`docs/innovation-ideas.md`](docs/innovation-ideas.md)          | Feature ideas for the assessment                                    |

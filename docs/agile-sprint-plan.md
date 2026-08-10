@@ -245,7 +245,7 @@ Name these explicitly in the report - the marking criteria assess them by catego
 ### Requirements
 - **User stories** in role–goal–benefit form, every one with acceptance criteria
 - **INVEST** applied at refinement to keep stories independent and testable
-- **MoSCoW** prioritisation - Must (E1–E4), Should (E5–E6), Could (E7), Won't-this-time (offline PWA scanner, waitlist, facial check-in - recorded in `innovation-ideas.md` as an explicitly deferred scope decision)
+- **MoSCoW** prioritisation - Must (E1–E4), Should (E5–E6), Could (E7), Won't-this-time (offline PWA scanner, waitlist, facial check-in, deferred as an explicit scope decision and recorded in the sprint review minutes)
 - **Backlog refinement** each sprint, mid-sprint
 - **Definition of Ready** gate before commitment
 

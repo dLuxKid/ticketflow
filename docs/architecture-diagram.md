@@ -136,20 +136,9 @@ redirect/UX convenience only. Every real authorisation decision is server-side
 
 ## 2. Layering and the dependency rule
 
-```mermaid
-graph LR
-    A["Presentation<br/>routes · controllers"] --> B["Services<br/>business rules · authorisation"]
-    B --> C["Repositories<br/>query encapsulation"]
-    C --> D["Models<br/>Mongoose schemas + indexes"]
-    B -.-> E["Shared<br/>utils · middleware · errors"]
-    A -.-> E
-```
-
-<!-- Rendered image. Regenerate with: node docs/diagrams/render.mjs -->
-![architecture-diagram diagram 2](diagrams/mermaid/architecture-diagram-2.png)
-
-*[Full-resolution SVG](diagrams/mermaid/architecture-diagram-2.svg)*
-
+> **Diagram:** see the package diagram in
+> [`design-models.md` §4](design-models.md), which draws the same layering in more detail.
+> It is kept in one place so the two cannot drift apart.
 
 Dependencies point one way. Controllers never touch models directly; services never touch
 `req`/`res`. Authorisation lives in the service layer - `canViewDashboard` is reused by the
@@ -165,80 +154,25 @@ disagreeing - they previously carried separate copies written in opposite direct
 returned different answers for an event with no `accessMode`. The frontend is free to hide a
 control, but it is never the thing that decides.
 
+
 ## 3. Booking status state machine
 
+> **Diagram:** see [`design-models.md` §1.1](design-models.md), which models the same
+> `Booking.status` machine alongside the payment lifecycle it interacts with.
+
 The admission model is a six-state machine on `Booking.status`, not a boolean. `isCheckedIn`
-is a derived virtual (`status === 'admitted'`), so there is one source of truth.
-
-```mermaid
-stateDiagram-v2
-    [*] --> issued: created (purchase or invite)
-    issued --> delivered: ticket / invite emailed
-    delivered --> scanned: QR presented
-    issued --> admitted: scan wins the atomic claim
-    delivered --> admitted: scan wins the atomic claim
-    scanned --> admitted: scan wins the atomic claim
-    issued --> rejected: not admittable at door
-    delivered --> rejected
-    scanned --> rejected
-    admitted --> [*]
-    rejected --> [*]
-    issued --> revoked: organiser revokes
-    delivered --> revoked
-    revoked --> [*]
-```
-
-<!-- Rendered image. Regenerate with: node docs/diagrams/render.mjs -->
-![architecture-diagram diagram 3](diagrams/mermaid/architecture-diagram-3.png)
-
-*[Full-resolution SVG](diagrams/mermaid/architecture-diagram-3.svg)*
+is a derived virtual (`status === 'admitted'`), so there is one source of truth. The guard on
+the transition into `admitted` is what makes a second scan fail rather than silently succeed.
 
 
-`bookingRepository.admitById` only matches `status ∈ {issued, delivered, scanned}` - that
-guard *is* the single-use guarantee.
+## 4. Door check-in, the integrity-critical path
 
-## 4. Door check-in - the integrity-critical path
+> **Diagram:** see the admission sequence in [`design-models.md` §2](design-models.md), which
+> shows the same flow with the transaction boundary drawn explicitly.
 
-```mermaid
-sequenceDiagram
-    actor U as Door staff
-    participant API as TicketFlow API
-    participant DB as Database
-    participant D as Organiser dashboard
-
-    U->>API: Scan a ticket or invite QR
-    API->>API: Check this person may work this event
-    API->>DB: Look the code up
-
-    alt Code not recognised
-        API-->>U: Invalid ticket
-    else Not assigned to this event
-        API->>DB: Record the refused attempt
-        API-->>U: Not permitted
-    else Recognised and permitted
-        API->>DB: Claim the ticket and write the audit entry together
-        alt Claim won
-            API-->>U: Admitted
-            API->>D: Arrival appears live, no refresh
-        else Already admitted, or revoked
-            API->>DB: Record the refused attempt
-            API-->>U: Refused, with the reason
-        end
-    end
-    Note over API,DB: The claim and its audit entry commit as one unit, so a<br/>ticket scanned twice at once is admitted exactly once.
-```
-
-<!-- Rendered image. Regenerate with: node docs/diagrams/render.mjs -->
-![architecture-diagram diagram 4](diagrams/mermaid/architecture-diagram-4.png)
-
-*[Full-resolution SVG](diagrams/mermaid/architecture-diagram-4.svg)*
-
-
-Two simultaneous scans of one token both reach MongoDB; exactly one matches the status
-guard, and the loser is written to `auditlogs` as a rejection with a reason. The audit write
-shares the admission transaction, so an admitted booking can never lack its audit row. This
-is why deployment requires a **replica set** - `withTransaction` throws on a standalone
+**replica set** - `withTransaction` throws on a standalone
 `mongod`.
+
 
 ## 5. Purchase and payment
 
@@ -280,9 +214,9 @@ sequenceDiagram
 ```
 
 <!-- Rendered image. Regenerate with: node docs/diagrams/render.mjs -->
-![architecture-diagram diagram 5](diagrams/mermaid/architecture-diagram-5.png)
+![architecture-diagram diagram 5](diagrams/mermaid/architecture-diagram-2.png)
 
-*[Full-resolution SVG](diagrams/mermaid/architecture-diagram-5.svg)*
+*[Full-resolution SVG](diagrams/mermaid/architecture-diagram-2.svg)*
 
 
 Three details that are easy to get wrong when reading this quickly:
@@ -325,9 +259,9 @@ graph LR
 ```
 
 <!-- Rendered image. Regenerate with: node docs/diagrams/render.mjs -->
-![architecture-diagram diagram 6](diagrams/mermaid/architecture-diagram-6.png)
+![architecture-diagram diagram 6](diagrams/mermaid/architecture-diagram-3.png)
 
-*[Full-resolution SVG](diagrams/mermaid/architecture-diagram-6.svg)*
+*[Full-resolution SVG](diagrams/mermaid/architecture-diagram-3.svg)*
 
 
 `anomalyService` is rule-based and pure - no training step, unit-testable, and evaluated
