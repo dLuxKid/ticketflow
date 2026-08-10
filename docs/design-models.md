@@ -114,46 +114,36 @@ The critical path of the system: it must admit exactly once under concurrency, a
 ```mermaid
 sequenceDiagram
     autonumber
-    actor U as Usher
-    participant C as admissionController
-    participant S as admissionService
-    participant BR as bookingRepository
-    participant AR as auditLogRepository
-    participant DB as MongoDB
-    participant SSE as admissionEvents → dashboard
+    actor U as Door staff
+    participant APP as TicketFlow
+    participant DB as Database
+    participant D as Organiser dashboard
 
-    U->>C: POST /bookings/scan { code, deviceId }
-    C->>S: checkInByScan(code, actor, context)
-    S->>BR: findByInviteTokenOrTicketId(code)
-    BR->>DB: findOne($or inviteToken / ticketId)
-    DB-->>S: booking + event
+    U->>APP: Scan a ticket or invite QR
+    APP->>DB: Find the booking behind that code
+    APP->>APP: May this person work this event?
 
-    S->>S: authorizeScan(actor, event)
-    alt Not authorised
-        S->>AR: record(outcome rejected, reason)
-        S-->>U: 403 / 404
+    alt Not permitted
+        APP->>DB: Record the refused attempt
+        APP-->>U: Refused
     end
 
     rect rgb(238, 242, 255)
-        note over S,DB: Transaction - admission and its audit row commit together
-        S->>BR: admitById(bookingId)
-        BR->>DB: findOneAndUpdate(status in issued/delivered/scanned → admitted)
-        alt Guard matched
-            DB-->>BR: updated booking
-            S->>AR: record(outcome admitted, deviceId, ip)
-        else Guard matched nothing (already admitted)
-            DB-->>BR: null
+        note over APP,DB: One transaction: the admission and its audit entry<br/>either both commit, or neither does
+        APP->>DB: Admit, but only if the ticket is still unused
+        alt Ticket was unused
+            DB-->>APP: Admitted
+        else Ticket already used
+            DB-->>APP: Nothing changed
         end
     end
 
     alt Admitted
-        S->>SSE: emitAdmitted(eventId, name, ticketType)
-        SSE-->>U: live dashboard updates
-        S-->>U: 200 admitted
+        APP->>D: Arrival appears live
+        APP-->>U: Admitted
     else Not admittable
-        S->>BR: findById - re-read for accurate reason
-        S->>AR: record(outcome rejected, reason)
-        S-->>U: 409 already_admitted / revoked
+        APP->>DB: Record the refusal and why
+        APP-->>U: Already admitted, or revoked
     end
 ```
 
@@ -175,34 +165,27 @@ sequenceDiagram
 sequenceDiagram
     autonumber
     actor O as Organiser
-    participant GC as guestController
-    participant GS as guestService
-    participant P as parseGuestCsv
-    participant DB as MongoDB
-    participant M as sendInvite → Nodemailer
+    participant APP as TicketFlow
+    participant DB as Database
+    participant M as Email
     actor G as Guest
 
-    O->>GC: POST /events/:eventId/guests (CSV / XLSX)
-    GC->>GS: importGuests(eventId, file, actor)
-    GS->>GS: authorise - owner or admin, access mode allows a guest list
-    GS->>P: parse rows
-    P-->>GS: [{ name, email, vip, plusOnes }]
+    O->>APP: Upload a guest list (CSV or Excel)
+    APP->>APP: Check the event actually has a guest list
+    APP->>APP: Read the rows, skipping any that are invalid
 
-    loop per guest
-        GS->>DB: create Guest (unique index on event+email)
-        GS->>GS: generateInviteToken() - 24 random bytes
-        GS->>DB: create Booking (source invite, inviteToken, status issued)
-        GS->>M: sendInvite({ to, name, eventName, inviteToken })
-        M->>M: generateQRCode(inviteToken) → data URL
-        M->>G: email with inline QR
+    loop for each valid guest
+        APP->>DB: Add the guest and issue one single-use invite
+        APP->>M: Send the invite with its QR code
+        M->>G: Invite arrives
         alt Sent
-            GS->>DB: booking.status = delivered
+            APP->>DB: Mark the invite delivered
         else Send failed
-            note over GS: caught and swallowed - booking stays `issued`,<br/>organiser can resend. See limitation 4.
+            note over APP,DB: The guest is saved before the email is attempted,<br/>so a mail outage cannot lose the list.
         end
     end
 
-    GS-->>O: import summary
+    APP-->>O: Summary: how many added, how many skipped, and why
 ```
 
 <!-- Rendered image. Regenerate with: node docs/diagrams/render.mjs -->
@@ -389,43 +372,30 @@ The problem this solves: most attendees have **no account**. A guest checkout or
 
 ```mermaid
 sequenceDiagram
-    participant G as Guest (no account)
-    participant F as Frontend
-    participant A as API
-    participant S as networkingGuestService
-    participant M as Mail
+    actor G as Guest with no account
+    participant APP as TicketFlow
+    participant M as Email
 
-    G->>F: Join the Meet and Greet
-    F->>A: POST /events/:id/network/guest/request { email }
-    A->>S: requestGuestAccess
-    S->>S: look up a valid booking for (event, email)
+    G->>APP: Ask to join the Meet and Greet
+    APP->>APP: Look for a valid booking on that email address
 
-    alt booking found
-        S->>S: generateOtp() - crypto.randomInt, 6 digits
-        S->>S: store SHA-256(code) + expiry (10 min)
-        S->>M: email the plaintext code
-    else no booking
-        S->>S: do nothing
+    alt Booking found
+        APP->>APP: Make a 6-digit code, store only its hash
+        APP->>M: Email the code
+    else No booking
+        APP->>APP: Do nothing at all
     end
 
-    S-->>A: { sent } (for logs/tests only)
-    A-->>F: 200 - IDENTICAL response either way
-    Note over A,F: The response must not reveal whether<br/>an address holds a ticket, or the endpoint<br/>becomes an attendee-enumeration oracle.
+    APP-->>G: The same response either way
+    Note over APP,G: The reply must not reveal whether an address holds a<br/>ticket, or the endpoint becomes a way to enumerate attendees.
 
-    G->>F: enter the 6-digit code
-    F->>A: POST /events/:id/network/guest/verify { email, code }
-    A->>S: verifyGuestAccess
-    S->>S: compare SHA-256 with crypto.timingSafeEqual
-    S->>S: reject if expired or already used
+    G->>APP: Enter the code
+    APP->>APP: Check it against the stored hash, and that it has not expired or been used
 
-    alt valid
-        S->>S: find or create the attendee's User identity
-        S-->>A: { token, user }
-        A-->>F: session cookie
-        F->>A: GET /events/:id/network/stream (ordinary auth)
-    else invalid
-        S-->>A: generic failure
-        A-->>F: 401 - same message for wrong and expired
+    alt Correct
+        APP-->>G: Signed in, joins the event chat
+    else Wrong or expired
+        APP-->>G: The same generic failure for both
     end
 ```
 

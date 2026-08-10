@@ -201,38 +201,31 @@ guard *is* the single-use guarantee.
 
 ```mermaid
 sequenceDiagram
-    participant U as Usher device
-    participant API as POST /api/bookings/scan
-    participant AC as restrictTo('usher','creator','admin')
-    participant AS as admissionService
-    participant BR as bookingRepository
-    participant AL as auditLogRepository
-    participant BUS as admissionBus
+    actor U as Door staff
+    participant API as TicketFlow API
+    participant DB as Database
     participant D as Organiser dashboard
 
-    U->>API: { code, deviceId, ip }
-    API->>AC: verify JWT + role
-    AC->>AS: checkInByScan(code, actor, context)
-    AS->>BR: findByScanCode (inviteToken OR ticketId)
-    alt unknown code
-        AS-->>U: 404 invalid ticket
-    else wrong event for this usher
-        AS->>AL: record rejected (reason: wrong_event)
-        AS-->>U: 403
-    else authorised
-        AS->>BR: admitById inside transaction<br/>{status ∈ issued, delivered, scanned} → admitted
-        alt claim won
-            AS->>AL: record admitted (same transaction)
-            AS->>BUS: emit ADMISSION_ADMITTED
-            AS-->>U: 200 admitted
-        else already admitted / revoked
-            AS->>BR: re-read status for an accurate reason
-            AS->>AL: record rejected (reason from status)
-            AS->>BUS: emit ADMISSION_REJECTED
-            AS-->>U: 409
+    U->>API: Scan a ticket or invite QR
+    API->>API: Check this person may work this event
+    API->>DB: Look the code up
+
+    alt Code not recognised
+        API-->>U: Invalid ticket
+    else Not assigned to this event
+        API->>DB: Record the refused attempt
+        API-->>U: Not permitted
+    else Recognised and permitted
+        API->>DB: Claim the ticket and write the audit entry together
+        alt Claim won
+            API-->>U: Admitted
+            API->>D: Arrival appears live, no refresh
+        else Already admitted, or revoked
+            API->>DB: Record the refused attempt
+            API-->>U: Refused, with the reason
         end
     end
-    BUS-->>D: SSE event on the open stream
+    Note over API,DB: The claim and its audit entry commit as one unit, so a<br/>ticket scanned twice at once is admitted exactly once.
 ```
 
 <!-- Rendered image. Regenerate with: node docs/diagrams/render.mjs -->
@@ -254,42 +247,36 @@ so a charge always has a booking behind it.
 
 ```mermaid
 sequenceDiagram
-    participant B as Buyer
-    participant FE as Next.js
-    participant BS as bookingService.reserveBooking
-    participant ER as eventRepository
+    actor B as Buyer
+    participant APP as TicketFlow
+    participant DB as Database
     participant PS as Paystack
-    participant CF as confirm / release
 
-    B->>FE: select tickets
-    FE->>BS: POST /api/bookings/create (auth optional)
-    BS->>BS: reject if event.accessMode === 'invite_only'
-    BS->>ER: reserveTicketInventory per tier, in a transaction<br/>guarded $inc: match ticketQuantity >= count
-    alt any tier short
-        BS-->>B: 409 not enough tickets (rolled back, nothing charged)
-    else all reserved
-        BS->>BS: insertMany bookings - pending, with reservationExpiresAt<br/>server-issued reference + ticketId
-        BS-->>FE: { reference, requiresPayment }
-    end
+    B->>APP: Choose tickets and check out
+    APP->>APP: Refuse if the event is invite-only
+    APP->>DB: Hold the tickets and price the order from the event's own tiers
 
-    alt free event
-        BS->>CF: confirmReservation inline (no charge to wait for)
-    else paid event
-        FE->>PS: checkout with the server-issued reference
-        par webhook
-            PS-->>CF: signed charge.success / charge.failed
-        and browser callback
-            FE->>CF: POST /api/bookings/confirm { reference }
-            CF->>PS: verify the charge server-side
+    alt Not enough tickets left
+        APP-->>B: Refused, nothing held and nothing charged
+    else Tickets held
+        APP-->>B: Order reference
+
+        alt Free event
+            APP->>DB: Confirm straight away
+        else Paid event
+            B->>PS: Pay
+            PS-->>APP: Signed notice that the charge succeeded
+            APP->>PS: Verify that charge independently
+        end
+
+        alt Payment confirmed
+            APP->>DB: Confirm the booking, once only
+            APP-->>B: Ticket and QR by email
+        else Never paid, or abandoned
+            APP->>DB: Release the hold, tickets go back on sale
         end
     end
-
-    alt charge confirmed
-        CF->>CF: confirmByReference (guarded on pending)
-        CF->>B: email PDF ticket + QR - once, by whoever won the transition
-    else failed, abandoned, or hold expired
-        CF->>ER: releaseTicketInventory - seats go back on sale
-    end
+    Note over APP,PS: The amount is decided by the server, never sent by the<br/>browser, so a buyer cannot name their own price.
 ```
 
 <!-- Rendered image. Regenerate with: node docs/diagrams/render.mjs -->

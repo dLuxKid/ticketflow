@@ -1,8 +1,10 @@
 # TicketFlow - Agile Delivery Plan (Azure Boards)
 
-**Document version:** 2.0 · **Prepared:** 5 August 2026 · **Revised:** 10 August 2026 · **Delivery window:** 20 July to 15 August 2026 · **Tool:** Azure DevOps, Azure Boards (Scrum process)
+**Document version:** 2.1 · **Prepared:** 5 August 2026 · **Revised:** 10 August 2026 · **Delivery window:** 20 July to 15 August 2026 · **Tool:** Azure DevOps, Azure Boards (Scrum process)
 
 > **Purpose.** Supplies the Task 1.1 evidence: the agile approach, the Scrum roles adopted, the specific techniques used for **requirements, planning and tracking**, and the per-member contribution breakdown that every band of the marking criteria requires.
+>
+> **Changes in 2.1.** The board now carries the full four-level hierarchy: 13 Epics, 33 Features, 73 Backlog Items, 198 Tasks, every level parented. §5 lists the real Epic work item IDs, and §10 records how the upper levels were built and the three configuration traps that make a correctly imported board look empty.
 >
 > **Changes in 2.0.** The delivery record was consolidated from seven planned increments to the **four sprints the team actually ran**, starting 20 July rather than 13 July. Members are named. QA leadership moved to M2 alongside the Product Owner and UX remit. The Scrum Master role now **rotates each sprint**. Every figure in §3, §6 and §8 is computed from `azure-devops-backlog.csv` rather than estimated, so the board and this document cannot disagree.
 >
@@ -17,8 +19,8 @@
 | Setting | Value | Rationale |
 |---|---|---|
 | Process template | **Scrum** | Gives Epic → Feature → Product Backlog Item → Task with Story Points, matching the framework the Outstanding band asks you to apply |
-| Iterations | `TicketFlow\Sprint 1` to `Sprint 4` | Three 7-day sprints and a closing 6-day sprint, 20 Jul to 15 Aug 2026. Iteration **start and end dates are mandatory**: Azure Boards renders no burndown and no velocity chart without them. `azure-devops-setup.sh` sets them (see §10) |
-| Area paths | `TicketFlow\Backend`, `\Frontend`, `\Data & ML`, `\QA`, `\DevOps` | Lets you filter contribution by discipline, the fastest way to evidence who owned what. Created by `azure-devops-setup.sh`, which also subscribes the team to each one: an area path exists at project level but stays invisible on the board until it does |
+| Iterations | `Sprint 1` to `Sprint 4`, under the project root | Three 7-day sprints and a closing 6-day sprint, 20 Jul to 15 Aug 2026. Iteration **start and end dates are mandatory**: Azure Boards renders no burndown and no velocity chart without them. `azure-devops-setup.sh` sets them (see §10) |
+| Area paths | `Backend`, `Frontend`, `Data and ML`, `QA`, `DevOps`, under the project root | Lets you filter contribution by discipline, the fastest way to evidence who owned what. **`Data and ML`, never `Data & ML`**: Azure DevOps rejects an ampersand in a node name (§10). Created by `azure-devops-setup.sh`, which also subscribes the team to each one, since an area path exists at project level but stays invisible on the board until it does |
 | Board columns | New → Approved → Committed → In Progress → In Review → Done | "In Review" makes peer review visible on the board rather than implied |
 | Definition of Ready | Story has acceptance criteria, is estimated, and has no unresolved dependency | Prevents unrefined items entering a sprint |
 | Definition of Done | Merged to `dev`, tests pass in CI, documentation updated, peer-reviewed | Cite this verbatim in the report - it ties QA to the workflow |
@@ -114,7 +116,7 @@ only in this paragraph.
 | M2 | Abiola | `abiolao5@uni.coventry.ac.uk` | Scrum Master (Sprint 2) · Product Owner · UX · **QA lead** | `QA`, `Frontend` | Market research, backlog and acceptance criteria, design system, accessibility, usability testing, test strategy and the quality gate |
 | M3 | Ederhi | `ederhio@uni.coventry.ac.uk` | Scrum Master (Sprint 3) · Backend and domain lead | `Backend` | Data model, transactions, admission service, payments integration, privilege model |
 | M4 | Adetunji | `adetunjim@uni.coventry.ac.uk` | Scrum Master (Sprint 4) · Frontend lead | `Frontend` | App Router structure, checkout, dashboard, scanner UI, guest manager |
-| M5 | Akoki | `akokic@uni.coventry.ac.uk` | Retrospective facilitator · Data & ML lead | `Data & ML` | Anomaly detection, natural-language queries, no-show model, AI concierge, evaluation harnesses |
+| M5 | Akoki | `akokic@uni.coventry.ac.uk` | Retrospective facilitator · Data and ML lead | `Data and ML` | Anomaly detection, natural-language queries, no-show model, AI concierge, evaluation harnesses |
 
 **QA leadership sits with M2, not M5.** M2 already owns acceptance criteria as Product Owner
 and the accessibility and usability evaluation as UX, and test strategy is the same
@@ -124,28 +126,40 @@ the Definition of Done gate on work M2 did not write, which is the right way rou
 
 ---
 
-## 5. Product backlog - Epics and Features
+## 5. Product backlog: Epics, Features and Backlog Items
 
-| Epic | Features |
-|---|---|
-| **E1 Accounts & access** | Registration and authentication · Role-based access control · Profile management |
-| **E2 Event management** | Event creation and editing · Discovery and search · Access modes (public / invite-only / hybrid) |
-| **E3 Ticket sales** | Seat reservation · Payment integration · Ticket issuance and delivery |
-| **E4 Admission** | QR scanning · Atomic check-in · Usher assignment · Audit logging · Capacity safety |
-| **E5 Guest management** | Guest list import · Invite issuance · GDPR erasure |
-| **E6 Live operations** | Arrivals dashboard · Real-time streaming · Anomaly detection |
-| **E7 Intelligence** | Natural-language guest queries · No-show prediction |
-| **E8 Quality & compliance** | Automated testing · CI/CD · Coverage measurement · Load testing · Accessibility · Usability evaluation · Documentation |
-| **E9 Attendee networking** | Meet and Greet directory · Event Chat (Public) · Direct messages · Guest access by one-time code |
-| **E10 AI concierge** | Chatbot with tool calling · Event Q&A · Weather and dress-code advice |
-| **E11 Discovery** | Categories · Filters and sorting · Search · Trending and upcoming · Event detail page |
-| **E12 Revenue** | Platform fee via split settlement · Organiser payout onboarding · Revenue reporting and daily earnings |
-| **E13 Process** | Sprint facilitation · Board and burndown accuracy · Retrospectives and the Definition of Done |
+The backlog is a four-level hierarchy on the board, exactly as described here: **13
+Epics**, **33 Features**, **73 Product Backlog Items** and **198 Tasks**. Every level is
+parented, so Boards, Backlogs renders the whole tree rather than a flat list. The Epic IDs
+below are the live work item IDs, so any row in this table can be opened directly.
 
-Epic tags are carried on every work item in the CSV, so the backlog can be grouped by epic
-without building the Epic and Feature hierarchy by hand. **E13 is facilitation, not product**:
-filter it out before reading velocity, or the chart credits the team with delivering its own
-ceremonies.
+| Epic | ID | Features | Items |
+|---|---|---|---|
+| **E1 Accounts and access** | `#885` | Registration and authentication · Role-based access control · Profile management | 8 |
+| **E2 Event management** | `#881` | Event creation and authoring · Event configuration and access modes · Event lifecycle management | 14 |
+| **E3 Ticket sales** | `#874` | Ticket configuration · Checkout and payment · Ticket issuance and inventory integrity | 10 |
+| **E4 Admission** | `#877` | QR scanning and atomic check-in · Capacity safety and door staff | 5 |
+| **E5 Guest management** | `#875` | Guest list import · Invite issuance · GDPR erasure | 5 |
+| **E6 Live operations** | `#880` | Arrivals dashboard and real-time streaming | 1 |
+| **E7 Intelligence** | `#884` | Natural-language guest queries · Anomaly detection · No-show prediction | 3 |
+| **E8 Quality and compliance** | `#883` | CI/CD and containerisation · Security and access-control assurance · Documentation, coverage and demonstration | 6 |
+| **E9 Attendee networking** | `#879` | Meet and Greet directory and chat · Guest access by one-time code · Networking notifications | 4 |
+| **E10 AI concierge** | `#882` | Chatbot with tool calling · Weather and dress-code advice | 2 |
+| **E11 Discovery** | `#878` | Categories, filters and sorting · Search, trending and upcoming · Event detail page | 6 |
+| **E12 Revenue** | `#876` | Platform fee and payouts · Revenue reporting | 4 |
+| **E13 Process and facilitation** | `#873` | Sprint facilitation · Retrospectives and Definition of Done | 5 |
+| | | **33 features** | **73** |
+
+Two things this table is deliberately honest about.
+
+**Feature sizes are uneven**, from one backlog item (Invite issuance, Anomaly detection,
+Event detail page) to seven (Event creation and authoring). Splitting the small ones further
+to make the table look tidy would invent structure the work did not have.
+
+**E13 Process is facilitation, not product.** Filter it out before reading velocity, or the
+chart credits the team with delivering its own ceremonies. It is on the board because the
+rotating Scrum Master role in §2 needs to be evidenced somewhere, not because it shipped
+anything to a user.
 
 ---
 
@@ -257,21 +271,28 @@ Every figure below is counted from `azure-devops-backlog.csv`. Reproduce it from
 itself via **Boards → Queries → "Work items by Assigned To"** and screenshot that alongside
 this table; the two should agree exactly.
 
-| Member | Role | Stories led | Effort | Tasks owned | Paired on | Total items |
-|---|---|---|---|---|---|---|
-| M1 Ijeoma | Scrum Master (S1) · DevOps | 5 | 18 | 13 | 74 | **92** |
-| M2 Abiola | Scrum Master (S2) · PO · UX · QA lead | 2 | 10 | 16 | 68 | **86** |
-| M3 Ederhi | Scrum Master (S3) · Backend lead | 37 | 183 | 89 | 28 | **154** |
-| M4 Adetunji | Scrum Master (S4) · Frontend lead | 23 | 109 | 67 | 45 | **135** |
-| M5 Akoki | Retrospectives · Data & ML lead | 6 | 45 | 13 | 56 | **75** |
-| | | **73** | **365** | **198** | | |
+| Member | Role | Epics | Features | Stories | Effort | Tasks | Paired on | Total |
+|---|---|---|---|---|---|---|---|---|
+| M1 Ijeoma | Scrum Master (S1) · DevOps | 3 | 2 | 5 | 18 | 13 | 74 | **97** |
+| M2 Abiola | Scrum Master (S2) · PO · UX · QA lead | 3 | 2 | 2 | 10 | 16 | 68 | **91** |
+| M3 Ederhi | Scrum Master (S3) · Backend lead | 2 | 13 | 37 | 183 | 89 | 28 | **169** |
+| M4 Adetunji | Scrum Master (S4) · Frontend lead | 3 | 10 | 23 | 109 | 67 | 45 | **148** |
+| M5 Akoki | Retrospectives · Data and ML lead | 2 | 6 | 6 | 45 | 13 | 56 | **83** |
+| | | **13** | **33** | **73** | **365** | **198** | | **317 items** |
+
+**Ownership is assigned on two different principles, and the split is the point.**
+
+*Epics* answer for scope, acceptance and reporting on a theme, not for writing the code, so
+they are spread deliberately evenly: 3, 3, 2, 3, 2. Every member answers for a part of the
+product at that level. *Features* and everything below follow delivery reality, so they are
+not spread at all: they sit with whoever owned the backlog items underneath them.
 
 **Read the two halves of this table against each other, because they say different things.**
 
 By *effort*, the split is stark: M3 carries **50% of the points** and M1 and M2 together carry
-under 8%. By *total involvement*, the same five people sit between 75 and 154 items, a ratio
-of about two to one rather than eighteen to one. Both are true, and the gap between them is
-the finding.
+under 8%. By *total involvement*, the same five people sit between 83 and 169 items, a ratio
+of about two to one rather than eighteen to one. At *epic* level the split is even. All three
+are true of the same board, and the distance between them is the finding.
 
 Story points measure the size of a build task. They measure CI configuration, accessibility
 auditing, acceptance criteria and usability research badly, and they do not measure
@@ -279,7 +300,9 @@ facilitation at all. M3 leads 37 stories because the backend concentrates the ge
 work: transactions, concurrency, payment integrity and the privilege model. M2 leads 2 because
 the Product Owner, UX and QA remit produces judgement and gates rather than merge commits, and
 because QA work is distributed as *tasks* underneath other people's stories rather than as
-stories of its own.
+stories of its own. That is exactly why M2 holds three epics, including Quality and
+compliance: a marker asking "what did the Product Owner own?" gets an answer at the level
+where the answer is honest.
 
 Say this in the report rather than flattening the numbers. Recognising that velocity is a
 planning tool and not a productivity ranking is itself an evaluative observation, and it
@@ -302,7 +325,7 @@ asks you to evaluate your own contribution critically.
 
 | Screenshot | Where in Azure Boards | Evidences |
 |---|---|---|
-| Product backlog with Epics/Features/Stories | Boards → Backlogs | Requirements technique |
+| Product backlog showing the Epic, Feature, Backlog item, Task tree | Boards → Backlogs, with Epics and Features enabled | Requirements technique, and that the hierarchy in §5 is real rather than described |
 | Sprint board mid-sprint, cards in several columns | Boards → Sprints → Taskboard | Tracking technique |
 | Sprint burndown | Sprints → Analytics | Tracking, and honest reporting of a sprint that did not burn down cleanly |
 | Velocity across all four sprints | Analytics → Velocity | Planning maturity over time, and the Sprint 3 and 4 loading named in §3 |
@@ -361,10 +384,44 @@ Errors are shown inline in a grid and can be corrected before saving. What the i
   update that item in place. Existing work items not named in the file are untouched, so
   importing over a populated board leaves duplicates. Delete the old items first if you want a
   clean slate.
-- **It does not build the Epic → Feature hierarchy.** Parent and child links between backlog
-  items and their tasks *are* created, through the `Title 1` and `Title 2` columns. Epics and
-  Features are not; create those manually and drag items onto them, or add a `Parent` column in
-  a second pass once the IDs exist. The `E1` to `E13` tags make that grouping quick.
+- **It does not build the Epic and Feature levels.** Parent and child links between backlog
+  items and their tasks *are* created, through the `Title 1` and `Title 2` columns. Nothing
+  above that is. A `Parent` column does **not** work either: CSV import only links items
+  within the same file, so an existing work item cannot be re-parented that way.
+
+### Step 4: build the upper hierarchy
+
+The 13 Epics and 33 Features in §5 were created **through the CLI**, not the importer, for the
+reason just given. Each backlog item was then moved from its Epic onto the right Feature,
+which takes two calls rather than one: a work item holds only one parent, so the old link is
+removed before the new one is added.
+
+```bash
+az boards work-item create --type Epic --title "E1 Accounts and access" --area "$PROJECT"
+az boards work-item relation add --id <feature> --relation-type parent --target-id <epic>
+az boards work-item relation remove --id <item> --relation-type parent --target-id <epic> --yes
+az boards work-item relation add --id <item> --relation-type parent --target-id <feature>
+```
+
+### Step 5: switch the backlog levels on
+
+Epics and Features exist as work items the moment they are created, but the backlog will not
+display them until the team subscribes to those levels: **Project Settings → Team
+configuration → Backlogs**, tick **Epics** and **Features**. Until then Boards, Backlogs shows
+only backlog items and the hierarchy looks absent even though it is there.
+
+The same trap applies to areas, and it is the one most likely to make the board look empty.
+A team subscribed to the project root **with sub-areas excluded** shows none of the work,
+because every item lives in `\Backend`, `\Frontend`, `\QA`, `\DevOps` or `\Data and ML`.
+Note also that `az boards area team update` only edits a path already on the team's list; use
+`az boards area team add` for one that is not.
+
+**One naming rule that costs an entire import.** Azure DevOps rejects an ampersand in a
+classification node name with `TF50316`, so the area is `Data and ML`, **not** `Data & ML`.
+When that area does not exist, every work item referencing it fails with *"The area or
+iteration provided could not be found"*, and each of their child tasks fails after it with
+`TF401232`, naming a negative work item ID: the temporary ID the importer gave the parent that
+never saved.
 
 ### Field names differ by process template
 
