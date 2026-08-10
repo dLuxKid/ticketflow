@@ -1,257 +1,257 @@
-﻿ID,Work Item Type,Title 1,Title 2,Description,Acceptance Criteria,State,Area Path,Iteration Path,Story Points,Priority,Tags
-,Product Backlog Item,As a visitor I can register with email and password so that I can access the platform,,Email and password registration issuing a JWT in an HTTP-only cookie.,Password is stored hashed; duplicate email is rejected; session survives a page reload.,Done,TicketFlow\Backend,TicketFlow\Sprint 1,5,1,E1-Accounts
-,Task,,Create a responsive sign-up form UI with client-side validation,"Name, email, password and confirmation with inline errors.",,Done,TicketFlow\Frontend,TicketFlow\Sprint 1,,,E1-Accounts
-,Task,,Implement POST /api/v1/users/signup with bcrypt password hashing,"Controller, service and repository for account creation.",,Done,TicketFlow\Backend,TicketFlow\Sprint 1,,,E1-Accounts
-,Task,,Filter the submitted role through the SIGNUP_ROLES whitelist,Only user and creator are self-assignable; admin is refused.,,Done,TicketFlow\Backend,TicketFlow\Sprint 1,,,E1-Accounts
-,Task,,Issue the JWT as an HTTP-only cookie on success,Not readable by scripts; expiry configured from environment.,,Done,TicketFlow\Backend,TicketFlow\Sprint 1,,,E1-Accounts
-,Product Backlog Item,As a registered user I can log in and log out so that my session is mine alone,,"Login, logout and the protect middleware guarding authenticated routes.",Invalid credentials are rejected without revealing which field was wrong; logout clears the cookie.,Done,TicketFlow\Backend,TicketFlow\Sprint 1,3,1,E1-Accounts
-,Task,,Build the login form and logout control,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 1,,,E1-Accounts
-,Task,,"Implement login, logout and the protect middleware",,,Done,TicketFlow\Backend,TicketFlow\Sprint 1,,,E1-Accounts
-,Task,,Add the middleware.ts route guard for unauthenticated users,"Decodes the cookie and redirects; a UX guard only, never the authorisation decision.",,Done,TicketFlow\Frontend,TicketFlow\Sprint 1,,,E1-Accounts
-,Product Backlog Item,As a user I can reset a forgotten password by email so that I am not locked out,,Emailed reset token with a short expiry.,Token is single-use and expires in 10 minutes; only a hash is stored; the old password stops working.,Done,TicketFlow\Backend,TicketFlow\Sprint 1,3,2,E1-Accounts
-,Task,,Build the forgot-password and reset-password screens,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 1,,,E1-Accounts
-,Task,,Generate a hashed single-use reset token with a 10-minute expiry,,,Done,TicketFlow\Backend,TicketFlow\Sprint 1,,,E1-Accounts
-,Task,,Send the reset email through the Pug template and nodemailer,,,Done,TicketFlow\Backend,TicketFlow\Sprint 1,,,E1-Accounts
-,Product Backlog Item,As an administrator I can assign roles to users so that permissions match responsibility,,"Four roles: user, creator, usher and admin, with root admin as a specialisation.",Only the root admin can grant or revoke admin; nobody can promote themselves or demote the root admin.,Done,TicketFlow\Backend,TicketFlow\Sprint 1,5,1,E1-Accounts
-,Task,,Define user role and permission fields in the MongoDB user schema,,,Done,TicketFlow\Backend,TicketFlow\Sprint 1,,,E1-Accounts
-,Task,,Build the role assignment endpoint PATCH /api/v1/users/:id/role,,,Done,TicketFlow\Backend,TicketFlow\Sprint 1,,,E1-Accounts
-,Task,,Design the admin dashboard panel for managing user roles,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 1,,,E1-Accounts
-,Task,,Implement canChangeRole with unit tests for every role pair,,,Done,TicketFlow\QA,TicketFlow\Sprint 1,,,E1-Accounts
-,Product Backlog Item,"As a user I can update my profile picture, display name and bio so that my account represents me",,Profile editing with avatar upload to Cloudinary.,The new avatar appears in the navbar immediately; email changes do not bypass validation.,Done,TicketFlow\Frontend,TicketFlow\Sprint 1,3,2,E1-Accounts
-,Task,,Build the profile edit form component with image preview,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 1,,,E1-Accounts
-,Task,,Build the media upload handler for profile avatars via Cloudinary,,,Done,TicketFlow\Backend,TicketFlow\Sprint 1,,,E1-Accounts
-,Task,,Create the PATCH /api/v1/users/update-my-details endpoint,,,Done,TicketFlow\Backend,TicketFlow\Sprint 1,,,E1-Accounts
-,Product Backlog Item,As a user I can delete my own account so that I control my data,,Soft delete preserving bookings and audit history.,The account can no longer log in; referenced bookings and audit rows survive.,Done,TicketFlow\Backend,TicketFlow\Sprint 1,2,3,E1-Accounts
-,Task,,Add the delete-account control with a confirmation step,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 1,,,E1-Accounts
-,Task,,Implement soft delete via isActive and a pre-find hook excluding inactive users,,,Done,TicketFlow\Backend,TicketFlow\Sprint 1,,,E1-Accounts
-,Product Backlog Item,As an administrator I can list and deactivate accounts so that I can manage the platform,,Administration views over users.,"Only admins reach these routes; deactivation is archival, never destructive.",Done,TicketFlow\Backend,TicketFlow\Sprint 1,5,2,E1-Accounts
-,Task,,Build the admin user list with search,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 1,,,E1-Accounts
-,Task,,Implement GET /api/v1/users and GET /api/v1/users/:id restricted to admin,,,Done,TicketFlow\Backend,TicketFlow\Sprint 1,,,E1-Accounts
-,Task,,Implement canDeleteUser as a pure decision function with unit tests,,,Done,TicketFlow\QA,TicketFlow\Sprint 1,,,E1-Accounts
-,Product Backlog Item,As the team we seed the first administrator from the CLI so that admin has no in-application origin,,Root admin creation outside the application surface.,Running the script promotes an existing account and flags it as root admin.,Done,TicketFlow\Backend,TicketFlow\Sprint 1,2,2,E1-Accounts
-,Task,,Write the seed:admin CLI script,,,Done,TicketFlow\Backend,TicketFlow\Sprint 1,,,E1-Accounts
-,Task,,Flag the seeded account as root admin,,,Done,TicketFlow\Backend,TicketFlow\Sprint 1,,,E1-Accounts
-,Product Backlog Item,As the team every push is verified by CI so that regressions are caught before merge,,"GitHub Actions running lint, tests, typecheck and coverage.",The workflow runs on pushes and pull requests to main and dev and fails the build on a failing test.,Done,TicketFlow\DevOps,TicketFlow\Sprint 1,5,1,E8-Quality
-,Task,,Create the GitHub Actions workflow for backend lint and tests,,,Done,TicketFlow\DevOps,TicketFlow\Sprint 1,,,E8-Quality
-,Task,,Start MongoDB as a single-node replica set in CI so transactions work,Advertise 127.0.0.1 so replica-set discovery resolves from the runner.,,Done,TicketFlow\DevOps,TicketFlow\Sprint 1,,,E8-Quality
-,Task,,"Add frontend typecheck, lint and component tests to the workflow",,,Done,TicketFlow\DevOps,TicketFlow\Sprint 1,,,E8-Quality
-,Product Backlog Item,As the team we can run the whole stack in containers so that the environment is reproducible,,Docker images for both packages plus a compose file.,A clean machine can bring the stack up with one command; images publish to GHCR from main.,Done,TicketFlow\DevOps,TicketFlow\Sprint 1,3,3,E8-Quality
-,Task,,Write Dockerfiles for the backend and the frontend,,,Done,TicketFlow\DevOps,TicketFlow\Sprint 1,,,E8-Quality
-,Task,,Write docker-compose including replica-set initialisation,,,Done,TicketFlow\DevOps,TicketFlow\Sprint 1,,,E8-Quality
-,Task,,Publish images to GitHub Container Registry on push to main,,,Done,TicketFlow\DevOps,TicketFlow\Sprint 1,,,E8-Quality
-,Product Backlog Item,As an organiser I can access a dedicated Create Event page so that publishing is a deliberate action,,Entry point and access control for event creation.,The call to action is visible to signed-in organisers; anonymous visitors are redirected to login.,Done,TicketFlow\Frontend,TicketFlow\Sprint 2,2,1,E2-Events
-,Task,,Add the Create Event call-to-action button in the header navigation,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 2,,,E2-Events
-,Task,,Add route middleware so only authenticated users can access the page,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 2,,,E2-Events
-,Product Backlog Item,As an organiser I can create a new event so that it exists on the platform,,"The event document, its schema and the creation endpoint.",A created event receives a unique slug and appears in My Events.,Done,TicketFlow\Backend,TicketFlow\Sprint 2,5,1,E2-Events
-,Task,,Set up the single-page form container component with initial state,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 2,,,E2-Events
-,Task,,Define the Event schema in MongoDB with slug generation,,,Done,TicketFlow\Backend,TicketFlow\Sprint 2,,,E2-Events
-,Task,,Implement POST /api/v1/events/create,,,Done,TicketFlow\Backend,TicketFlow\Sprint 2,,,E2-Events
-,Product Backlog Item,As an organiser I can enter a title and rich description so that attendees understand the event,,Core descriptive fields.,"Both fields are required and validated server-side, not only in the browser.",Done,TicketFlow\Frontend,TicketFlow\Sprint 2,3,1,E2-Events
-,Task,,Build the form input for the event name,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 2,,,E2-Events
-,Task,,Integrate a formatted textarea for the event description,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 2,,,E2-Events
-,Task,,Add validation for required title and description in the event schema,,,Done,TicketFlow\Backend,TicketFlow\Sprint 2,,,E2-Events
-,Product Backlog Item,"As an organiser I can set the start date, end date and time so that attendees know when to arrive",,The event date window and its derived live state.,The end is never before the start; an event whose start and end fall on the same day is still live that day.,Done,TicketFlow\Backend,TicketFlow\Sprint 2,3,1,E2-Events
-,Task,,Add date and time picker components for event start and end,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 2,,,E2-Events
-,Task,,Implement validation so the end is never before the start,,,Done,TicketFlow\Backend,TicketFlow\Sprint 2,,,E2-Events
-,Task,,"Derive the isLive virtual from the date window, running to end of day",,,Done,TicketFlow\Backend,TicketFlow\Sprint 2,,,E2-Events
-,Product Backlog Item,As an organiser I can upload a primary display image so that the listing is visually identifiable,,Cover image capture and storage.,"The image previews before upload, oversized files are rejected, and the stored URL renders on the listing.",Done,TicketFlow\Frontend,TicketFlow\Sprint 2,3,2,E2-Events
-,Task,,Create the image dropzone component with preview and file size check,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 2,,,E2-Events
-,Task,,Implement the image upload endpoint with Cloudinary storage,,,Done,TicketFlow\Backend,TicketFlow\Sprint 2,,,E2-Events
-,Task,,Store the cover image URL on the event document,,,Done,TicketFlow\Backend,TicketFlow\Sprint 2,,,E2-Events
-,Product Backlog Item,As an organiser I can attach social links so that attendees can follow the event,,Optional social handles on the event.,Malformed URLs are rejected; empty fields are permitted.,Done,TicketFlow\Frontend,TicketFlow\Sprint 2,2,3,E2-Events
-,Task,,"Build input fields with dynamic icon prefixes for YouTube, Instagram and Facebook",,,Done,TicketFlow\Frontend,TicketFlow\Sprint 2,,,E2-Events
-,Task,,Add URL syntax validation for the provided social handles,,,Done,TicketFlow\Backend,TicketFlow\Sprint 2,,,E2-Events
-,Product Backlog Item,As an organiser I can set opening and closing dates for ticket availability so that sales run to a schedule,,Sales window independent of the event window.,Booking cannot close after the event starts; the window is enforced server-side at purchase.,Done,TicketFlow\Backend,TicketFlow\Sprint 2,3,2,E3-Sales
-,Task,,Add date and time pickers for ticket booking availability,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 2,,,E3-Sales
-,Task,,Validate that booking closes at or before the event start time,,,Done,TicketFlow\Backend,TicketFlow\Sprint 2,,,E3-Sales
-,Task,,Save the scheduling fields in the event schema,,,Done,TicketFlow\Backend,TicketFlow\Sprint 2,,,E3-Sales
-,Product Backlog Item,As an organiser I can post the event so that it appears publicly,,Submission and cache revalidation.,The event appears on the listing page without a manual refresh.,Done,TicketFlow\Frontend,TicketFlow\Sprint 2,3,1,E2-Events
-,Task,,"Implement the submit handler, payload serialisation and success feedback",,,Done,TicketFlow\Frontend,TicketFlow\Sprint 2,,,E2-Events
-,Task,,Revalidate the event listing cache so the event appears immediately,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 2,,,E2-Events
-,Product Backlog Item,"As an organiser I can define ticket tiers with price, quantity and per-order limits so that I can sell different admissions",,Multiple purchasable tiers per event.,Buying beyond a tier's remaining quantity is refused; an invite-only event cannot carry tiers.,Done,TicketFlow\Backend,TicketFlow\Sprint 2,8,1,E3-Sales
-,Task,,Build the repeatable tier editor in the event form,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 2,,,E3-Sales
-,Task,,"Model ticket tiers as a sub-document with price, quantity and per-order limit",,,Done,TicketFlow\Backend,TicketFlow\Sprint 2,,,E3-Sales
-,Task,,Reject an invite-only event that carries ticket tiers,,,Done,TicketFlow\Backend,TicketFlow\Sprint 2,,,E3-Sales
-,Product Backlog Item,As an organiser I can choose the ticket currency so that I charge in a currency my attendees use,,"Explicit currency per event, limited to what the gateway can settle.",Only settleable currencies are offered; changing the country does not silently change the currency.,Done,TicketFlow\Backend,TicketFlow\Sprint 2,3,2,E3-Sales
-,Task,,Add the currency dropdown restricted to currencies the gateway settles,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 2,,,E3-Sales
-,Task,,Add a currency enum to the event schema with a configurable default,,,Done,TicketFlow\Backend,TicketFlow\Sprint 2,,,E3-Sales
-,Task,,"Carry the chosen currency through checkout, the ticket and the email",,,Done,TicketFlow\Backend,TicketFlow\Sprint 2,,,E3-Sales
-,Product Backlog Item,"As an organiser I can set the event access mode so that entry is by ticket, by invitation, or both",,"Public, invite-only and hybrid events.",Invite-only events are hidden from public discovery and refuse purchase; hybrid allows both paths.,Done,TicketFlow\Backend,TicketFlow\Sprint 2,5,1,E2-Events
-,Task,,Add the access mode selector to the create and edit forms,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 2,,,E2-Events
-,Task,,"Add accessMode to the event schema with public, invite_only and hybrid",,,Done,TicketFlow\Backend,TicketFlow\Sprint 2,,,E2-Events
-,Task,,Refuse ticket purchase on an invite-only event,,,Done,TicketFlow\Backend,TicketFlow\Sprint 2,,,E2-Events
-,Product Backlog Item,As an organiser I can record venue detail so that attendees know what to expect,,"Venue name, dress code, parking, accessibility and age limit.",Each field renders on the event page and is available to the concierge.,Done,TicketFlow\Frontend,TicketFlow\Sprint 2,3,2,E2-Events
-,Task,,"Add venue name, dress code, parking, accessibility and age limit fields",,,Done,TicketFlow\Frontend,TicketFlow\Sprint 2,,,E2-Events
-,Task,,Persist the venue detail fields and surface them on the event page,,,Done,TicketFlow\Backend,TicketFlow\Sprint 2,,,E2-Events
-,Product Backlog Item,As an organiser I can set venue capacity so that the door can stop admitting when the room is full,,"Safe occupancy, deliberately separate from ticket inventory.",Capacity is stored independently of total ticket quantity and is what the door enforces.,Done,TicketFlow\Backend,TicketFlow\Sprint 2,3,2,E2-Events
-,Task,,Add the venue capacity field with helper text distinguishing it from ticket quantity,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 2,,,E2-Events
-,Task,,Store venueCapacity separately from totalQuantity,,,Done,TicketFlow\Backend,TicketFlow\Sprint 2,,,E2-Events
-,Product Backlog Item,As an organiser I can enter the event location so that attendees can find it,,"Structured country, state or county, city and postcode.",The county field is labelled appropriately for the selected country; city remains free text.,Done,TicketFlow\Frontend,TicketFlow\Sprint 2,3,2,E2-Events
-,Task,,"Add country, state or county, city and postcode fields with dependent dropdowns",,,Done,TicketFlow\Frontend,TicketFlow\Sprint 2,,,E2-Events
-,Task,,Persist the structured location on the event document,,,Done,TicketFlow\Backend,TicketFlow\Sprint 2,,,E2-Events
-,Product Backlog Item,As an organiser I can edit an event so that details stay correct,,Update with ownership enforcement.,Only the creator or an admin can edit; a tier price change does not alter tickets already sold.,Done,TicketFlow\Backend,TicketFlow\Sprint 2,5,1,E2-Events
-,Task,,Build the edit form pre-populated from the existing event,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 2,,,E2-Events
-,Task,,Implement PATCH /api/v1/events/update/:eventId with ownership enforcement,,,Done,TicketFlow\Backend,TicketFlow\Sprint 2,,,E2-Events
-,Task,,Leave the price stamped on tickets already sold unchanged,,,Done,TicketFlow\Backend,TicketFlow\Sprint 2,,,E2-Events
-,Product Backlog Item,As an organiser I can see my own events so that I can manage them,,The My Events surface and its management links.,An organiser sees only their own events; an admin can widen the same view to all events.,Done,TicketFlow\Frontend,TicketFlow\Sprint 2,3,1,E2-Events
-,Task,,Build the My Events page with event cards and management links,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 2,,,E2-Events
-,Task,,"Implement GET /api/v1/events/my/events, widening to all events for an admin",,,Done,TicketFlow\Backend,TicketFlow\Sprint 2,,,E2-Events
-,Product Backlog Item,As an administrator I can archive an event so that it disappears without destroying its records,,Soft delete for events.,"Bookings, guests, chat and audit rows survive; assigned door staff are unassigned.",Done,TicketFlow\Backend,TicketFlow\Sprint 2,3,3,E2-Events
-,Task,,Add the archive control with confirmation,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 2,,,E2-Events
-,Task,,Implement soft delete and exclude archived events from every query,,,Done,TicketFlow\Backend,TicketFlow\Sprint 2,,,E2-Events
-,Task,,Unassign door staff when an event is archived,,,Done,TicketFlow\Backend,TicketFlow\Sprint 2,,,E2-Events
-,Product Backlog Item,As a visitor I can open a panel of event categories so that I can narrow what I browse,,Category browsing on the discovery page.,"The panel opens and closes on small screens; categories come from the API, not a hard-coded list.",Done,TicketFlow\Frontend,TicketFlow\Sprint 3,3,1,E11-Discovery
-,Task,,Create the responsive category UI component with open and close triggers,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 3,,,E11-Discovery
-,Task,,Fetch and display a dynamic list of categories with item icons,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 3,,,E11-Discovery
-,Task,,Implement the categories endpoint returning active categories,,,Done,TicketFlow\Backend,TicketFlow\Sprint 3,,,E11-Discovery
-,Product Backlog Item,As a visitor I can see the active filter tags so that I know what is being applied,,"Visible, removable filter state.",Every applied filter appears as a tag and can be cleared individually.,Done,TicketFlow\Frontend,TicketFlow\Sprint 3,3,2,E11-Discovery
-,Task,,Build the filter control panel with removable active tags,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 3,,,E11-Discovery
-,Task,,Extend the event search and list endpoint with filter parameters,,,Done,TicketFlow\Backend,TicketFlow\Sprint 3,,,E11-Discovery
-,Task,,Make the filter fields legible against the dark discovery banner,Contrast checked against the worst case under the banner glow.,,Done,TicketFlow\Frontend,TicketFlow\Sprint 3,,,E11-Discovery
-,Product Backlog Item,As a visitor I can sort search results so that the most relevant events come first,,Sorting on the listing endpoint.,Sort choice survives pagination; the list shows a loading state during the change.,Done,TicketFlow\Backend,TicketFlow\Sprint 3,3,2,E11-Discovery
-,Task,,Add sorting parameters to the events listing controller,,,Done,TicketFlow\Backend,TicketFlow\Sprint 3,,,E11-Discovery
-,Task,,Handle loading states and smooth transitions when sorting changes,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 3,,,E11-Discovery
-,Product Backlog Item,As a visitor I can browse trending and upcoming events so that I discover events without searching,,Home page carousels.,Invite-only events never appear; past events never appear as upcoming.,Done,TicketFlow\Frontend,TicketFlow\Sprint 3,3,2,E11-Discovery
-,Task,,Build the trending and upcoming carousels on the home page,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 3,,,E11-Discovery
-,Task,,Implement the trending and upcoming endpoints excluding invite-only events,,,Done,TicketFlow\Backend,TicketFlow\Sprint 3,,,E11-Discovery
-,Product Backlog Item,As a visitor I can search events by name and city so that I find something specific,,Free-text search across the listing.,Search is case-insensitive and matches partial names.,Done,TicketFlow\Backend,TicketFlow\Sprint 3,3,1,E11-Discovery
-,Task,,Build the search field with debounced input,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 3,,,E11-Discovery
-,Task,,"Implement case-insensitive search across name, category and city",,,Done,TicketFlow\Backend,TicketFlow\Sprint 3,,,E11-Discovery
-,Product Backlog Item,As a visitor I can ask a concierge about events in plain English so that I need no training,,"AI concierge backed by a hosted model, answering only from real data.",The model never invents an event; with no API key configured the widget degrades to a canned reply rather than an error.,Done,TicketFlow\Data & ML,TicketFlow\Sprint 3,13,2,E10-Concierge
-,Task,,Build the chat widget with a launcher and message history,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 3,,,E10-Concierge
-,Task,,"Implement the tool-calling loop with search, event detail and FAQ tools",,,Done,TicketFlow\Data & ML,TicketFlow\Sprint 3,,,E10-Concierge
-,Task,,Add an OpenAI provider with a Gemini fallback over plain fetch,,,Done,TicketFlow\Data & ML,TicketFlow\Sprint 3,,,E10-Concierge
-,Task,,Format replies as labelled bullets so the panel renders them legibly,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 3,,,E10-Concierge
-,Product Backlog Item,As an attendee I can ask what to wear and whether an event runs late so that I can prepare,,Forecast and practical attendance advice for a named event.,Advice comes only from the returned conditions; if no forecast is available the reply says so rather than guessing.,Done,TicketFlow\Data & ML,TicketFlow\Sprint 3,5,2,E10-Concierge
-,Task,,"Integrate Open-Meteo geocoding and forecast, which needs no API key",,,Done,TicketFlow\Data & ML,TicketFlow\Sprint 3,,,E10-Concierge
-,Task,,Derive dress and attendance advice from the forecast and the event fields,,,Done,TicketFlow\Data & ML,TicketFlow\Sprint 3,,,E10-Concierge
-,Task,,Fold the conditions into the event detail tool so one question answers everything,,,Done,TicketFlow\Data & ML,TicketFlow\Sprint 3,,,E10-Concierge
-,Product Backlog Item,As an organiser I can import a guest list from CSV or Excel so that setup is fast,,Bulk guest import for invite-only and hybrid events.,The header row is optional and column order is free; an invalid row is reported as skipped rather than failing the import.,Done,TicketFlow\Backend,TicketFlow\Sprint 3,8,1,E5-Guests
-,Task,,Build the import UI with a file picker and a result summary,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 3,,,E5-Guests
-,Task,,Write the CSV and XLSX parser tolerating a missing header and any column order,,,Done,TicketFlow\Backend,TicketFlow\Sprint 3,,,E5-Guests
-,Task,,Report skipped rows individually rather than failing the whole import,,,Done,TicketFlow\Backend,TicketFlow\Sprint 3,,,E5-Guests
-,Product Backlog Item,As an organiser I can add a single guest by hand so that small changes are not painful,,One-off guest addition reusing the import path.,A single guest receives the same invite as an imported one.,Done,TicketFlow\Frontend,TicketFlow\Sprint 3,3,3,E5-Guests
-,Task,,Build the single-guest form with VIP and plus-ones,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 3,,,E5-Guests
-,Task,,Reuse the import path for a one-row payload,,,Done,TicketFlow\Backend,TicketFlow\Sprint 3,,,E5-Guests
-,Product Backlog Item,As a guest I receive a single-use QR invite so that I can be admitted,,Invite issuance as a side effect of being added to a guest list.,"The guest and their booking are persisted before the email is attempted, so a mail outage cannot lose the guest list.",Done,TicketFlow\Backend,TicketFlow\Sprint 3,5,1,E5-Guests
-,Task,,Generate a signed single-use invite token per guest,,,Done,TicketFlow\Backend,TicketFlow\Sprint 3,,,E5-Guests
-,Task,,Render the QR into the invite email template,,,Done,TicketFlow\Backend,TicketFlow\Sprint 3,,,E5-Guests
-,Task,,Create the linked admission booking at invite time,,,Done,TicketFlow\Backend,TicketFlow\Sprint 3,,,E5-Guests
-,Product Backlog Item,As an organiser I only see the guest list on events that have one so that I am not offered a link that cannot work,,Guest list surfaces limited to invite-only and hybrid events.,The tab and card link are absent for a public event; a hand-typed URL explains the reason instead of failing.,Done,TicketFlow\Backend,TicketFlow\Sprint 3,3,2,E5-Guests
-,Task,,Define hasGuestList once on the event model and use it in the service check,,,Done,TicketFlow\Backend,TicketFlow\Sprint 3,,,E5-Guests
-,Task,,Add the workspace lookup returning access mode and hasGuestList,,,Done,TicketFlow\Backend,TicketFlow\Sprint 3,,,E5-Guests
-,Task,,Hide the guest list tab and the My Events card link for public events,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 3,,,E5-Guests
-,Task,,Add tests pinning the rule in both the API and the tab strip,,,Done,TicketFlow\QA,TicketFlow\Sprint 3,,,E5-Guests
-,Product Backlog Item,As an organiser I can ask questions about my guest list in plain English so that I need no training,,"Natural-language guest queries, implemented as a local intent parser rather than a language model.",Count and list intents are answered from the guest list only; no guest data leaves the process.,Done,TicketFlow\Data & ML,TicketFlow\Sprint 3,8,2,E7-Intelligence
-,Task,,Build the query box and answer panel on the guest list page,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 3,,,E7-Intelligence
-,Task,,Write the regex intent parser for count and list questions,,,Done,TicketFlow\Data & ML,TicketFlow\Sprint 3,,,E7-Intelligence
-,Task,,Add unit tests covering each supported intent,,,Done,TicketFlow\QA,TicketFlow\Sprint 3,,,E7-Intelligence
-,Product Backlog Item,As an organiser I can erase a guest's personal data on request so that we meet GDPR obligations,,On-demand erasure plus a scheduled retention sweep.,"Name and email are anonymised while VIP status, plus-ones and arrival record survive so statistics stay usable.",Done,TicketFlow\Backend,TicketFlow\Sprint 3,5,2,E5-Guests
-,Task,,Add the erase control with confirmation on the guest list,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 3,,,E5-Guests
-,Task,,Anonymise name and email while preserving attendance statistics,,,Done,TicketFlow\Backend,TicketFlow\Sprint 3,,,E5-Guests
-,Task,,Write the scheduled retention sweep for events past their window,,,Done,TicketFlow\Data & ML,TicketFlow\Sprint 3,,,E5-Guests
-,Product Backlog Item,As door staff I can scan a ticket or invite QR so that entry is quick,,Camera scanning with a manual code fallback.,An usher not assigned to the event is refused; a correctly typed code works in any case and with or without a hash prefix.,Done,TicketFlow\Frontend,TicketFlow\Sprint 3,13,1,E4-Admission
-,Task,,Build the scanner page using the device camera,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 3,,,E4-Admission
-,Task,,Implement the scan endpoint with an atomic single-use claim in a transaction,,,Done,TicketFlow\Backend,TicketFlow\Sprint 3,,,E4-Admission
-,Task,,"Accept a manually typed code, case-insensitively and with or without a hash prefix",,,Done,TicketFlow\Backend,TicketFlow\Sprint 3,,,E4-Admission
-,Task,,"Authorise the scan for the owner, an admin or an assigned usher",,,Done,TicketFlow\Backend,TicketFlow\Sprint 3,,,E4-Admission
-,Product Backlog Item,As an organiser the door refuses to admit the same ticket twice so that entry cannot be duplicated,,Atomic admission under concurrency.,Two simultaneous scans of one ticket admit exactly once; both attempts are audited.,Done,TicketFlow\Backend,TicketFlow\Sprint 3,8,1,E4-Admission
-,Task,,Make admission a conditional update on booking status inside a transaction,,,Done,TicketFlow\Backend,TicketFlow\Sprint 3,,,E4-Admission
-,Task,,Write concurrency tests proving a double scan admits exactly once,,,Done,TicketFlow\QA,TicketFlow\Sprint 3,,,E4-Admission
-,Task,,Record every scan outcome in the audit log,,,Done,TicketFlow\Backend,TicketFlow\Sprint 3,,,E4-Admission
-,Product Backlog Item,As an organiser the door stops admitting when the venue is full so that we stay within safe occupancy,,Capacity guardrail at the point of admission.,Capacity uses venue capacity where set and ticket inventory otherwise; re-scanning an already admitted ticket does not report the venue as full.,Done,TicketFlow\Backend,TicketFlow\Sprint 3,5,2,E4-Admission
-,Task,,"Implement the capacity decision using venue capacity, falling back to ticket inventory",,,Done,TicketFlow\Backend,TicketFlow\Sprint 3,,,E4-Admission
-,Task,,Load the capacity fields in the scan query so the guardrail actually fires,,,Done,TicketFlow\Backend,TicketFlow\Sprint 3,,,E4-Admission
-,Task,,Offer an explicit override prompt to the operator,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 3,,,E4-Admission
-,Product Backlog Item,As door staff I can admit manually so that a broken screen does not stop the queue,,Manual check-in as a fallback path.,Manual rows are flagged in the audit log and excluded from anomaly detection.,Done,TicketFlow\Frontend,TicketFlow\Sprint 3,3,2,E4-Admission
-,Task,,Add the manual check-in control,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 3,,,E4-Admission
-,Task,,Flag manual rows in the audit log and exclude them from anomaly detection,,,Done,TicketFlow\Backend,TicketFlow\Sprint 3,,,E4-Admission
-,Product Backlog Item,As an organiser I can assign door staff to an event so that entry is scoped to the right people,,Usher assignment writing an event-scoped permission.,Role alone grants nothing; an usher scanning another event's ticket is refused and the attempt is audited.,Done,TicketFlow\Backend,TicketFlow\Sprint 3,5,2,E4-Admission
-,Task,,Build the door staff management page,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 3,,,E4-Admission
-,Task,,Implement assign and unassign endpoints writing assignedEvents,,,Done,TicketFlow\Backend,TicketFlow\Sprint 3,,,E4-Admission
-,Product Backlog Item,As a visitor I can click an event to see its full detail so that I can decide whether to attend,,The public event detail page.,"Venue detail, tiers, dates and organiser all render; an invite-only event is not reachable this way.",Done,TicketFlow\Frontend,TicketFlow\Sprint 4,5,1,E11-Discovery
-,Task,,Create the event detail route and layout,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 4,,,E11-Discovery
-,Task,,"Render venue detail, ticket tiers, dates and the organiser",,,Done,TicketFlow\Frontend,TicketFlow\Sprint 4,,,E11-Discovery
-,Task,,Implement the single-event endpoint by slug,,,Done,TicketFlow\Backend,TicketFlow\Sprint 4,,,E11-Discovery
-,Product Backlog Item,As an attendee I can review my order before paying so that I know what I am being charged,,Checkout summary showing exactly what will be taken.,"The total is the plain sum of tier prices in the event currency, with no hidden booking fee added.",Done,TicketFlow\Frontend,TicketFlow\Sprint 4,5,1,E3-Sales
-,Task,,"Build the summary UI component listing tiers, quantities and total",,,Done,TicketFlow\Frontend,TicketFlow\Sprint 4,,,E3-Sales
-,Task,,Validate the order state before payment can begin,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 4,,,E3-Sales
-,Task,,Show the total in the event currency and state that no booking fee is added,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 4,,,E3-Sales
-,Product Backlog Item,As an attendee I can choose a payment method so that I can pay how I prefer,,Paystack checkout initialisation.,Checkout refuses to open if the organiser has no payout account or the gateway key is missing.,Done,TicketFlow\Frontend,TicketFlow\Sprint 4,8,1,E3-Sales
-,Task,,Integrate the Paystack SDK on the checkout page,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 4,,,E3-Sales
-,Task,,Implement the payment intent endpoint returning the checkout configuration,,,Done,TicketFlow\Backend,TicketFlow\Sprint 4,,,E3-Sales
-,Product Backlog Item,As an attendee I receive a receipt and confirmation so that I know the purchase succeeded,,Webhook-driven confirmation and the ticket email.,The webhook signature is verified against the raw body; the ticket is emailed only after a verified charge.,Done,TicketFlow\Backend,TicketFlow\Sprint 4,8,1,E3-Sales
-,Task,,Implement the webhook handler verifying the Paystack HMAC against the raw body,,,Done,TicketFlow\Backend,TicketFlow\Sprint 4,,,E3-Sales
-,Task,,Confirm the booking and send the ticket email only after a verified charge,,,Done,TicketFlow\Backend,TicketFlow\Sprint 4,,,E3-Sales
-,Task,,Show the success state with the booking reference,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 4,,,E3-Sales
-,Product Backlog Item,As an attendee I can open my ticket with its QR so that I can be admitted at the door,,The digital ticket and the My Tickets list.,The QR encodes the scannable ticket identifier; the on-screen ticket matches the emailed one.,Done,TicketFlow\Frontend,TicketFlow\Sprint 4,5,1,E3-Sales
-,Task,,Generate a unique ticket identifier and QR per booking,,,Done,TicketFlow\Backend,TicketFlow\Sprint 4,,,E3-Sales
-,Task,,Build the digital ticket page styled to match the email template,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 4,,,E3-Sales
-,Task,,Add the My Tickets list,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 4,,,E3-Sales
-,Product Backlog Item,As a visitor I can buy a ticket without creating an account so that nothing blocks the sale,,Guest checkout capturing a name and an email.,The booking is attached to an email rather than a user; the ticket still arrives and still scans.,Done,TicketFlow\Backend,TicketFlow\Sprint 4,5,1,E3-Sales
-,Task,,Capture buyer name and email at checkout for guests,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 4,,,E3-Sales
-,Task,,Attach the booking to an email rather than a user when there is no account,,,Done,TicketFlow\Backend,TicketFlow\Sprint 4,,,E3-Sales
-,Product Backlog Item,As an organiser inventory is held during checkout and released if payment never completes so that abandoned baskets cost nothing,,"Reservation, expiry and release.",The last ticket cannot be sold twice under concurrent purchase; a lapsed hold returns to sale automatically.,Done,TicketFlow\Backend,TicketFlow\Sprint 4,8,1,E3-Sales
-,Task,,Reserve inventory and write a pending booking inside a transaction,,,Done,TicketFlow\Backend,TicketFlow\Sprint 4,,,E3-Sales
-,Task,,Run an in-process sweeper releasing lapsed holds on an interval,,,Done,TicketFlow\Backend,TicketFlow\Sprint 4,,,E3-Sales
-,Task,,Write concurrency tests proving the last ticket cannot be sold twice,,,Done,TicketFlow\QA,TicketFlow\Sprint 4,,,E3-Sales
-,Product Backlog Item,As the platform every order is priced on the server so that a buyer cannot set their own price,,"Server-authoritative pricing, closing a real defect where the client supplied the amount.",A tampered client payload is ignored; the charge always matches the event's own tier prices.,Done,TicketFlow\Backend,TicketFlow\Sprint 4,8,1,E3-Sales
-,Task,,Move pricing into a server-side pricing service reading the event's own tiers,,,Done,TicketFlow\Backend,TicketFlow\Sprint 4,,,E3-Sales
-,Task,,Ignore any client-supplied price and recompute the expected amount,,,Done,TicketFlow\Backend,TicketFlow\Sprint 4,,,E3-Sales
-,Task,,Add tests attempting to buy a high-value ticket for a token amount,,,Done,TicketFlow\QA,TicketFlow\Sprint 4,,,E3-Sales
-,Product Backlog Item,As the platform we take a percentage fee via split settlement so that the business earns from each sale,,"Platform fee applied as a Paystack split, settling the organiser directly.",The fee is computed in minor units and rounded down; the organiser bears the gateway charge.,Done,TicketFlow\Backend,TicketFlow\Sprint 4,8,2,E12-Revenue
-,Task,,"Compute the platform fee in minor units, rounding down",,,Done,TicketFlow\Backend,TicketFlow\Sprint 4,,,E12-Revenue
-,Task,,Attach the subaccount and transaction charge to the Paystack transaction,,,Done,TicketFlow\Backend,TicketFlow\Sprint 4,,,E12-Revenue
-,Task,,Cover the fee arithmetic with unit tests,,,Done,TicketFlow\QA,TicketFlow\Sprint 4,,,E12-Revenue
-,Product Backlog Item,As an organiser I can connect a payout account so that I am paid directly,,"Bank selection, account resolution and subaccount creation, in the application.",The subaccount code is never returned to the browser; paid events refuse to sell until a payout account exists.,Done,TicketFlow\Backend,TicketFlow\Sprint 4,5,2,E12-Revenue
-,Task,,Build the payout onboarding screen with bank selection and account resolution,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 4,,,E12-Revenue
-,Task,,Create the Paystack subaccount and store its code without ever exposing it,,,Done,TicketFlow\Backend,TicketFlow\Sprint 4,,,E12-Revenue
-,Task,,Refuse to sell paid tickets until the organiser can be paid,,,Done,TicketFlow\Backend,TicketFlow\Sprint 4,,,E12-Revenue
-,Product Backlog Item,As an organiser I can watch arrivals live so that I can manage the door,,Live dashboard driven by server-sent events.,The dashboard is populated on connect from a snapshot and updates without a refresh as scans arrive.,Done,TicketFlow\Frontend,TicketFlow\Sprint 4,13,1,E6-LiveOps
-,Task,,"Build the live dashboard with capacity, sold and admitted counts",,,Done,TicketFlow\Frontend,TicketFlow\Sprint 4,,,E6-LiveOps
-,Task,,Stream admission events over SSE from an in-process event bus,,,Done,TicketFlow\Backend,TicketFlow\Sprint 4,,,E6-LiveOps
-,Task,,Send a point-in-time snapshot so the dashboard is populated before the next scan,,,Done,TicketFlow\Backend,TicketFlow\Sprint 4,,,E6-LiveOps
-,Product Backlog Item,As an organiser I can review scan anomalies so that fraud is visible,,"Rule-based anomaly detection over the audit log, running locally.","Repeated rejects, multiple devices and rapid sequential scans are flagged; manual entries are excluded.",Done,TicketFlow\Data & ML,TicketFlow\Sprint 4,8,2,E7-Intelligence
-,Task,,Define the anomaly rules and thresholds,,,Done,TicketFlow\Data & ML,TicketFlow\Sprint 4,,,E7-Intelligence
-,Task,,Surface flagged tickets on the live dashboard,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 4,,,E7-Intelligence
-,Task,,Exclude manual check-ins from detection,,,Done,TicketFlow\Data & ML,TicketFlow\Sprint 4,,,E7-Intelligence
-,Product Backlog Item,As an organiser I see expected no-shows so that I can plan capacity,,"Offline-trained model shipped as portable weights, scored at request time.",Both ticket buyers and invited guests are scored; the model is evaluated with a published offline report.,Done,TicketFlow\Data & ML,TicketFlow\Sprint 4,8,2,E7-Intelligence
-,Task,,Train the model offline and ship portable weights,,,Done,TicketFlow\Data & ML,TicketFlow\Sprint 4,,,E7-Intelligence
-,Task,,"Score pending bookings, covering ticket buyers and invited guests alike",,,Done,TicketFlow\Data & ML,TicketFlow\Sprint 4,,,E7-Intelligence
-,Task,,Publish an offline evaluation report with metrics,,,Done,TicketFlow\QA,TicketFlow\Sprint 4,,,E7-Intelligence
-,Product Backlog Item,As an attendee I can join Meet and Greet so that I can network with other attendees,,Per-event attendee network with a public channel.,"Eligibility is a valid booking, not a role; posting additionally requires the event to be live.",Done,TicketFlow\Frontend,TicketFlow\Sprint 4,13,2,E9-Networking
-,Task,,Build the Meet and Greet page with the directory and public chat,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 4,,,E9-Networking
-,Task,,Stream messages and presence over SSE,,,Done,TicketFlow\Backend,TicketFlow\Sprint 4,,,E9-Networking
-,Task,,Gate access on holding a non-revoked booking for the event,,,Done,TicketFlow\Backend,TicketFlow\Sprint 4,,,E9-Networking
-,Product Backlog Item,As a guest without an account I can join Meet and Greet with an emailed code so that no account is required,,One-time code proving control of the booking email.,"The response is identical whether or not the address holds a ticket, so it cannot be used to enumerate attendees.",Done,TicketFlow\Backend,TicketFlow\Sprint 4,8,2,E9-Networking
-,Task,,Build the code request and verification screens,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 4,,,E9-Networking
-,Task,,Issue and verify a one-time code against the booking email,,,Done,TicketFlow\Backend,TicketFlow\Sprint 4,,,E9-Networking
-,Task,,Return an identical response whether or not the address holds a ticket,,,Done,TicketFlow\Backend,TicketFlow\Sprint 4,,,E9-Networking
-,Product Backlog Item,As an attendee I can opt in to the directory and send direct messages so that I control my visibility,,Directory opt-in and one-to-one messaging.,A user who has not opted in does not appear in the directory.,Done,TicketFlow\Frontend,TicketFlow\Sprint 4,5,3,E9-Networking
-,Task,,Add the opt-in toggle and the direct message thread,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 4,,,E9-Networking
-,Task,,Persist opt-in state and message threads,,,Done,TicketFlow\Backend,TicketFlow\Sprint 4,,,E9-Networking
-,Product Backlog Item,As an organiser I am notified when Meet and Greet opens so that I can bring my attendees in,,Notification reaching every eligible attendee.,"The notification reaches both invited guests and ticket buyers, proven by test.",Done,TicketFlow\Backend,TicketFlow\Sprint 4,5,3,E9-Networking
-,Task,,Send the notification to both invited guests and ticket buyers,,,Done,TicketFlow\Backend,TicketFlow\Sprint 4,,,E9-Networking
-,Task,,Add a test asserting both sources are covered,,,Done,TicketFlow\QA,TicketFlow\Sprint 4,,,E9-Networking
-,Product Backlog Item,As an organiser I can see my revenue and daily earnings so that I know what I am owed,,"Revenue reporting per event and in total, with a daily series.",Figures cover confirmed payments only; the series sums exactly to the headline totals.,Done,TicketFlow\Backend,TicketFlow\Sprint 4,8,1,E12-Revenue
-,Task,,"Aggregate gross, platform fee and net per event and in total",,,Done,TicketFlow\Backend,TicketFlow\Sprint 4,,,E12-Revenue
-,Task,,Build the stat tiles and the daily earnings column chart,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 4,,,E12-Revenue
-,Task,,Zero-fill days with no sales so a quiet period is visible rather than compressed,,,Done,TicketFlow\Backend,TicketFlow\Sprint 4,,,E12-Revenue
-,Product Backlog Item,As an administrator I can see platform fee income separately from my own events so that the two are never confused,,Scoped revenue with an admin-only platform view.,"The platform figure is the fee alone, not the gross; a non-admin requesting the platform scope is refused.",Done,TicketFlow\Backend,TicketFlow\Sprint 4,5,2,E12-Revenue
-,Task,,Add scope handling with the platform scope restricted to admins,,,Done,TicketFlow\Backend,TicketFlow\Sprint 4,,,E12-Revenue
-,Task,,Add My events and Platform tabs to the revenue page,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 4,,,E12-Revenue
-,Task,,Headline the platform figure as the fee alone,,,Done,TicketFlow\Frontend,TicketFlow\Sprint 4,,,E12-Revenue
-,Product Backlog Item,As an organiser only I or an admin can see my sales and booker list so that attendee data is not exposed,,Closing a broken access control defect on the sales view.,Another organiser requesting the same event is refused; the fix is covered by regression tests.,Done,TicketFlow\Backend,TicketFlow\Sprint 4,5,1,E8-Quality
-,Task,,Enforce the same ownership rule on the bookings endpoint as on the dashboard,,,Done,TicketFlow\Backend,TicketFlow\Sprint 4,,,E8-Quality
-,Task,,Add regression tests that fail against the pre-fix code,,,Done,TicketFlow\QA,TicketFlow\Sprint 4,,,E8-Quality
-,Product Backlog Item,As the team the product is documented and demonstrable so that it can be assessed,,"Technical documentation, diagrams and the demonstration video.",Every diagram exists as a rendered image as well as source; the demo runs end to end from a seeded environment.,Done,TicketFlow\QA,TicketFlow\Sprint 4,8,1,E8-Quality
-,Task,,"Write the technical documentation, quality model and feature testing guide",,,Done,TicketFlow\QA,TicketFlow\Sprint 4,,,E8-Quality
-,Task,,"Produce the use case, architecture and data flow diagrams with rendered images",,,Done,TicketFlow\QA,TicketFlow\Sprint 4,,,E8-Quality
-,Task,,Record the demonstration video from a seeded environment,,,Done,TicketFlow\QA,TicketFlow\Sprint 4,,,E8-Quality
-,Product Backlog Item,As the team coverage is measured and published so that quality is evidenced,,Coverage generated in CI and published to a reporting service.,Coverage is produced for both packages; publication is skipped cleanly when the token is absent.,Committed,TicketFlow\DevOps,TicketFlow\Sprint 4,3,2,E8-Quality
-,Task,,Generate lcov coverage for both packages in CI,,,Done,TicketFlow\DevOps,TicketFlow\Sprint 4,,,E8-Quality
-,Task,,Upload coverage to the reporting service behind a repository secret,Needs repository admin to add the project and create the secret.,,Committed,TicketFlow\DevOps,TicketFlow\Sprint 4,,,E8-Quality
-,Product Backlog Item,As the team the stack can be deployed so that it runs outside a developer machine,,"Deployment target for the API and the web application. Images publish to a registry today, but nothing pulls and runs them.",A deployed environment serves the application over HTTPS with production configuration.,New,TicketFlow\DevOps,TicketFlow\Sprint 4,5,3,E8-Quality
-,Task,,Choose a hosting target for the API and the web application,,,New,TicketFlow\DevOps,TicketFlow\Sprint 4,,,E8-Quality
-,Task,,Configure production environment variables and secrets,,,New,TicketFlow\DevOps,TicketFlow\Sprint 4,,,E8-Quality
-,Task,,Run a deployment from the published images,,,New,TicketFlow\DevOps,TicketFlow\Sprint 4,,,E8-Quality
+﻿ID,Work Item Type,Title 1,Title 2,Description,Acceptance Criteria,State,Area Path,Iteration Path,Story Points,Priority,Activity,Tags
+,User Story,As a visitor I can register with email and password so that I can access the platform,,Email and password registration issuing a JWT in an HTTP-only cookie.,Password is stored hashed; duplicate email is rejected; session survives a page reload.,Closed,TicketFlow\Backend,TicketFlow\Sprint 1,5,1,,E1-Accounts
+,Task,,Create a responsive sign-up form UI with client-side validation,"Name, email, password and confirmation with inline errors.",,Closed,TicketFlow\Frontend,TicketFlow\Sprint 1,,,Development,E1-Accounts
+,Task,,Implement POST /api/v1/users/signup with bcrypt password hashing,"Controller, service and repository for account creation.",,Closed,TicketFlow\Backend,TicketFlow\Sprint 1,,,Development,E1-Accounts
+,Task,,Filter the submitted role through the SIGNUP_ROLES whitelist,Only user and creator are self-assignable; admin is refused.,,Closed,TicketFlow\Backend,TicketFlow\Sprint 1,,,Development,E1-Accounts
+,Task,,Issue the JWT as an HTTP-only cookie on success,Not readable by scripts; expiry configured from environment.,,Closed,TicketFlow\Backend,TicketFlow\Sprint 1,,,Development,E1-Accounts
+,User Story,As a registered user I can log in and log out so that my session is mine alone,,"Login, logout and the protect middleware guarding authenticated routes.",Invalid credentials are rejected without revealing which field was wrong; logout clears the cookie.,Closed,TicketFlow\Backend,TicketFlow\Sprint 1,3,1,,E1-Accounts
+,Task,,Build the login form and logout control,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 1,,,Development,E1-Accounts
+,Task,,"Implement login, logout and the protect middleware",,,Closed,TicketFlow\Backend,TicketFlow\Sprint 1,,,Development,E1-Accounts
+,Task,,Add the middleware.ts route guard for unauthenticated users,"Decodes the cookie and redirects; a UX guard only, never the authorisation decision.",,Closed,TicketFlow\Frontend,TicketFlow\Sprint 1,,,Development,E1-Accounts
+,User Story,As a user I can reset a forgotten password by email so that I am not locked out,,Emailed reset token with a short expiry.,Token is single-use and expires in 10 minutes; only a hash is stored; the old password stops working.,Closed,TicketFlow\Backend,TicketFlow\Sprint 1,3,2,,E1-Accounts
+,Task,,Build the forgot-password and reset-password screens,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 1,,,Development,E1-Accounts
+,Task,,Generate a hashed single-use reset token with a 10-minute expiry,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 1,,,Development,E1-Accounts
+,Task,,Send the reset email through the Pug template and nodemailer,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 1,,,Development,E1-Accounts
+,User Story,As an administrator I can assign roles to users so that permissions match responsibility,,"Four roles: user, creator, usher and admin, with root admin as a specialisation.",Only the root admin can grant or revoke admin; nobody can promote themselves or demote the root admin.,Closed,TicketFlow\Backend,TicketFlow\Sprint 1,5,1,,E1-Accounts
+,Task,,Define user role and permission fields in the MongoDB user schema,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 1,,,Development,E1-Accounts
+,Task,,Build the role assignment endpoint PATCH /api/v1/users/:id/role,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 1,,,Development,E1-Accounts
+,Task,,Design the admin dashboard panel for managing user roles,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 1,,,Development,E1-Accounts
+,Task,,Implement canChangeRole with unit tests for every role pair,,,Closed,TicketFlow\QA,TicketFlow\Sprint 1,,,Testing,E1-Accounts
+,User Story,"As a user I can update my profile picture, display name and bio so that my account represents me",,Profile editing with avatar upload to Cloudinary.,The new avatar appears in the navbar immediately; email changes do not bypass validation.,Closed,TicketFlow\Frontend,TicketFlow\Sprint 1,3,2,,E1-Accounts
+,Task,,Build the profile edit form component with image preview,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 1,,,Development,E1-Accounts
+,Task,,Build the media upload handler for profile avatars via Cloudinary,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 1,,,Development,E1-Accounts
+,Task,,Create the PATCH /api/v1/users/update-my-details endpoint,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 1,,,Development,E1-Accounts
+,User Story,As a user I can delete my own account so that I control my data,,Soft delete preserving bookings and audit history.,The account can no longer log in; referenced bookings and audit rows survive.,Closed,TicketFlow\Backend,TicketFlow\Sprint 1,2,3,,E1-Accounts
+,Task,,Add the delete-account control with a confirmation step,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 1,,,Development,E1-Accounts
+,Task,,Implement soft delete via isActive and a pre-find hook excluding inactive users,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 1,,,Development,E1-Accounts
+,User Story,As an administrator I can list and deactivate accounts so that I can manage the platform,,Administration views over users.,"Only admins reach these routes; deactivation is archival, never destructive.",Closed,TicketFlow\Backend,TicketFlow\Sprint 1,5,2,,E1-Accounts
+,Task,,Build the admin user list with search,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 1,,,Development,E1-Accounts
+,Task,,Implement GET /api/v1/users and GET /api/v1/users/:id restricted to admin,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 1,,,Development,E1-Accounts
+,Task,,Implement canDeleteUser as a pure decision function with unit tests,,,Closed,TicketFlow\QA,TicketFlow\Sprint 1,,,Testing,E1-Accounts
+,User Story,As the team we seed the first administrator from the CLI so that admin has no in-application origin,,Root admin creation outside the application surface.,Running the script promotes an existing account and flags it as root admin.,Closed,TicketFlow\Backend,TicketFlow\Sprint 1,2,2,,E1-Accounts
+,Task,,Write the seed:admin CLI script,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 1,,,Development,E1-Accounts
+,Task,,Flag the seeded account as root admin,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 1,,,Development,E1-Accounts
+,User Story,As the team every push is verified by CI so that regressions are caught before merge,,"GitHub Actions running lint, tests, typecheck and coverage.",The workflow runs on pushes and pull requests to main and dev and fails the build on a failing test.,Closed,TicketFlow\DevOps,TicketFlow\Sprint 1,5,1,,E8-Quality
+,Task,,Create the GitHub Actions workflow for backend lint and tests,,,Closed,TicketFlow\DevOps,TicketFlow\Sprint 1,,,Deployment,E8-Quality
+,Task,,Start MongoDB as a single-node replica set in CI so transactions work,Advertise 127.0.0.1 so replica-set discovery resolves from the runner.,,Closed,TicketFlow\DevOps,TicketFlow\Sprint 1,,,Deployment,E8-Quality
+,Task,,"Add frontend typecheck, lint and component tests to the workflow",,,Closed,TicketFlow\DevOps,TicketFlow\Sprint 1,,,Deployment,E8-Quality
+,User Story,As the team we can run the whole stack in containers so that the environment is reproducible,,Docker images for both packages plus a compose file.,A clean machine can bring the stack up with one command; images publish to GHCR from main.,Closed,TicketFlow\DevOps,TicketFlow\Sprint 1,3,3,,E8-Quality
+,Task,,Write Dockerfiles for the backend and the frontend,,,Closed,TicketFlow\DevOps,TicketFlow\Sprint 1,,,Deployment,E8-Quality
+,Task,,Write docker-compose including replica-set initialisation,,,Closed,TicketFlow\DevOps,TicketFlow\Sprint 1,,,Deployment,E8-Quality
+,Task,,Publish images to GitHub Container Registry on push to main,,,Closed,TicketFlow\DevOps,TicketFlow\Sprint 1,,,Deployment,E8-Quality
+,User Story,As an organiser I can access a dedicated Create Event page so that publishing is a deliberate action,,Entry point and access control for event creation.,The call to action is visible to signed-in organisers; anonymous visitors are redirected to login.,Closed,TicketFlow\Frontend,TicketFlow\Sprint 2,2,1,,E2-Events
+,Task,,Add the Create Event call-to-action button in the header navigation,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 2,,,Development,E2-Events
+,Task,,Add route middleware so only authenticated users can access the page,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 2,,,Development,E2-Events
+,User Story,As an organiser I can create a new event so that it exists on the platform,,"The event document, its schema and the creation endpoint.",A created event receives a unique slug and appears in My Events.,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,5,1,,E2-Events
+,Task,,Set up the single-page form container component with initial state,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 2,,,Development,E2-Events
+,Task,,Define the Event schema in MongoDB with slug generation,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,,,Development,E2-Events
+,Task,,Implement POST /api/v1/events/create,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,,,Development,E2-Events
+,User Story,As an organiser I can enter a title and rich description so that attendees understand the event,,Core descriptive fields.,"Both fields are required and validated server-side, not only in the browser.",Closed,TicketFlow\Frontend,TicketFlow\Sprint 2,3,1,,E2-Events
+,Task,,Build the form input for the event name,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 2,,,Development,E2-Events
+,Task,,Integrate a formatted textarea for the event description,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 2,,,Development,E2-Events
+,Task,,Add validation for required title and description in the event schema,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,,,Development,E2-Events
+,User Story,"As an organiser I can set the start date, end date and time so that attendees know when to arrive",,The event date window and its derived live state.,The end is never before the start; an event whose start and end fall on the same day is still live that day.,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,3,1,,E2-Events
+,Task,,Add date and time picker components for event start and end,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 2,,,Development,E2-Events
+,Task,,Implement validation so the end is never before the start,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,,,Development,E2-Events
+,Task,,"Derive the isLive virtual from the date window, running to end of day",,,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,,,Development,E2-Events
+,User Story,As an organiser I can upload a primary display image so that the listing is visually identifiable,,Cover image capture and storage.,"The image previews before upload, oversized files are rejected, and the stored URL renders on the listing.",Closed,TicketFlow\Frontend,TicketFlow\Sprint 2,3,2,,E2-Events
+,Task,,Create the image dropzone component with preview and file size check,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 2,,,Development,E2-Events
+,Task,,Implement the image upload endpoint with Cloudinary storage,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,,,Development,E2-Events
+,Task,,Store the cover image URL on the event document,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,,,Development,E2-Events
+,User Story,As an organiser I can attach social links so that attendees can follow the event,,Optional social handles on the event.,Malformed URLs are rejected; empty fields are permitted.,Closed,TicketFlow\Frontend,TicketFlow\Sprint 2,2,3,,E2-Events
+,Task,,"Build input fields with dynamic icon prefixes for YouTube, Instagram and Facebook",,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 2,,,Development,E2-Events
+,Task,,Add URL syntax validation for the provided social handles,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,,,Development,E2-Events
+,User Story,As an organiser I can set opening and closing dates for ticket availability so that sales run to a schedule,,Sales window independent of the event window.,Booking cannot close after the event starts; the window is enforced server-side at purchase.,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,3,2,,E3-Sales
+,Task,,Add date and time pickers for ticket booking availability,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 2,,,Development,E3-Sales
+,Task,,Validate that booking closes at or before the event start time,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,,,Development,E3-Sales
+,Task,,Save the scheduling fields in the event schema,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,,,Development,E3-Sales
+,User Story,As an organiser I can post the event so that it appears publicly,,Submission and cache revalidation.,The event appears on the listing page without a manual refresh.,Closed,TicketFlow\Frontend,TicketFlow\Sprint 2,3,1,,E2-Events
+,Task,,"Implement the submit handler, payload serialisation and success feedback",,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 2,,,Development,E2-Events
+,Task,,Revalidate the event listing cache so the event appears immediately,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 2,,,Development,E2-Events
+,User Story,"As an organiser I can define ticket tiers with price, quantity and per-order limits so that I can sell different admissions",,Multiple purchasable tiers per event.,Buying beyond a tier's remaining quantity is refused; an invite-only event cannot carry tiers.,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,8,1,,E3-Sales
+,Task,,Build the repeatable tier editor in the event form,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 2,,,Development,E3-Sales
+,Task,,"Model ticket tiers as a sub-document with price, quantity and per-order limit",,,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,,,Development,E3-Sales
+,Task,,Reject an invite-only event that carries ticket tiers,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,,,Development,E3-Sales
+,User Story,As an organiser I can choose the ticket currency so that I charge in a currency my attendees use,,"Explicit currency per event, limited to what the gateway can settle.",Only settleable currencies are offered; changing the country does not silently change the currency.,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,3,2,,E3-Sales
+,Task,,Add the currency dropdown restricted to currencies the gateway settles,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 2,,,Development,E3-Sales
+,Task,,Add a currency enum to the event schema with a configurable default,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,,,Development,E3-Sales
+,Task,,"Carry the chosen currency through checkout, the ticket and the email",,,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,,,Development,E3-Sales
+,User Story,"As an organiser I can set the event access mode so that entry is by ticket, by invitation, or both",,"Public, invite-only and hybrid events.",Invite-only events are hidden from public discovery and refuse purchase; hybrid allows both paths.,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,5,1,,E2-Events
+,Task,,Add the access mode selector to the create and edit forms,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 2,,,Development,E2-Events
+,Task,,"Add accessMode to the event schema with public, invite_only and hybrid",,,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,,,Development,E2-Events
+,Task,,Refuse ticket purchase on an invite-only event,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,,,Development,E2-Events
+,User Story,As an organiser I can record venue detail so that attendees know what to expect,,"Venue name, dress code, parking, accessibility and age limit.",Each field renders on the event page and is available to the concierge.,Closed,TicketFlow\Frontend,TicketFlow\Sprint 2,3,2,,E2-Events
+,Task,,"Add venue name, dress code, parking, accessibility and age limit fields",,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 2,,,Development,E2-Events
+,Task,,Persist the venue detail fields and surface them on the event page,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,,,Development,E2-Events
+,User Story,As an organiser I can set venue capacity so that the door can stop admitting when the room is full,,"Safe occupancy, deliberately separate from ticket inventory.",Capacity is stored independently of total ticket quantity and is what the door enforces.,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,3,2,,E2-Events
+,Task,,Add the venue capacity field with helper text distinguishing it from ticket quantity,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 2,,,Development,E2-Events
+,Task,,Store venueCapacity separately from totalQuantity,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,,,Development,E2-Events
+,User Story,As an organiser I can enter the event location so that attendees can find it,,"Structured country, state or county, city and postcode.",The county field is labelled appropriately for the selected country; city remains free text.,Closed,TicketFlow\Frontend,TicketFlow\Sprint 2,3,2,,E2-Events
+,Task,,"Add country, state or county, city and postcode fields with dependent dropdowns",,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 2,,,Development,E2-Events
+,Task,,Persist the structured location on the event document,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,,,Development,E2-Events
+,User Story,As an organiser I can edit an event so that details stay correct,,Update with ownership enforcement.,Only the creator or an admin can edit; a tier price change does not alter tickets already sold.,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,5,1,,E2-Events
+,Task,,Build the edit form pre-populated from the existing event,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 2,,,Development,E2-Events
+,Task,,Implement PATCH /api/v1/events/update/:eventId with ownership enforcement,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,,,Development,E2-Events
+,Task,,Leave the price stamped on tickets already sold unchanged,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,,,Development,E2-Events
+,User Story,As an organiser I can see my own events so that I can manage them,,The My Events surface and its management links.,An organiser sees only their own events; an admin can widen the same view to all events.,Closed,TicketFlow\Frontend,TicketFlow\Sprint 2,3,1,,E2-Events
+,Task,,Build the My Events page with event cards and management links,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 2,,,Development,E2-Events
+,Task,,"Implement GET /api/v1/events/my/events, widening to all events for an admin",,,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,,,Development,E2-Events
+,User Story,As an administrator I can archive an event so that it disappears without destroying its records,,Soft delete for events.,"Bookings, guests, chat and audit rows survive; assigned door staff are unassigned.",Closed,TicketFlow\Backend,TicketFlow\Sprint 2,3,3,,E2-Events
+,Task,,Add the archive control with confirmation,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 2,,,Development,E2-Events
+,Task,,Implement soft delete and exclude archived events from every query,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,,,Development,E2-Events
+,Task,,Unassign door staff when an event is archived,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 2,,,Development,E2-Events
+,User Story,As a visitor I can open a panel of event categories so that I can narrow what I browse,,Category browsing on the discovery page.,"The panel opens and closes on small screens; categories come from the API, not a hard-coded list.",Closed,TicketFlow\Frontend,TicketFlow\Sprint 3,3,1,,E11-Discovery
+,Task,,Create the responsive category UI component with open and close triggers,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 3,,,Development,E11-Discovery
+,Task,,Fetch and display a dynamic list of categories with item icons,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 3,,,Development,E11-Discovery
+,Task,,Implement the categories endpoint returning active categories,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,,,Development,E11-Discovery
+,User Story,As a visitor I can see the active filter tags so that I know what is being applied,,"Visible, removable filter state.",Every applied filter appears as a tag and can be cleared individually.,Closed,TicketFlow\Frontend,TicketFlow\Sprint 3,3,2,,E11-Discovery
+,Task,,Build the filter control panel with removable active tags,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 3,,,Development,E11-Discovery
+,Task,,Extend the event search and list endpoint with filter parameters,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,,,Development,E11-Discovery
+,Task,,Make the filter fields legible against the dark discovery banner,Contrast checked against the worst case under the banner glow.,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 3,,,Development,E11-Discovery
+,User Story,As a visitor I can sort search results so that the most relevant events come first,,Sorting on the listing endpoint.,Sort choice survives pagination; the list shows a loading state during the change.,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,3,2,,E11-Discovery
+,Task,,Add sorting parameters to the events listing controller,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,,,Development,E11-Discovery
+,Task,,Handle loading states and smooth transitions when sorting changes,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 3,,,Development,E11-Discovery
+,User Story,As a visitor I can browse trending and upcoming events so that I discover events without searching,,Home page carousels.,Invite-only events never appear; past events never appear as upcoming.,Closed,TicketFlow\Frontend,TicketFlow\Sprint 3,3,2,,E11-Discovery
+,Task,,Build the trending and upcoming carousels on the home page,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 3,,,Development,E11-Discovery
+,Task,,Implement the trending and upcoming endpoints excluding invite-only events,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,,,Development,E11-Discovery
+,User Story,As a visitor I can search events by name and city so that I find something specific,,Free-text search across the listing.,Search is case-insensitive and matches partial names.,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,3,1,,E11-Discovery
+,Task,,Build the search field with debounced input,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 3,,,Development,E11-Discovery
+,Task,,"Implement case-insensitive search across name, category and city",,,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,,,Development,E11-Discovery
+,User Story,As a visitor I can ask a concierge about events in plain English so that I need no training,,"AI concierge backed by a hosted model, answering only from real data.",The model never invents an event; with no API key configured the widget degrades to a canned reply rather than an error.,Closed,TicketFlow\Data & ML,TicketFlow\Sprint 3,13,2,,E10-Concierge
+,Task,,Build the chat widget with a launcher and message history,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 3,,,Development,E10-Concierge
+,Task,,"Implement the tool-calling loop with search, event detail and FAQ tools",,,Closed,TicketFlow\Data & ML,TicketFlow\Sprint 3,,,Development,E10-Concierge
+,Task,,Add an OpenAI provider with a Gemini fallback over plain fetch,,,Closed,TicketFlow\Data & ML,TicketFlow\Sprint 3,,,Development,E10-Concierge
+,Task,,Format replies as labelled bullets so the panel renders them legibly,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 3,,,Development,E10-Concierge
+,User Story,As an attendee I can ask what to wear and whether an event runs late so that I can prepare,,Forecast and practical attendance advice for a named event.,Advice comes only from the returned conditions; if no forecast is available the reply says so rather than guessing.,Closed,TicketFlow\Data & ML,TicketFlow\Sprint 3,5,2,,E10-Concierge
+,Task,,"Integrate Open-Meteo geocoding and forecast, which needs no API key",,,Closed,TicketFlow\Data & ML,TicketFlow\Sprint 3,,,Development,E10-Concierge
+,Task,,Derive dress and attendance advice from the forecast and the event fields,,,Closed,TicketFlow\Data & ML,TicketFlow\Sprint 3,,,Development,E10-Concierge
+,Task,,Fold the conditions into the event detail tool so one question answers everything,,,Closed,TicketFlow\Data & ML,TicketFlow\Sprint 3,,,Development,E10-Concierge
+,User Story,As an organiser I can import a guest list from CSV or Excel so that setup is fast,,Bulk guest import for invite-only and hybrid events.,The header row is optional and column order is free; an invalid row is reported as skipped rather than failing the import.,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,8,1,,E5-Guests
+,Task,,Build the import UI with a file picker and a result summary,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 3,,,Development,E5-Guests
+,Task,,Write the CSV and XLSX parser tolerating a missing header and any column order,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,,,Development,E5-Guests
+,Task,,Report skipped rows individually rather than failing the whole import,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,,,Development,E5-Guests
+,User Story,As an organiser I can add a single guest by hand so that small changes are not painful,,One-off guest addition reusing the import path.,A single guest receives the same invite as an imported one.,Closed,TicketFlow\Frontend,TicketFlow\Sprint 3,3,3,,E5-Guests
+,Task,,Build the single-guest form with VIP and plus-ones,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 3,,,Development,E5-Guests
+,Task,,Reuse the import path for a one-row payload,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,,,Development,E5-Guests
+,User Story,As a guest I receive a single-use QR invite so that I can be admitted,,Invite issuance as a side effect of being added to a guest list.,"The guest and their booking are persisted before the email is attempted, so a mail outage cannot lose the guest list.",Closed,TicketFlow\Backend,TicketFlow\Sprint 3,5,1,,E5-Guests
+,Task,,Generate a signed single-use invite token per guest,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,,,Development,E5-Guests
+,Task,,Render the QR into the invite email template,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,,,Development,E5-Guests
+,Task,,Create the linked admission booking at invite time,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,,,Development,E5-Guests
+,User Story,As an organiser I only see the guest list on events that have one so that I am not offered a link that cannot work,,Guest list surfaces limited to invite-only and hybrid events.,The tab and card link are absent for a public event; a hand-typed URL explains the reason instead of failing.,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,3,2,,E5-Guests
+,Task,,Define hasGuestList once on the event model and use it in the service check,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,,,Development,E5-Guests
+,Task,,Add the workspace lookup returning access mode and hasGuestList,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,,,Development,E5-Guests
+,Task,,Hide the guest list tab and the My Events card link for public events,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 3,,,Development,E5-Guests
+,Task,,Add tests pinning the rule in both the API and the tab strip,,,Closed,TicketFlow\QA,TicketFlow\Sprint 3,,,Testing,E5-Guests
+,User Story,As an organiser I can ask questions about my guest list in plain English so that I need no training,,"Natural-language guest queries, implemented as a local intent parser rather than a language model.",Count and list intents are answered from the guest list only; no guest data leaves the process.,Closed,TicketFlow\Data & ML,TicketFlow\Sprint 3,8,2,,E7-Intelligence
+,Task,,Build the query box and answer panel on the guest list page,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 3,,,Development,E7-Intelligence
+,Task,,Write the regex intent parser for count and list questions,,,Closed,TicketFlow\Data & ML,TicketFlow\Sprint 3,,,Development,E7-Intelligence
+,Task,,Add unit tests covering each supported intent,,,Closed,TicketFlow\QA,TicketFlow\Sprint 3,,,Testing,E7-Intelligence
+,User Story,As an organiser I can erase a guest's personal data on request so that we meet GDPR obligations,,On-demand erasure plus a scheduled retention sweep.,"Name and email are anonymised while VIP status, plus-ones and arrival record survive so statistics stay usable.",Closed,TicketFlow\Backend,TicketFlow\Sprint 3,5,2,,E5-Guests
+,Task,,Add the erase control with confirmation on the guest list,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 3,,,Development,E5-Guests
+,Task,,Anonymise name and email while preserving attendance statistics,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,,,Development,E5-Guests
+,Task,,Write the scheduled retention sweep for events past their window,,,Closed,TicketFlow\Data & ML,TicketFlow\Sprint 3,,,Development,E5-Guests
+,User Story,As door staff I can scan a ticket or invite QR so that entry is quick,,Camera scanning with a manual code fallback.,An usher not assigned to the event is refused; a correctly typed code works in any case and with or without a hash prefix.,Closed,TicketFlow\Frontend,TicketFlow\Sprint 3,13,1,,E4-Admission
+,Task,,Build the scanner page using the device camera,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 3,,,Development,E4-Admission
+,Task,,Implement the scan endpoint with an atomic single-use claim in a transaction,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,,,Development,E4-Admission
+,Task,,"Accept a manually typed code, case-insensitively and with or without a hash prefix",,,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,,,Development,E4-Admission
+,Task,,"Authorise the scan for the owner, an admin or an assigned usher",,,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,,,Development,E4-Admission
+,User Story,As an organiser the door refuses to admit the same ticket twice so that entry cannot be duplicated,,Atomic admission under concurrency.,Two simultaneous scans of one ticket admit exactly once; both attempts are audited.,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,8,1,,E4-Admission
+,Task,,Make admission a conditional update on booking status inside a transaction,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,,,Development,E4-Admission
+,Task,,Write concurrency tests proving a double scan admits exactly once,,,Closed,TicketFlow\QA,TicketFlow\Sprint 3,,,Testing,E4-Admission
+,Task,,Record every scan outcome in the audit log,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,,,Development,E4-Admission
+,User Story,As an organiser the door stops admitting when the venue is full so that we stay within safe occupancy,,Capacity guardrail at the point of admission.,Capacity uses venue capacity where set and ticket inventory otherwise; re-scanning an already admitted ticket does not report the venue as full.,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,5,2,,E4-Admission
+,Task,,"Implement the capacity decision using venue capacity, falling back to ticket inventory",,,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,,,Development,E4-Admission
+,Task,,Load the capacity fields in the scan query so the guardrail actually fires,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,,,Development,E4-Admission
+,Task,,Offer an explicit override prompt to the operator,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 3,,,Development,E4-Admission
+,User Story,As door staff I can admit manually so that a broken screen does not stop the queue,,Manual check-in as a fallback path.,Manual rows are flagged in the audit log and excluded from anomaly detection.,Closed,TicketFlow\Frontend,TicketFlow\Sprint 3,3,2,,E4-Admission
+,Task,,Add the manual check-in control,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 3,,,Development,E4-Admission
+,Task,,Flag manual rows in the audit log and exclude them from anomaly detection,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,,,Development,E4-Admission
+,User Story,As an organiser I can assign door staff to an event so that entry is scoped to the right people,,Usher assignment writing an event-scoped permission.,Role alone grants nothing; an usher scanning another event's ticket is refused and the attempt is audited.,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,5,2,,E4-Admission
+,Task,,Build the door staff management page,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 3,,,Development,E4-Admission
+,Task,,Implement assign and unassign endpoints writing assignedEvents,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,,,Development,E4-Admission
+,User Story,As an attendee I can join Meet and Greet so that I can network with other attendees,,Per-event attendee network with a public channel.,"Eligibility is a valid booking, not a role; posting additionally requires the event to be live.",Closed,TicketFlow\Frontend,TicketFlow\Sprint 3,13,2,,E9-Networking
+,Task,,Build the Meet and Greet page with the directory and public chat,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 3,,,Development,E9-Networking
+,Task,,Stream messages and presence over SSE,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,,,Development,E9-Networking
+,Task,,Gate access on holding a non-revoked booking for the event,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,,,Development,E9-Networking
+,User Story,As a guest without an account I can join Meet and Greet with an emailed code so that no account is required,,One-time code proving control of the booking email.,"The response is identical whether or not the address holds a ticket, so it cannot be used to enumerate attendees.",Closed,TicketFlow\Backend,TicketFlow\Sprint 3,8,2,,E9-Networking
+,Task,,Build the code request and verification screens,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 3,,,Development,E9-Networking
+,Task,,Issue and verify a one-time code against the booking email,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,,,Development,E9-Networking
+,Task,,Return an identical response whether or not the address holds a ticket,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,,,Development,E9-Networking
+,User Story,As an attendee I can opt in to the directory and send direct messages so that I control my visibility,,Directory opt-in and one-to-one messaging.,A user who has not opted in does not appear in the directory.,Closed,TicketFlow\Frontend,TicketFlow\Sprint 3,5,3,,E9-Networking
+,Task,,Add the opt-in toggle and the direct message thread,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 3,,,Development,E9-Networking
+,Task,,Persist opt-in state and message threads,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,,,Development,E9-Networking
+,User Story,As an organiser I am notified when Meet and Greet opens so that I can bring my attendees in,,Notification reaching every eligible attendee.,"The notification reaches both invited guests and ticket buyers, proven by test.",Closed,TicketFlow\Backend,TicketFlow\Sprint 3,5,3,,E9-Networking
+,Task,,Send the notification to both invited guests and ticket buyers,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 3,,,Development,E9-Networking
+,Task,,Add a test asserting both sources are covered,,,Closed,TicketFlow\QA,TicketFlow\Sprint 3,,,Testing,E9-Networking
+,User Story,As a visitor I can click an event to see its full detail so that I can decide whether to attend,,The public event detail page.,"Venue detail, tiers, dates and organiser all render; an invite-only event is not reachable this way.",Closed,TicketFlow\Frontend,TicketFlow\Sprint 4,5,1,,E11-Discovery
+,Task,,Create the event detail route and layout,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 4,,,Development,E11-Discovery
+,Task,,"Render venue detail, ticket tiers, dates and the organiser",,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 4,,,Development,E11-Discovery
+,Task,,Implement the single-event endpoint by slug,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 4,,,Development,E11-Discovery
+,User Story,As an attendee I can review my order before paying so that I know what I am being charged,,Checkout summary showing exactly what will be taken.,"The total is the plain sum of tier prices in the event currency, with no hidden booking fee added.",Closed,TicketFlow\Frontend,TicketFlow\Sprint 4,5,1,,E3-Sales
+,Task,,"Build the summary UI component listing tiers, quantities and total",,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 4,,,Development,E3-Sales
+,Task,,Validate the order state before payment can begin,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 4,,,Development,E3-Sales
+,Task,,Show the total in the event currency and state that no booking fee is added,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 4,,,Development,E3-Sales
+,User Story,As an attendee I can choose a payment method so that I can pay how I prefer,,Paystack checkout initialisation.,Checkout refuses to open if the organiser has no payout account or the gateway key is missing.,Closed,TicketFlow\Frontend,TicketFlow\Sprint 4,8,1,,E3-Sales
+,Task,,Integrate the Paystack SDK on the checkout page,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 4,,,Development,E3-Sales
+,Task,,Implement the payment intent endpoint returning the checkout configuration,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 4,,,Development,E3-Sales
+,User Story,As an attendee I receive a receipt and confirmation so that I know the purchase succeeded,,Webhook-driven confirmation and the ticket email.,The webhook signature is verified against the raw body; the ticket is emailed only after a verified charge.,Closed,TicketFlow\Backend,TicketFlow\Sprint 4,8,1,,E3-Sales
+,Task,,Implement the webhook handler verifying the Paystack HMAC against the raw body,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 4,,,Development,E3-Sales
+,Task,,Confirm the booking and send the ticket email only after a verified charge,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 4,,,Development,E3-Sales
+,Task,,Show the success state with the booking reference,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 4,,,Development,E3-Sales
+,User Story,As an attendee I can open my ticket with its QR so that I can be admitted at the door,,The digital ticket and the My Tickets list.,The QR encodes the scannable ticket identifier; the on-screen ticket matches the emailed one.,Closed,TicketFlow\Frontend,TicketFlow\Sprint 4,5,1,,E3-Sales
+,Task,,Generate a unique ticket identifier and QR per booking,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 4,,,Development,E3-Sales
+,Task,,Build the digital ticket page styled to match the email template,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 4,,,Development,E3-Sales
+,Task,,Add the My Tickets list,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 4,,,Development,E3-Sales
+,User Story,As a visitor I can buy a ticket without creating an account so that nothing blocks the sale,,Guest checkout capturing a name and an email.,The booking is attached to an email rather than a user; the ticket still arrives and still scans.,Closed,TicketFlow\Backend,TicketFlow\Sprint 4,5,1,,E3-Sales
+,Task,,Capture buyer name and email at checkout for guests,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 4,,,Development,E3-Sales
+,Task,,Attach the booking to an email rather than a user when there is no account,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 4,,,Development,E3-Sales
+,User Story,As an organiser inventory is held during checkout and released if payment never completes so that abandoned baskets cost nothing,,"Reservation, expiry and release.",The last ticket cannot be sold twice under concurrent purchase; a lapsed hold returns to sale automatically.,Closed,TicketFlow\Backend,TicketFlow\Sprint 4,8,1,,E3-Sales
+,Task,,Reserve inventory and write a pending booking inside a transaction,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 4,,,Development,E3-Sales
+,Task,,Run an in-process sweeper releasing lapsed holds on an interval,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 4,,,Development,E3-Sales
+,Task,,Write concurrency tests proving the last ticket cannot be sold twice,,,Closed,TicketFlow\QA,TicketFlow\Sprint 4,,,Testing,E3-Sales
+,User Story,As the platform every order is priced on the server so that a buyer cannot set their own price,,"Server-authoritative pricing, closing a real defect where the client supplied the amount.",A tampered client payload is ignored; the charge always matches the event's own tier prices.,Closed,TicketFlow\Backend,TicketFlow\Sprint 4,8,1,,E3-Sales
+,Task,,Move pricing into a server-side pricing service reading the event's own tiers,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 4,,,Development,E3-Sales
+,Task,,Ignore any client-supplied price and recompute the expected amount,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 4,,,Development,E3-Sales
+,Task,,Add tests attempting to buy a high-value ticket for a token amount,,,Closed,TicketFlow\QA,TicketFlow\Sprint 4,,,Testing,E3-Sales
+,User Story,As the platform we take a percentage fee via split settlement so that the business earns from each sale,,"Platform fee applied as a Paystack split, settling the organiser directly.",The fee is computed in minor units and rounded down; the organiser bears the gateway charge.,Closed,TicketFlow\Backend,TicketFlow\Sprint 4,8,2,,E12-Revenue
+,Task,,"Compute the platform fee in minor units, rounding down",,,Closed,TicketFlow\Backend,TicketFlow\Sprint 4,,,Development,E12-Revenue
+,Task,,Attach the subaccount and transaction charge to the Paystack transaction,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 4,,,Development,E12-Revenue
+,Task,,Cover the fee arithmetic with unit tests,,,Closed,TicketFlow\QA,TicketFlow\Sprint 4,,,Testing,E12-Revenue
+,User Story,As an organiser I can connect a payout account so that I am paid directly,,"Bank selection, account resolution and subaccount creation, in the application.",The subaccount code is never returned to the browser; paid events refuse to sell until a payout account exists.,Closed,TicketFlow\Backend,TicketFlow\Sprint 4,5,2,,E12-Revenue
+,Task,,Build the payout onboarding screen with bank selection and account resolution,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 4,,,Development,E12-Revenue
+,Task,,Create the Paystack subaccount and store its code without ever exposing it,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 4,,,Development,E12-Revenue
+,Task,,Refuse to sell paid tickets until the organiser can be paid,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 4,,,Development,E12-Revenue
+,User Story,As an organiser I can watch arrivals live so that I can manage the door,,Live dashboard driven by server-sent events.,The dashboard is populated on connect from a snapshot and updates without a refresh as scans arrive.,Closed,TicketFlow\Frontend,TicketFlow\Sprint 4,13,1,,E6-LiveOps
+,Task,,"Build the live dashboard with capacity, sold and admitted counts",,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 4,,,Development,E6-LiveOps
+,Task,,Stream admission events over SSE from an in-process event bus,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 4,,,Development,E6-LiveOps
+,Task,,Send a point-in-time snapshot so the dashboard is populated before the next scan,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 4,,,Development,E6-LiveOps
+,User Story,As an organiser I can review scan anomalies so that fraud is visible,,"Rule-based anomaly detection over the audit log, running locally.","Repeated rejects, multiple devices and rapid sequential scans are flagged; manual entries are excluded.",Closed,TicketFlow\Data & ML,TicketFlow\Sprint 4,8,2,,E7-Intelligence
+,Task,,Define the anomaly rules and thresholds,,,Closed,TicketFlow\Data & ML,TicketFlow\Sprint 4,,,Development,E7-Intelligence
+,Task,,Surface flagged tickets on the live dashboard,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 4,,,Development,E7-Intelligence
+,Task,,Exclude manual check-ins from detection,,,Closed,TicketFlow\Data & ML,TicketFlow\Sprint 4,,,Development,E7-Intelligence
+,User Story,As an organiser I see expected no-shows so that I can plan capacity,,"Offline-trained model shipped as portable weights, scored at request time.",Both ticket buyers and invited guests are scored; the model is evaluated with a published offline report.,Closed,TicketFlow\Data & ML,TicketFlow\Sprint 4,8,2,,E7-Intelligence
+,Task,,Train the model offline and ship portable weights,,,Closed,TicketFlow\Data & ML,TicketFlow\Sprint 4,,,Development,E7-Intelligence
+,Task,,"Score pending bookings, covering ticket buyers and invited guests alike",,,Closed,TicketFlow\Data & ML,TicketFlow\Sprint 4,,,Development,E7-Intelligence
+,Task,,Publish an offline evaluation report with metrics,,,Closed,TicketFlow\QA,TicketFlow\Sprint 4,,,Testing,E7-Intelligence
+,User Story,As an organiser I can see my revenue and daily earnings so that I know what I am owed,,"Revenue reporting per event and in total, with a daily series.",Figures cover confirmed payments only; the series sums exactly to the headline totals.,Closed,TicketFlow\Backend,TicketFlow\Sprint 4,8,1,,E12-Revenue
+,Task,,"Aggregate gross, platform fee and net per event and in total",,,Closed,TicketFlow\Backend,TicketFlow\Sprint 4,,,Development,E12-Revenue
+,Task,,Build the stat tiles and the daily earnings column chart,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 4,,,Development,E12-Revenue
+,Task,,Zero-fill days with no sales so a quiet period is visible rather than compressed,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 4,,,Development,E12-Revenue
+,User Story,As an administrator I can see platform fee income separately from my own events so that the two are never confused,,Scoped revenue with an admin-only platform view.,"The platform figure is the fee alone, not the gross; a non-admin requesting the platform scope is refused.",Closed,TicketFlow\Backend,TicketFlow\Sprint 4,5,2,,E12-Revenue
+,Task,,Add scope handling with the platform scope restricted to admins,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 4,,,Development,E12-Revenue
+,Task,,Add My events and Platform tabs to the revenue page,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 4,,,Development,E12-Revenue
+,Task,,Headline the platform figure as the fee alone,,,Closed,TicketFlow\Frontend,TicketFlow\Sprint 4,,,Development,E12-Revenue
+,User Story,As an organiser only I or an admin can see my sales and booker list so that attendee data is not exposed,,Closing a broken access control defect on the sales view.,Another organiser requesting the same event is refused; the fix is covered by regression tests.,Closed,TicketFlow\Backend,TicketFlow\Sprint 4,5,1,,E8-Quality
+,Task,,Enforce the same ownership rule on the bookings endpoint as on the dashboard,,,Closed,TicketFlow\Backend,TicketFlow\Sprint 4,,,Development,E8-Quality
+,Task,,Add regression tests that fail against the pre-fix code,,,Closed,TicketFlow\QA,TicketFlow\Sprint 4,,,Testing,E8-Quality
+,User Story,As the team the product is documented and demonstrable so that it can be assessed,,"Technical documentation, diagrams and the demonstration video.",Every diagram exists as a rendered image as well as source; the demo runs end to end from a seeded environment.,Closed,TicketFlow\QA,TicketFlow\Sprint 4,8,1,,E8-Quality
+,Task,,"Write the technical documentation, quality model and feature testing guide",,,Closed,TicketFlow\QA,TicketFlow\Sprint 4,,,Documentation,E8-Quality
+,Task,,"Produce the use case, architecture and data flow diagrams with rendered images",,,Closed,TicketFlow\QA,TicketFlow\Sprint 4,,,Documentation,E8-Quality
+,Task,,Record the demonstration video from a seeded environment,,,Closed,TicketFlow\QA,TicketFlow\Sprint 4,,,Documentation,E8-Quality
+,User Story,As the team coverage is measured and published so that quality is evidenced,,Coverage generated in CI and published to a reporting service.,Coverage is produced for both packages; publication is skipped cleanly when the token is absent.,Active,TicketFlow\DevOps,TicketFlow\Sprint 4,3,2,,E8-Quality
+,Task,,Generate lcov coverage for both packages in CI,,,Closed,TicketFlow\DevOps,TicketFlow\Sprint 4,,,Deployment,E8-Quality
+,Task,,Upload coverage to the reporting service behind a repository secret,Needs repository admin to add the project and create the secret.,,Active,TicketFlow\DevOps,TicketFlow\Sprint 4,,,Deployment,E8-Quality
+,User Story,As the team the stack can be deployed so that it runs outside a developer machine,,"Deployment target for the API and the web application. Images publish to a registry today, but nothing pulls and runs them.",A deployed environment serves the application over HTTPS with production configuration.,New,TicketFlow\DevOps,TicketFlow\Sprint 4,5,3,,E8-Quality
+,Task,,Choose a hosting target for the API and the web application,,,New,TicketFlow\DevOps,TicketFlow\Sprint 4,,,Deployment,E8-Quality
+,Task,,Configure production environment variables and secrets,,,New,TicketFlow\DevOps,TicketFlow\Sprint 4,,,Deployment,E8-Quality
+,Task,,Run a deployment from the published images,,,New,TicketFlow\DevOps,TicketFlow\Sprint 4,,,Deployment,E8-Quality
