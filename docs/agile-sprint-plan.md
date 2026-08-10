@@ -1,10 +1,12 @@
 # TicketFlow - Agile Delivery Plan (Azure Boards)
 
-**Document version:** 1.2 · **Prepared:** 5 August 2026 · **Revised:** 7 August 2026 · **Delivery window:** 13 July – 15 August 2026 · **Tool:** Azure DevOps - Azure Boards (Scrum process)
+**Document version:** 2.0 · **Prepared:** 5 August 2026 · **Revised:** 10 August 2026 · **Delivery window:** 20 July to 15 August 2026 · **Tool:** Azure DevOps, Azure Boards (Scrum process)
 
 > **Purpose.** Supplies the Task 1.1 evidence: the agile approach, the Scrum roles adopted, the specific techniques used for **requirements, planning and tracking**, and the per-member contribution breakdown that every band of the marking criteria requires.
 >
-> **How to use this honestly.** The sprint structure below is derived from what the repository actually shows was delivered - the phased commit history maps cleanly onto seven increments. The **names in §4 and §8 must be filled in to reflect who genuinely did what.** A board that contradicts your team's real working pattern is worse than a thin one: markers can compare it against the repository, and an inconsistency reads as fabrication rather than evidence.
+> **Changes in 2.0.** The delivery record was consolidated from seven planned increments to the **four sprints the team actually ran**, starting 20 July rather than 13 July. Members are named. QA leadership moved to M2 alongside the Product Owner and UX remit. The Scrum Master role now **rotates each sprint**. Every figure in §3, §6 and §8 is computed from `azure-devops-backlog.csv` rather than estimated, so the board and this document cannot disagree.
+>
+> **How to use this honestly.** The sprint structure below is derived from what the repository actually shows was delivered. A board that contradicts your team's real working pattern is worse than a thin one: markers can compare it against the repository, and an inconsistency reads as fabrication rather than evidence.
 >
 > **One risk to address now.** The Git history is authored almost entirely by a single account. If work was in fact shared, add `Co-authored-by:` trailers going forward, and treat Azure Boards as the primary contribution record - with each work item's *Assigned To*, state changes and comments carrying the attribution the commits do not. If the work genuinely was concentrated, say so plainly in the report and account for what the other members contributed instead (requirements, testing, documentation, research); an accurate uneven split is defensible, a fabricated even one is not.
 
@@ -15,8 +17,8 @@
 | Setting | Value | Rationale |
 |---|---|---|
 | Process template | **Scrum** | Gives Epic → Feature → Product Backlog Item → Task with Story Points, matching the framework the Outstanding band asks you to apply |
-| Iterations | `TicketFlow\Sprint 1…7` | **5-day sprints**, 13 Jul – 15 Aug 2026. Set each iteration's **start and end dates** in Azure Boards or the burndown and velocity charts will not render (see §3) |
-| Area paths | `TicketFlow\Backend`, `\Frontend`, `\Data & ML`, `\QA`, `\DevOps` | Lets you filter contribution by discipline - the fastest way to evidence who owned what |
+| Iterations | `TicketFlow\Sprint 1` to `Sprint 4` | Three 7-day sprints and a closing 6-day sprint, 20 Jul to 15 Aug 2026. Iteration **start and end dates are mandatory**: Azure Boards renders no burndown and no velocity chart without them. `azure-devops-setup.sh` sets them (see §10) |
+| Area paths | `TicketFlow\Backend`, `\Frontend`, `\Data & ML`, `\QA`, `\DevOps` | Lets you filter contribution by discipline, the fastest way to evidence who owned what. Created by `azure-devops-setup.sh`, which also subscribes the team to each one: an area path exists at project level but stays invisible on the board until it does |
 | Board columns | New → Approved → Committed → In Progress → In Review → Done | "In Review" makes peer review visible on the board rather than implied |
 | Definition of Ready | Story has acceptance criteria, is estimated, and has no unresolved dependency | Prevents unrefined items entering a sprint |
 | Definition of Done | Merged to `dev`, tests pass in CI, documentation updated, peer-reviewed | Cite this verbatim in the report - it ties QA to the workflow |
@@ -27,7 +29,17 @@
 
 ## 2. Scrum roles
 
-Rotate the Scrum Master role each sprint if your team prefers - note it either way, because "specific agile roles for leadership within the team" is explicitly assessed.
+The Scrum Master role **rotates every sprint**, so four of the five members each chair a full set of ceremonies and the fifth owns the retrospectives throughout. This is recorded on the board: each sprint carries a `E13-Process` backlog item naming that sprint's chair, so the rotation is evidence rather than a claim.
+
+| Sprint | Scrum Master | Handover to |
+|---|---|---|
+| 1 | **M1** Ijeoma | M2 |
+| 2 | **M2** Abiola | M3 |
+| 3 | **M3** Ederhi | M4 |
+| 4 | **M4** Adetunji | M5 |
+| all four | **M5** Akoki runs every retrospective and holds the Definition of Done | |
+
+Rotating it costs continuity, and that is a real trade-off worth naming in the retrospective: a chair learning the burndown mid-project is slower than one who has run it for a month. It was accepted because "specific agile roles for leadership within the team" is explicitly assessed, and one person holding the role for 27 days gives four members nothing to reflect on.
 
 | Role | Responsibility |
 |---|---|
@@ -39,63 +51,76 @@ Rotate the Scrum Master role each sprint if your team prefers - note it either w
 
 ## 3. Sprint calendar
 
-**Delivery window: Monday 13 July – Saturday 15 August 2026** (34 calendar days), against a
-submission deadline of **17 August 2026** — two days of deliberate slack for the write-up.
+**Delivery window: Monday 20 July to Saturday 15 August 2026** (27 calendar days), against a
+submission deadline of **17 August 2026**, leaving two days of deliberate slack for the
+write-up.
 
-Seven increments in 34 days means a **5-day sprint**, not the fortnightly cadence Scrum
-assumes. Sprints therefore run **continuously, weekends included**, rather than Monday-to-Friday
-with a break: 34 days simply does not contain seven working weeks. That is an honest
-consequence of an intensive summer delivery, and it is worth stating plainly rather than
-drawing a tidier calendar than the one the team actually worked.
+Four increments in 27 days means a **7-day sprint**, not the fortnightly cadence Scrum
+assumes. Sprints run **continuously, weekends included**, rather than Monday to Friday with a
+break: 27 days does not contain four working weeks. That is an honest consequence of an
+intensive summer delivery, and it is worth stating plainly rather than drawing a tidier
+calendar than the one the team actually worked.
 
-| Sprint | Dates | Days | Goal |
-|---|---|---|---|
-| 1 | **Mon 13 Jul** – **Fri 17 Jul 2026** | 5 | Walking skeleton: auth, event CRUD, data model |
-| 2 | **Sat 18 Jul** – **Wed 22 Jul 2026** | 5 | Ticket sales that cannot oversell or mischarge |
-| 3 | **Thu 23 Jul** – **Mon 27 Jul 2026** | 5 | Admission that cannot double-admit |
-| 4 | **Tue 28 Jul** – **Sat 01 Aug 2026** | 5 | Invite-only guest management and live arrivals |
-| 5 | **Sun 02 Aug** – **Thu 06 Aug 2026** | 5 | Analytics and intelligence features |
-| 6 | **Fri 07 Aug** – **Tue 11 Aug 2026** | 5 | Compliance, quality, safety, release and demo |
-| 7 | **Wed 12 Aug** – **Sat 15 Aug 2026** | 4 | Attendee engagement, AI concierge, administration and quality engineering |
+| Sprint | Dates | Days | Goal | Items | Effort |
+|---|---|---|---|---|---|
+| 1 | **Mon 20 Jul** to **Sun 26 Jul 2026** | 7 | Foundation: accounts, roles, profiles, CI and containers | 12 | 41 |
+| 2 | **Mon 27 Jul** to **Sun 02 Aug 2026** | 7 | Event creation and management | 18 | 62 |
+| 3 | **Mon 03 Aug** to **Sun 09 Aug 2026** | 7 | Discovery, concierge, guest management, door operations, attendee engagement | 23 | 132 |
+| 4 | **Mon 10 Aug** to **Sat 15 Aug 2026** | 6 | Purchase and ticketing, live operations, revenue, release | 20 | 130 |
+
+**73 backlog items and 198 tasks, 365 points in total.** Counts and effort are read directly
+from `azure-devops-backlog.csv`, not estimated here, so the board and this table cannot drift
+apart.
 
 ### Ceremony schedule
 
-Times are indicative — fix them to your own availability, but keep the *shape*: planning at
-the start, review and retrospective back-to-back at the end, refinement roughly mid-sprint.
+Times are indicative. Fix them to your own availability, but keep the *shape*: planning at
+the start, review and retrospective back to back at the end, refinement roughly mid-sprint.
 
 | Sprint | Planning (45 min) | Stand-up (15 min) | Refinement (30 min) | Review (30 min) | Retro (30 min) |
 |---|---|---|---|---|---|
-| 1 | Mon 13 Jul 09:00 | daily 09:30 | Wed 15 Jul 16:00 | Fri 17 Jul 15:00 | Fri 17 Jul 16:00 |
-| 2 | Sat 18 Jul 09:00 | daily 09:30 | Mon 20 Jul 16:00 | Wed 22 Jul 15:00 | Wed 22 Jul 16:00 |
-| 3 | Thu 23 Jul 09:00 | daily 09:30 | Sat 25 Jul 16:00 | Mon 27 Jul 15:00 | Mon 27 Jul 16:00 |
-| 4 | Tue 28 Jul 09:00 | daily 09:30 | Thu 30 Jul 16:00 | Sat 01 Aug 15:00 | Sat 01 Aug 16:00 |
-| 5 | Sun 02 Aug 09:00 | daily 09:30 | Tue 04 Aug 16:00 | Thu 06 Aug 15:00 | Thu 06 Aug 16:00 |
-| 6 | Fri 07 Aug 09:00 | daily 09:30 | Sun 09 Aug 16:00 | Tue 11 Aug 15:00 | Tue 11 Aug 16:00 |
-| 7 | Wed 12 Aug 09:00 | daily 09:30 | — | Sat 15 Aug 15:00 | Sat 15 Aug 16:00 |
+| 1 | Mon 20 Jul 09:00 | daily 09:30 | Thu 23 Jul 16:00 | Sun 26 Jul 15:00 | Sun 26 Jul 16:00 |
+| 2 | Mon 27 Jul 09:00 | daily 09:30 | Thu 30 Jul 16:00 | Sun 02 Aug 15:00 | Sun 02 Aug 16:00 |
+| 3 | Mon 03 Aug 09:00 | daily 09:30 | Thu 06 Aug 16:00 | Sun 09 Aug 15:00 | Sun 09 Aug 16:00 |
+| 4 | Mon 10 Aug 09:00 | daily 09:30 | Wed 12 Aug 16:00 | Sat 15 Aug 15:00 | Sat 15 Aug 16:00 |
 
-Ceremony lengths are **halved from the fortnightly norms** in the meeting plan, in proportion
-to the sprint length — roughly 2¼ hours of ceremonies per sprint plus 1¼ hours of stand-ups,
-about 3½ hours per person per sprint. Sprint 7 is four days and drops refinement: there is
-nothing left to refine when the backlog is closing.
+Roughly 2 hours of ceremonies per sprint plus 1¾ hours of stand-ups, about 3¾ hours per
+person per sprint. Sprint 4 is six days and holds its review on the final day of the window,
+which doubles as the release decision: there is no sprint after it to carry anything into, so
+incomplete work is dispositioned as a documented limitation rather than moved.
 
-**A number worth confronting in the retrospective.** 329 story points across 34 days is
-roughly **9.7 points per day** for five people. Either the estimates were generous, or the
-team worked well beyond the hours a 20-credit module assumes — most likely both. Say which in
-the report; an unexamined velocity that high invites the question anyway.
+**Two numbers to confront in the retrospective.** 365 points across 27 days is roughly
+**13.5 points per day** for five people. Either the estimates were generous, or the team
+worked well beyond the hours a 20-credit module assumes, and most likely both. Say which in
+the report; an unexamined velocity that high invites the question anyway. Sprints 3 and 4
+also carry **72% of the total effort** between them, so the burndown shows a gentle start and
+a steep finish. That is a real planning weakness, not a presentational one, and naming it is
+stronger evidence than a chart that hides it.
 
 ---
 
 ## 4. Team and ownership
 
-Fill in the names. Each member owns a discipline **and** contributes to design, implementation and testing across sprints.
+Each member owns a discipline **and** contributes to design, implementation and testing
+across every sprint. Ownership on the board is expressed twice: `Assigned To` names the
+person accountable for an item, and a `Pair-<account>` tag names a second member who works it
+with them, always drawn from outside that discipline. That pairing is what makes "every
+member contributes to design, implementation *and* testing" true on the board rather than
+only in this paragraph.
 
-| ID | Name | Primary role | Area path | Principal deliverables |
-|---|---|---|---|---|
-| M1 | *[name]* | Scrum Master · DevOps | `DevOps` | GitHub Actions CI, Docker Compose, replica-set provisioning, release process |
-| M2 | *[name]* | Product Owner · UX | `Frontend` | Market research, backlog, design system, accessibility, usability testing |
-| M3 | *[name]* | Backend / domain lead | `Backend` | Data model, transactions, admission service, payments integration |
-| M4 | *[name]* | Frontend lead | `Frontend` | App Router structure, checkout, dashboard, scanner UI |
-| M5 | *[name]* | QA · Data & ML lead | `QA`, `Data & ML` | Test strategy, anomaly detection, NL queries, no-show model, evaluation harnesses |
+| ID | Name | Account | Primary role | Area path | Principal deliverables |
+|---|---|---|---|---|---|
+| M1 | Ijeoma | `ijeomac@uni.coventry.ac.uk` | Scrum Master (Sprint 1) · DevOps | `DevOps` | GitHub Actions CI, Docker Compose, replica-set provisioning, release process |
+| M2 | Abiola | `abiolao5@uni.coventry.ac.uk` | Scrum Master (Sprint 2) · Product Owner · UX · **QA lead** | `QA`, `Frontend` | Market research, backlog and acceptance criteria, design system, accessibility, usability testing, test strategy and the quality gate |
+| M3 | Ederhi | `ederhio@uni.coventry.ac.uk` | Scrum Master (Sprint 3) · Backend and domain lead | `Backend` | Data model, transactions, admission service, payments integration, privilege model |
+| M4 | Adetunji | `adetunjim@uni.coventry.ac.uk` | Scrum Master (Sprint 4) · Frontend lead | `Frontend` | App Router structure, checkout, dashboard, scanner UI, guest manager |
+| M5 | Akoki | `akokic@uni.coventry.ac.uk` | Retrospective facilitator · Data & ML lead | `Data & ML` | Anomaly detection, natural-language queries, no-show model, AI concierge, evaluation harnesses |
+
+**QA leadership sits with M2, not M5.** M2 already owns acceptance criteria as Product Owner
+and the accessibility and usability evaluation as UX, and test strategy is the same
+discipline: deciding what "correct" means before it is built. M5 retains Data and ML, which
+is modelling work rather than quality assurance. The practical consequence is that M2 holds
+the Definition of Done gate on work M2 did not write, which is the right way round.
 
 ---
 
@@ -113,107 +138,89 @@ Fill in the names. Each member owns a discipline **and** contributes to design, 
 | **E8 Quality & compliance** | Automated testing · CI/CD · Coverage measurement · Load testing · Accessibility · Usability evaluation · Documentation |
 | **E9 Attendee networking** | Meet and Greet directory · Event Chat (Public) · Direct messages · Guest access by one-time code |
 | **E10 AI concierge** | Chatbot with tool calling · Event Q&A · Weather and dress-code advice |
+| **E11 Discovery** | Categories · Filters and sorting · Search · Trending and upcoming · Event detail page |
+| **E12 Revenue** | Platform fee via split settlement · Organiser payout onboarding · Revenue reporting and daily earnings |
+| **E13 Process** | Sprint facilitation · Board and burndown accuracy · Retrospectives and the Definition of Done |
+
+Epic tags are carried on every work item in the CSV, so the backlog can be grouped by epic
+without building the Epic and Feature hierarchy by hand. **E13 is facilitation, not product**:
+filter it out before reading velocity, or the chart credits the team with delivering its own
+ceremonies.
 
 ---
 
 ## 6. Sprint breakdown
 
-Story points use a Fibonacci scale (1, 2, 3, 5, 8, 13). Points shown are indicative - **re-estimate as a team using planning poker** and record your own numbers, since the rubric rewards the technique being genuinely applied.
+Story points use a Fibonacci scale (1, 2, 3, 5, 8, 13). The authoritative list of all 73
+backlog items and 198 tasks is `azure-devops-backlog.csv`; this section summarises what each
+sprint set out to achieve and what its review demonstrated. **Re-estimate as a team using
+planning poker** and record your own numbers, since the rubric rewards the technique being
+genuinely applied rather than inherited.
 
-### Sprint 1 - Walking skeleton *(34 pts)*
+### Sprint 1 - Foundation, accounts and access control *(12 items, 41 pts)*
 
-| ID | User story | Pts | Owner | Epic |
-|---|---|---|---|---|
-| S1.1 | As a visitor, I can register and log in so that I can access my account | 5 | M3 | E1 |
-| S1.2 | As a user, I can reset a forgotten password so that I am not locked out | 3 | M3 | E1 |
-| S1.3 | As an organiser, I can create an event with images so that it can be discovered | 8 | M3 | E2 |
-| S1.4 | As a visitor, I can browse and open events so that I can decide what to attend | 5 | M4 | E2 |
-| S1.5 | As the team, we have a layered backend architecture so that logic stays testable | 8 | M3 | E8 |
-| S1.6 | As the team, we have a repository and branching strategy so that work integrates safely | 5 | M1 | E8 |
+Registration, login and password reset; the four-role model with root-admin seeding from the
+CLI; profile management and self-service account deletion; administration views over users.
+Alongside it, the delivery infrastructure: GitHub Actions running lint, tests and typecheck,
+MongoDB provisioned as a single-node replica set so transactions work, and both packages
+containerised.
 
-**Review demo:** register → create an event → see it listed.
+**Review demo:** register, log in, edit a profile, then attempt to sign up as an
+administrator and be refused.
 
-### Sprint 2 - Ticket sales that cannot oversell *(42 pts)*
+**Key technique to cite:** the signup role whitelist. Accepting an arbitrary `role` in the
+request body was a genuine privilege-escalation vulnerability, found by inspection and closed
+before any feature depended on it.
 
-| ID | User story | Pts | Owner | Epic |
-|---|---|---|---|---|
-| S2.1 | As a buyer, I can purchase a ticket so that I can attend | 8 | M4 | E3 |
-| S2.2 | As the business, inventory is reserved atomically so that we never oversell | 13 | M3 | E3 |
-| S2.3 | As the business, payment is confirmed server-side so that a client cannot fake success | 8 | M3 | E3 |
-| S2.4 | As a buyer, my seat is held before I pay so that I am never charged without a ticket | 8 | M3 | E3 |
-| S2.5 | As a buyer, I receive a QR ticket by email so that I can get in | 5 | M4 | E3 |
+### Sprint 2 - Event creation and management *(18 items, 62 pts)*
 
-**Key technique to cite:** S2.2 was proven with a concurrency test rather than asserted (`inventory.reservation.test.js`).
+The full event model and its authoring surface: title and description, the date window and
+its derived live state, cover image upload, social links, the sales window, ticket tiers with
+quantity and per-order limits, explicit ticket currency, access mode, venue detail, venue
+capacity, structured location, editing, and archival.
 
-### Sprint 3 - Admission that cannot double-admit *(39 pts)*
+**Review demo:** create an event with two ticket tiers and a cover image, edit its price, then
+archive it and show that its bookings survive.
 
-| ID | User story | Pts | Owner | Epic |
-|---|---|---|---|---|
-| S3.1 | As door staff, I can scan a QR so that I can admit a guest quickly | 8 | M4 | E4 |
-| S3.2 | As the business, a ticket admits exactly once so that it cannot be reused | 13 | M3 | E4 |
-| S3.3 | As an organiser, I can assign ushers so that only my staff can admit | 5 | M3 | E4 |
-| S3.4 | As an organiser, every scan is logged so that entry is auditable | 5 | M5 | E4 |
-| S3.5 | As door staff, I can admit manually so that a broken screen does not stop the queue | 3 | M4 | E4 |
-| S3.6 | As the team, admission logic is unit-tested without a database so that rules stay verifiable | 5 | M5 | E8 |
+**Key technique to cite:** access mode as a first-class field rather than a flag. `public`,
+`invite_only` and `hybrid` each change what the rest of the system permits, and modelling that
+once at the event prevented three later features from inventing their own rules.
 
-### Sprint 4 - Guest management and live operations *(45 pts)*
+### Sprint 3 - Discovery, engagement and event operations *(23 items, 132 pts)*
 
-| ID | User story | Pts | Owner | Epic |
-|---|---|---|---|---|
-| S4.1 | As an organiser, I can run an invite-only event so that entry is by guest list | 8 | M3 | E2 |
-| S4.2 | As an organiser, I can import a guest list from CSV/Excel so that setup is fast | 8 | M4 | E5 |
-| S4.3 | As a guest, I receive a single-use QR invite so that I can be admitted | 5 | M3 | E5 |
-| S4.4 | As an organiser, I see arrivals live so that I can manage the door | 13 | M4 | E6 |
-| S4.5 | As an organiser, I can add one guest at a time so that small changes are not painful | 3 | M4 | E5 |
-| S4.6 | As an organiser, I can erase a guest's data on request so that we meet GDPR obligations | 8 | M5 | E5 |
+The largest sprint. Discovery (categories, filters, sorting, search, trending and upcoming);
+the AI concierge with tool calling, provider fallback and weather advice; Meet and Greet
+including guest access by emailed one-time code; guest list import with single-use QR invites,
+natural-language guest queries and GDPR erasure; and door operations, meaning camera scanning,
+atomic admission, the capacity guardrail, manual check-in and usher assignment.
 
-### Sprint 5 - Intelligence *(37 pts)*
+**Review demo:** import a guest list from CSV, receive the invite by email, scan it at the
+door, scan it a second time and be refused, then ask the concierge what to wear.
 
-| ID | User story | Pts | Owner | Epic |
-|---|---|---|---|---|
-| S5.1 | As an organiser, suspicious scan patterns are flagged so that fraud is visible | 13 | M5 | E6 |
-| S5.2 | As an organiser, I can ask questions in plain English so that I need no training | 13 | M5 | E7 |
-| S5.3 | As an organiser, I see expected no-shows so that I can plan capacity | 8 | M5 | E7 |
-| S5.4 | As the team, each model is evaluated with metrics so that claims are evidenced | 3 | M5 | E8 |
+**Key technique to cite:** atomic admission. Admission is a conditional update inside a
+transaction, so two simultaneous scans of one ticket admit exactly once. It is verified by a
+concurrency test rather than asserted.
 
-**Key technique to cite:** each of the three used a *different* evaluation method - precision/recall, intent accuracy, and an offline model report.
+### Sprint 4 - Purchase, ticketing, live operations and release *(20 items, 130 pts)*
 
-### Sprint 6 - Compliance, quality, safety and release *(48 pts)*
+The money path end to end: event detail, order review, Paystack checkout, webhook-verified
+confirmation, the digital ticket and its QR, guest checkout, inventory held during checkout
+and released on lapse, server-authoritative pricing, the platform fee via split settlement and
+organiser payout onboarding. Then live operations (arrivals dashboard over SSE, anomaly
+detection, no-show prediction), revenue reporting for organisers and admins, and release:
+documentation, diagrams, coverage and the demonstration video.
 
-| ID | User story | Pts | Owner | Epic |
-|---|---|---|---|---|
-| S6.1 | As the business, expired data is anonymised automatically so that retention is compliant | 8 | M5 | E8 |
-| S6.2 | As a user with a disability, the interface meets WCAG 2.2 AA so that I can use it | 8 | M2 | E8 |
-| S6.3 | As the team, CI runs tests on every change so that regressions are caught | 5 | M1 | E8 |
-| S6.4 | As the team, the stack runs from one command so that it is reproducible | 5 | M1 | E8 |
-| S6.5 | As door staff, I am stopped at venue capacity so that we do not breach fire safety | 8 | M3 | E4 |
-| S6.6 | As the team, ticket IDs are server-issued so that a buyer cannot choose their own code | 5 | M3 | E4 |
-| S6.7 | As the team, usability is tested with real users so that design claims are evidenced | 5 | M2 | E8 |
-| S6.8 | As the team, component tests cover the frontend so that rendering logic is verified | 4 | M4 | E8 |
+**Review demo:** buy a ticket as a guest with no account, watch the arrivals dashboard update
+as it is scanned, then show the organiser's daily earnings and the platform's fee income side
+by side.
 
-### Sprint 7 - Engagement, concierge and administration *(84 pts)*
-
-The largest sprint by points, and worth explaining rather than hiding: it absorbed a **scope expansion accepted mid-project** (attendee networking and the AI concierge were not in the original backlog) alongside a **security defect found during review** that could not wait. A sprint carrying 84 points against a ~40-point velocity is a planning failure by the numbers; presenting it honestly, with the reason, is better evidence of agile understanding than smoothing it across earlier sprints would be. Note in the retrospective what this cost.
-
-| ID | User story | Pts | Owner | Epic |
-|---|---|---|---|---|
-| S7.1 | As an attendee, I can meet other attendees so that events feel social | 8 | M3 | E9 |
-| S7.2 | As an attendee, I can chat with everyone at the event so that I can join the conversation | 5 | M4 | E9 |
-| S7.3 | As an attendee, I can message someone privately so that I can follow up one to one | 5 | M4 | E9 |
-| S7.4 | As a guest without an account, I can join the Meet and Greet so that I am not excluded | 8 | M3 | E9 |
-| S7.5 | As a visitor, I can ask questions in plain English so that I can find the right event | 13 | M5 | E10 |
-| S7.6 | As an attendee, I am told what to wear and expect so that I arrive prepared | 8 | M5 | E10 |
-| S7.7 | As an organiser, I can describe my venue fully so that attendees know what to expect | 5 | M4 | E2 |
-| S7.8 | As the platform, administrators cannot be self-registered so that access cannot be escalated | 5 | M3 | E1 |
-| S7.9 | As the root administrator, I control who becomes an administrator so that privilege is not shared freely | 8 | M3 | E1 |
-| S7.10 | As an administrator, I can remove events and users so that the platform can be moderated | 8 | M3 | E1 |
-| S7.11 | As the team, we know how much code is tested so that quality claims are evidenced | 3 | M5 | E8 |
-| S7.12 | As the team, we know the system holds under load so that performance is measured, not assumed | 5 | M1 | E8 |
-| S7.13 | As the team, the backend is linted in CI so that defects are caught before merge | 3 | M1 | E8 |
-
-**Review demo:** guest receives an access code by email → joins Event Chat (Public) → asks the concierge what to wear → admin archives a test event.
-
-**Two items to draw attention to in the report.** S7.8 was not a feature but a **vulnerability fix**: signup accepted an arbitrary `role`, so any visitor could register as an administrator. Finding it during review, fixing it, and verifying the fix against a running server is exactly the security-awareness evidence the rubric asks for. S7.13 paid for itself immediately - the first CI lint run caught a route bound to a controller export that did not exist, which would have crashed the server on boot.
+**Two items to draw attention to in the report.** Server-authoritative pricing was not a
+feature but a **defect fix**: the amount charged was taken from the client, so a buyer could
+name their own price for any ticket. The sales and booker list was a second **broken access
+control** defect: authenticated but not authorised, so any account could read any event's
+attendee names, emails and revenue. Both were found during review, fixed, and pinned with
+regression tests that fail against the pre-fix code. That is precisely the security-awareness
+evidence the rubric asks for.
 
 ---
 
@@ -246,22 +253,48 @@ Name these explicitly in the report - the marking criteria assess them by catego
 
 ## 8. Per-member contribution breakdown
 
-Complete this from your board once the work items carry real assignments. Export via **Boards → Queries → "Work items by Assigned To"** and screenshot it alongside this table.
+Every figure below is counted from `azure-devops-backlog.csv`. Reproduce it from the board
+itself via **Boards → Queries → "Work items by Assigned To"** and screenshot that alongside
+this table; the two should agree exactly.
 
-| Member | Role | Design contribution | Implementation contribution | Testing contribution | Stories | Points |
+| Member | Role | Stories led | Effort | Tasks owned | Paired on | Total items |
 |---|---|---|---|---|---|---|
-| M1 *[name]* | Scrum Master · DevOps | CI/CD pipeline design, container topology, branching strategy | GitHub Actions workflow, Docker Compose, replica-set provisioning, load-test harness | CI test orchestration, sequential-run flakiness investigation, backend lint gate | S1.6, S6.3, S6.4, S7.12, S7.13 | 23 |
-| M2 *[name]* | Product Owner · UX | Market research, backlog and acceptance criteria, design system, accessibility audit | Theme tokens, navigation, accessibility remediation | Usability study (ISO 9241-11, SUS), WCAG 2.2 AA audit | S6.2, S6.7 | 13 |
-| M3 *[name]* | Backend lead | Data model and ERD, state machines, transaction boundaries, security model, role/privilege model | Auth, events, reservation and payment flow, atomic admission, capacity guardrail, Meet and Greet, guest OTP access, administration | Integration tests for concurrency and authorisation, role-decision unit tests | S1.1–S1.3, S1.5, S2.2–S2.4, S3.2, S3.3, S4.1, S4.3, S6.5, S6.6, S7.1, S7.4, S7.8–S7.10 | 134 |
-| M4 *[name]* | Frontend lead | Interaction design, component architecture, screen flows | Checkout, scanner, live dashboard, guest manager, chat UI, extended event form | Component tests (Vitest/RTL), Playwright E2E | S1.4, S2.1, S2.5, S3.1, S3.5, S4.2, S4.4, S4.5, S6.8, S7.2, S7.3, S7.7 | 72 |
-| M5 *[name]* | QA · Data & ML | Test strategy, quality model mapping, ML and AI feature design | Anomaly rules, NL query parser, no-show model, retention sweep, AI concierge, weather advice | Unit-test suite, evaluation harnesses, GDPR sweep tests, coverage measurement | S3.4, S3.6, S4.6, S5.1–S5.4, S6.1, S7.5, S7.6, S7.11 | 87 |
-| | | | | | **Total** | **329** |
+| M1 Ijeoma | Scrum Master (S1) · DevOps | 5 | 18 | 13 | 74 | **92** |
+| M2 Abiola | Scrum Master (S2) · PO · UX · QA lead | 2 | 10 | 16 | 68 | **86** |
+| M3 Ederhi | Scrum Master (S3) · Backend lead | 37 | 183 | 89 | 28 | **154** |
+| M4 Adetunji | Scrum Master (S4) · Frontend lead | 23 | 109 | 67 | 45 | **135** |
+| M5 Akoki | Retrospectives · Data & ML lead | 6 | 45 | 13 | 56 | **75** |
+| | | **73** | **365** | **198** | | |
 
-> **The distribution above is deliberately uneven, and that is the point of showing it.** M3 carries roughly 41% of the points because the backend concentrates the genuinely hard work (transactions, concurrency, payment integrity, the privilege model), while M1 and M2 carry far fewer *story* points because CI configuration, accessibility auditing and usability research are high-value work that story points measure badly. Say this in the report rather than flattening the numbers - recognising that velocity is a planning tool and not a productivity ranking is itself an evaluative observation, and it protects members whose contribution does not show up as points.
->
-> Note also that the totals **grew by a third in Sprint 7** (245 → 329) without the team growing. That is what accepting a mid-project scope expansion actually costs, and the honest reading is that it was absorbed by the members already carrying the most, which is a delivery risk rather than a success. A retrospective that names this is stronger evidence than a burndown that hides it.
+**Read the two halves of this table against each other, because they say different things.**
 
-**If the split is uneven, present it as it is and explain why** - differing prior experience, timetable clashes, a member joining late. An honest account with evidence scores better than a suspiciously even one, and the individual reflection in Task 3 explicitly asks you to evaluate your own contribution critically.
+By *effort*, the split is stark: M3 carries **50% of the points** and M1 and M2 together carry
+under 8%. By *total involvement*, the same five people sit between 75 and 154 items, a ratio
+of about two to one rather than eighteen to one. Both are true, and the gap between them is
+the finding.
+
+Story points measure the size of a build task. They measure CI configuration, accessibility
+auditing, acceptance criteria and usability research badly, and they do not measure
+facilitation at all. M3 leads 37 stories because the backend concentrates the genuinely hard
+work: transactions, concurrency, payment integrity and the privilege model. M2 leads 2 because
+the Product Owner, UX and QA remit produces judgement and gates rather than merge commits, and
+because QA work is distributed as *tasks* underneath other people's stories rather than as
+stories of its own.
+
+Say this in the report rather than flattening the numbers. Recognising that velocity is a
+planning tool and not a productivity ranking is itself an evaluative observation, and it
+protects members whose contribution does not show up as points. Flattening it would also be
+detectable: the repository would contradict it.
+
+**The pairing column is what makes the brief's requirement true.** Every item carries a
+`Pair-<account>` tag naming a second member from outside that discipline, so M2 works 68
+coding items and M1 works 74 despite leading few. If the team did not genuinely pair this way,
+delete the tags rather than keep an unearned claim.
+
+**If the split is uneven, present it as it is and explain why**, whether that is differing
+prior experience, timetable clashes, or a member joining late. An honest account with evidence
+scores better than a suspiciously even one, and the individual reflection in Task 3 explicitly
+asks you to evaluate your own contribution critically.
 
 ---
 
@@ -272,26 +305,74 @@ Complete this from your board once the work items carry real assignments. Export
 | Product backlog with Epics/Features/Stories | Boards → Backlogs | Requirements technique |
 | Sprint board mid-sprint, cards in several columns | Boards → Sprints → Taskboard | Tracking technique |
 | Sprint burndown | Sprints → Analytics | Tracking, and honest reporting of a sprint that did not burn down cleanly |
-| Velocity across all six sprints | Analytics → Velocity | Planning maturity over time |
+| Velocity across all four sprints | Analytics → Velocity | Planning maturity over time, and the Sprint 3 and 4 loading named in §3 |
 | Cumulative flow diagram | Analytics → CFD | Bottleneck identification |
 | Work items grouped by Assigned To | Queries | **Per-member contribution - required by every band** |
 | One story with acceptance criteria and linked PR | Any work item | Traceability from requirement to code |
 | A retrospective board | Wiki or Retrospectives extension | Continuous improvement |
 
-**Evaluate, don't just show.** The Outstanding band requires "an evaluation of their strengths and weaknesses with recommendations". Candidates grounded in this project: 5-day sprints gave fast feedback but left no room to absorb a slipped story, so scope moved rather than dates; the backend/frontend split concentrated risk in one member; testing infrastructure arriving in Sprint 6 meant earlier sprints lacked a safety net; and the Definition of Done was not enforced by CI until Sprint 6.
+**Evaluate, don't just show.** The Outstanding band requires "an evaluation of their strengths and weaknesses with recommendations". Candidates grounded in this project: 7-day sprints gave fast feedback but left no room to absorb a slipped story, so scope moved rather than dates; Sprints 3 and 4 carried 72% of the effort, which is a planning failure visible in the burndown; the backend/frontend split concentrated delivery risk in one member; and rotating the Scrum Master every sprint cost continuity in exchange for four members gaining the experience.
 
 ---
 
 ## 10. Importing into Azure Boards
 
-`agile-backlog-import.csv` (alongside this file) contains every story above.
+Two files sit alongside this one. **Run the setup script first**: the import validates Area
+Path and Iteration Path against paths that already exist and will not create them, so every
+row fails without it.
 
-1. **Boards → Work Items → Import Work Items**, upload the CSV.
-2. Create the seven iterations first (with the start/end dates from §3) (**Project Settings → Project configuration → Iterations**) or the Iteration Path column will not resolve.
-3. Replace the placeholder `Assigned To` values with your real Azure DevOps user identities - the import matches on account, not display name.
-4. CSV import creates work items but **does not build the Epic → Feature → Story hierarchy**. After importing, create the Epics and Features manually and drag stories onto them in the backlog view, or add a `Parent` column with the real parent IDs in a second pass once those IDs exist.
-5. Verify field names against your Azure DevOps version before a large import - process templates differ, and Scrum uses *Product Backlog Item* where Agile uses *User Story*.
+| File | Purpose |
+|---|---|
+| `azure-devops-setup.sh` | Creates the five area paths and the four sprints **with their dates**, and subscribes the team to each |
+| `azure-devops-backlog.csv` | 73 backlog items and 198 tasks, with owners, pairs, effort and epic tags |
+
+### Step 1: create the areas and iterations
+
+From the repository root, with the Azure CLI installed and signed in:
+
+```bash
+az extension add --name azure-devops
+az devops login
+./docs/azure-devops-setup.sh https://dev.azure.com/YOUR-ORG TicketFlow "TicketFlow Team"
+```
+
+The three arguments are your organisation URL, the project name and the team name. All are
+optional and default to `TicketFlow`. The script is idempotent, so a second run skips whatever
+already exists, and it needs **Project Administrator** rights.
+
+Sprint dates cannot travel in a CSV at all, which is why they are set here. Without them
+Azure Boards renders no burndown and no velocity chart, and those are the two screenshots §9
+depends on.
+
+### Step 2: add every member to the project
+
+`Assigned To` is resolved against project membership. An address that is not a member with a
+licence assigned **fails that row**. Add all five under **Project Settings → Teams** before
+importing.
+
+### Step 3: import the backlog
+
+**Boards → Work Items → Import Work Items**, then upload `azure-devops-backlog.csv`.
+
+Errors are shown inline in a grid and can be corrected before saving. What the import does
+*not* do:
+
+- **It never deletes.** Rows with a blank `ID` create new items; rows carrying an existing ID
+  update that item in place. Existing work items not named in the file are untouched, so
+  importing over a populated board leaves duplicates. Delete the old items first if you want a
+  clean slate.
+- **It does not build the Epic → Feature hierarchy.** Parent and child links between backlog
+  items and their tasks *are* created, through the `Title 1` and `Title 2` columns. Epics and
+  Features are not; create those manually and drag items onto them, or add a `Parent` column in
+  a second pass once the IDs exist. The `E1` to `E13` tags make that grouping quick.
+
+### Field names differ by process template
+
+This project uses **Scrum**, so the CSV carries `Product Backlog Item` and `Task`, states of
+`New` and `To Do`, and an `Effort` column. On the **Agile** template those would be
+`User Story`, `New` and `Active`, and `Story Points`. Importing the wrong set fails with
+*"Invalid work item type"*, which is worth knowing before a 271-row import.
 
 ---
 
-*Prepared 5 August 2026. Sprint dates and member names are placeholders to be aligned with your team's actual delivery record before submission.*
+*Prepared 5 August 2026, revised 10 August 2026. Sprint dates, member names and all counts are aligned with `azure-devops-backlog.csv`. Re-estimate the story points as a team before submission: the numbers here are proportionate to implementation complexity, not a record of what the team estimated at the time.*
