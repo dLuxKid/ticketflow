@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="44" height="64" viewBox="0 0 44 64">
+  <!-- UML actor. Referenced by use-case.dot; the renderer inlines it as a data URI so the
+       generated SVG stays self-contained (no external file to lose when the image moves). -->
+  <g fill="none" stroke="#2b2b2b" stroke-width="2.2" stroke-linecap="round">
+    <circle cx="22" cy="11" r="9" />
+    <line x1="22" y1="20" x2="22" y2="42" />
+    <line x1="6"  y1="29" x2="38" y2="29" />
+    <line x1="22" y1="42" x2="9"  y2="60" />
+    <line x1="22" y1="42" x2="35" y2="60" />
+  </g>
+</svg>

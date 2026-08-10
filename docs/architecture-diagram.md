@@ -12,6 +12,19 @@ Cylinders are persistent stores. Every claim below is traceable to a named modul
 
 ## 1. System / deployment architecture
 
+![TicketFlow system architecture](diagrams/architecture.png)
+
+*[Full-resolution SVG](diagrams/architecture.svg) · source: [`diagrams/src/architecture.dot`](diagrams/src/architecture.dot) · regenerate with `node docs/diagrams/render.mjs --dot`*
+
+**Reading it.** Each pale band is a layer, labelled top-left. The rows inside a box name the
+actual files or symbols it stands for, so every box can be checked against the source tree
+rather than taken on trust. Solid arrows are synchronous calls; the purple dashed arrows are
+the asynchronous and inbound paths - the Paystack webhook, the in-process event emitters and
+the SSE push - which are the ones that surprise someone tracing a request by hand.
+
+<details>
+<summary>Mermaid source (same content, renders inline on GitHub)</summary>
+
 ```mermaid
 graph TB
     subgraph Clients["Client tier"]
@@ -99,6 +112,11 @@ graph TB
     CRON["scripts/gdpr-retention-sweep.js<br/>(external scheduler / CI cron)"] --> CORE
 ```
 
+*Rendered: [PNG](diagrams/mermaid/architecture-diagram-1.png) · [SVG](diagrams/mermaid/architecture-diagram-1.svg)*
+
+</details>
+
+
 **Note on the AI boundary.** Only the concierge chatbot (`BOT`) leaves the process for
 inference. Everything else labelled AI here - anomaly detection, no-show prediction and
 natural-language guest queries - runs locally: the first two on rule thresholds and a
@@ -127,10 +145,25 @@ graph LR
     A -.-> E
 ```
 
+<!-- Rendered image. Regenerate with: node docs/diagrams/render.mjs -->
+![architecture-diagram diagram 2](diagrams/mermaid/architecture-diagram-2.png)
+
+*[Full-resolution SVG](diagrams/mermaid/architecture-diagram-2.svg)*
+
+
 Dependencies point one way. Controllers never touch models directly; services never touch
 `req`/`res`. Authorisation lives in the service layer - `canViewDashboard` is reused by the
 dashboard, the guest list, the NL query, and erasure, so the same ownership rule holds on
 every route that reaches them.
+
+**Preconditions live there too, and for the same reason.** Whether an event *has* a guest
+list at all is a property of the event, not of the caller: `hasGuestList(event)` is defined
+once in `eventModel.js` and read both by `guestService`'s authorisation check and by
+`eventService.getEventWorkspace`, the lookup the frontend calls to decide whether to draw the
+Guest list tab. Putting the predicate in one place is what stops the browser and the API
+disagreeing - they previously carried separate copies written in opposite directions, which
+returned different answers for an event with no `accessMode`. The frontend is free to hide a
+control, but it is never the thing that decides.
 
 ## 3. Booking status state machine
 
@@ -154,6 +187,12 @@ stateDiagram-v2
     delivered --> revoked
     revoked --> [*]
 ```
+
+<!-- Rendered image. Regenerate with: node docs/diagrams/render.mjs -->
+![architecture-diagram diagram 3](diagrams/mermaid/architecture-diagram-3.png)
+
+*[Full-resolution SVG](diagrams/mermaid/architecture-diagram-3.svg)*
+
 
 `bookingRepository.admitById` only matches `status ∈ {issued, delivered, scanned}` - that
 guard *is* the single-use guarantee.
@@ -195,6 +234,12 @@ sequenceDiagram
     end
     BUS-->>D: SSE event on the open stream
 ```
+
+<!-- Rendered image. Regenerate with: node docs/diagrams/render.mjs -->
+![architecture-diagram diagram 4](diagrams/mermaid/architecture-diagram-4.png)
+
+*[Full-resolution SVG](diagrams/mermaid/architecture-diagram-4.svg)*
+
 
 Two simultaneous scans of one token both reach MongoDB; exactly one matches the status
 guard, and the loser is written to `auditlogs` as a rejection with a reason. The audit write
@@ -247,6 +292,12 @@ sequenceDiagram
     end
 ```
 
+<!-- Rendered image. Regenerate with: node docs/diagrams/render.mjs -->
+![architecture-diagram diagram 5](diagrams/mermaid/architecture-diagram-5.png)
+
+*[Full-resolution SVG](diagrams/mermaid/architecture-diagram-5.svg)*
+
+
 Three details that are easy to get wrong when reading this quickly:
 
 - **Overselling is prevented by the guarded `$inc`, not by the transaction.**
@@ -285,6 +336,12 @@ graph LR
     Q["Organiser question<br/>POST /:eventId/guests/query"] --> NLP["nlGuestQueryService<br/>intentParser → executeQuery"]
     GU --> NLP
 ```
+
+<!-- Rendered image. Regenerate with: node docs/diagrams/render.mjs -->
+![architecture-diagram diagram 6](diagrams/mermaid/architecture-diagram-6.png)
+
+*[Full-resolution SVG](diagrams/mermaid/architecture-diagram-6.svg)*
+
 
 `anomalyService` is rule-based and pure - no training step, unit-testable, and evaluated
 against a committed labelled fixture (`scripts/eval-anomaly.js`: precision 0.948, recall

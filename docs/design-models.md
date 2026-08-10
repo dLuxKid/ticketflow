@@ -53,6 +53,12 @@ stateDiagram-v2
     end note
 ```
 
+<!-- Rendered image. Regenerate with: node docs/diagrams/render.mjs -->
+![design-models diagram 1](diagrams/mermaid/design-models-1.png)
+
+*[Full-resolution SVG](diagrams/mermaid/design-models-1.svg)*
+
+
 **Guard condition.** The transition to `admitted` is a conditional atomic update (`bookingRepository.admitById`) that matches only `status ∈ {issued, delivered, scanned}`. Two concurrent scans therefore produce exactly one match; the loser re-reads the booking, maps the current status to a rejection reason via `rejectionReasonForStatus`, writes a rejection audit row and returns HTTP 409. This is the behaviour proved by `tests/integration/admission.scan.test.js`.
 
 **Rejections are not a booking state.** A refused scan is recorded on `AuditLog` (`outcome: 'rejected'`), never on the booking. The booking keeps whatever status it already held, which is what allows a guest rejected once - say, arriving at the wrong event - to be admitted later at the right one.
@@ -80,6 +86,12 @@ stateDiagram-v2
         a resolved reservation.
     end note
 ```
+
+<!-- Rendered image. Regenerate with: node docs/diagrams/render.mjs -->
+![design-models diagram 2](diagrams/mermaid/design-models-2.png)
+
+*[Full-resolution SVG](diagrams/mermaid/design-models-2.svg)*
+
 
 Both exits from `pending` are **guarded on `pending` itself** (`updateMany({ reference, transactionStatus: 'pending' }, …)`). Whichever caller obtains `modifiedCount > 0` owns the follow-up side effect - sending tickets, or returning seats to inventory. This is what makes the flow safe against Paystack's webhook retries racing the client's confirm call, and against the expiry sweep racing a late confirmation. Covered by `tests/integration/reservation.lifecycle.test.js`.
 
@@ -145,6 +157,12 @@ sequenceDiagram
     end
 ```
 
+<!-- Rendered image. Regenerate with: node docs/diagrams/render.mjs -->
+![design-models diagram 3](diagrams/mermaid/design-models-3.png)
+
+*[Full-resolution SVG](diagrams/mermaid/design-models-3.svg)*
+
+
 **Why the audit write is inside the transaction.** If the admission committed but the audit row failed, the log would under-report admissions; if the reverse, it would show admissions that never happened. Since the log is the input to both the live dashboard and anomaly detection, either inconsistency corrupts downstream features. Binding them in one transaction is why MongoDB must run as a replica set.
 
 **Why the reason is re-read rather than inferred.** When the guard matches nothing, the service does not assume "already admitted" - it re-reads the booking and maps the actual current status, so a revoked ticket is reported as revoked rather than mislabelled.
@@ -187,6 +205,12 @@ sequenceDiagram
     GS-->>O: import summary
 ```
 
+<!-- Rendered image. Regenerate with: node docs/diagrams/render.mjs -->
+![design-models diagram 4](diagrams/mermaid/design-models-4.png)
+
+*[Full-resolution SVG](diagrams/mermaid/design-models-4.svg)*
+
+
 **Deliberate design points.** The guest and its booking are persisted *before* the email is attempted, so a mail outage cannot lose the guest list. The unique compound index on `{event, email}` makes re-importing the same file idempotent at the guest level rather than issuing duplicate invites.
 
 **Known weakness shown honestly.** The `catch` around delivery is empty - a misconfigured mailer produces no log line and no user-visible signal, only guests silently stuck at `issued`. This is limitation 4 in `technical-documentation.md` §12.
@@ -227,6 +251,12 @@ flowchart TD
     classDef forbidden stroke-dasharray: 4 4,stroke:#b91c1c,color:#b91c1c
     class C,S forbidden
 ```
+
+<!-- Rendered image. Regenerate with: node docs/diagrams/render.mjs -->
+![design-models diagram 5](diagrams/mermaid/design-models-5.png)
+
+*[Full-resolution SVG](diagrams/mermaid/design-models-5.svg)*
+
 
 **The rule this encodes.** Each layer may call only the one beneath it. No controller imports a repository; no service imports a Mongoose model. The two dashed edges are the violations the structure exists to prevent.
 
@@ -295,6 +325,12 @@ classDiagram
     Booking "1" --> "0..*" AuditLog : scan attempts
 ```
 
+<!-- Rendered image. Regenerate with: node docs/diagrams/render.mjs -->
+![design-models diagram 6](diagrams/mermaid/design-models-6.png)
+
+*[Full-resolution SVG](diagrams/mermaid/design-models-6.svg)*
+
+
 `authorizeScan` and `rejectionReasonForStatus` are exported separately from `checkInByScan` specifically so the decision logic can be exercised without a database - the structural choice that makes the authorisation matrix in §7.2 of the technical documentation directly testable.
 
 ---
@@ -336,6 +372,12 @@ stateDiagram-v2
         meaningless.
     end note
 ```
+
+<!-- Rendered image. Regenerate with: node docs/diagrams/render.mjs -->
+![design-models diagram 7](diagrams/mermaid/design-models-7.png)
+
+*[Full-resolution SVG](diagrams/mermaid/design-models-7.svg)*
+
 
 The derived-versus-stored distinction is the design point. A stored `status` field would need a scheduler to advance it and would be wrong between ticks; computing it means the answer is correct by construction. The cost is that the computation exists in two places - server and client - and must agree, which is exactly how the zero-length-window defect stayed invisible until a single-day event was created.
 
@@ -386,6 +428,12 @@ sequenceDiagram
         A-->>F: 401 - same message for wrong and expired
     end
 ```
+
+<!-- Rendered image. Regenerate with: node docs/diagrams/render.mjs -->
+![design-models diagram 8](diagrams/mermaid/design-models-8.png)
+
+*[Full-resolution SVG](diagrams/mermaid/design-models-8.svg)*
+
 
 Four decisions in this flow are worth defending in the report:
 

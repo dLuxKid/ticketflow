@@ -121,9 +121,12 @@ npm install
 npm run dev          # http://localhost:3000
 ```
 
-Open http://localhost:3000. Sign up (choose a creator account), create an **Invite-only** or
-**Hybrid** event, and the Guest list / Live dashboard / Scan / Door staff links appear on the
-event card in **My Events**.
+Open http://localhost:3000. Sign up (choose a creator account) and create an event. The
+Live dashboard / Scan / Door staff links appear on its card in **My Events**.
+
+**Guest list appears only on Invite-only and Hybrid events.** A public event has no guest
+list - everyone attending it holds a ticket - so the link is not offered and the API refuses
+guest-list calls for one. Create an Invite-only or Hybrid event to see it.
 
 ### 6. Create the first admin (optional)
 
@@ -516,6 +519,7 @@ See `docs/docker.md` for details.
 | [`docs/architecture-diagram.md`](docs/architecture-diagram.md)  | Layered / deployment architecture                                   |
 | [`docs/use-case-diagram.md`](docs/use-case-diagram.md)          | Actors and use cases                                                |
 | [`docs/data-flow-diagram.md`](docs/data-flow-diagram.md)        | DFD levels 0–1                                                      |
+| [`docs/diagrams/`](docs/diagrams/README.md)                     | **Rendered PNG/SVG of every diagram**, plus the Graphviz sources     |
 | [`docs/quality-model-iso25010.md`](docs/quality-model-iso25010.md) | ISO/IEC 25010 evidence map                                       |
 | [`docs/usability-test-plan.md`](docs/usability-test-plan.md)    | Usability test protocol and tasks                                   |
 | [`docs/market-analysis.md`](docs/market-analysis.md)            | Competitor comparison, pricing position and barriers                |

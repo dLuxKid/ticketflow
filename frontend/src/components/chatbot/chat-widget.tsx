@@ -24,6 +24,67 @@ const GREETING: Message = {
   content: "Hi! Ask me about events, tickets, or how TicketFlow works.",
 };
 
+
+/**
+ * Renders an assistant reply with structure, without a markdown dependency.
+ *
+ * The reply used to go straight into a `<p>`, so every newline collapsed into a space and a
+ * six-field answer arrived as one unbroken wall of text. Adding `react-markdown` would pull a
+ * parser (and its sanitiser surface) into the bundle for three constructs, so this handles
+ * exactly the three the prompt is told to emit:
+ *
+ *   - blank line  -> paragraph break
+ *   - "- " prefix -> bullet
+ *   - **bold**    -> <strong>
+ *
+ * Everything is built from React elements, never `dangerouslySetInnerHTML`, so a model that
+ * echoes user input cannot inject markup.
+ */
+function bold(text: string, keyPrefix: string) {
+  // Split on **…**; odd indices are the emphasised runs.
+  return text.split(/\*\*(.+?)\*\*/g).map((part, i) =>
+    i % 2 === 1 ? (
+      <strong key={`${keyPrefix}-${i}`} className="font-semibold">
+        {part}
+      </strong>
+    ) : (
+      <span key={`${keyPrefix}-${i}`}>{part}</span>
+    ),
+  );
+}
+
+export function FormattedReply({ content }: { content: string }) {
+  const lines = content.split("\n");
+  const blocks: React.ReactNode[] = [];
+  let bullets: string[] = [];
+
+  const flushBullets = () => {
+    if (bullets.length === 0) return;
+    blocks.push(
+      <ul key={`ul-${blocks.length}`} className="list-disc pl-4 space-y-0.5">
+        {bullets.map((b, i) => (
+          <li key={i}>{bold(b, `li-${blocks.length}-${i}`)}</li>
+        ))}
+      </ul>,
+    );
+    bullets = [];
+  };
+
+  lines.forEach((raw, i) => {
+    const line = raw.trim();
+    if (/^[-*•]\s+/.test(line)) {
+      bullets.push(line.replace(/^[-*•]\s+/, ""));
+      return;
+    }
+    flushBullets();
+    if (line === "") return;
+    blocks.push(<p key={`p-${i}`}>{bold(line, `p-${i}`)}</p>);
+  });
+  flushBullets();
+
+  return <div className="space-y-2">{blocks}</div>;
+}
+
 export default function ChatWidget() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([GREETING]);
@@ -89,16 +150,25 @@ export default function ChatWidget() {
 
           <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
             {messages.map((m, i) => (
-              <div key={i} className={m.role === "user" ? "self-end text-right" : ""}>
-                <p
-                  className={`inline-block rounded-big px-3 py-2 text-sm max-w-[85%] ${
+              <div
+                key={i}
+                className={m.role === "user" ? "flex justify-end" : "flex"}
+              >
+                <div
+                  className={`rounded-big px-3 py-2 text-sm leading-relaxed ${
                     m.role === "user"
-                      ? "bg-main-purple text-main-white"
-                      : "bg-main-grey-bg text-main-black"
+                      ? "max-w-[85%] bg-main-purple text-main-white"
+                      : // Assistant answers carry structured detail, so they get more room
+                        // than a one-line question does.
+                        "max-w-[92%] bg-main-grey-bg text-main-black"
                   }`}
                 >
-                  {m.content}
-                </p>
+                  {m.role === "assistant" ? (
+                    <FormattedReply content={m.content} />
+                  ) : (
+                    m.content
+                  )}
+                </div>
               </div>
             ))}
             {loading && (

@@ -64,6 +64,36 @@ export const getEvent = async (slug: string) => {
   }
 };
 
+export type EventWorkspace = {
+  eventId: string;
+  eventName: string;
+  slug: string;
+  accessMode: "public" | "invite_only" | "hybrid";
+  hasGuestList: boolean;
+};
+
+/**
+ * What the per-event organiser pages need to draw their own tab strip.
+ *
+ * Fails closed: any error (not found, not permitted, backend down) returns null, and the
+ * caller then renders no Guest list tab. Hiding a tool that might have been available is a
+ * far smaller failure than offering one that leads to an error page.
+ */
+export const getEventWorkspace = async (
+  eventId: string
+): Promise<EventWorkspace | null> => {
+  const token = await getToken("jwt");
+
+  try {
+    const res = await axios.get(API_URLS.events.workspace(eventId), {
+      headers: { Authorization: "Bearer " + token?.value },
+    });
+    return res.data?.data?.workspace ?? null;
+  } catch {
+    return null;
+  }
+};
+
 export const getBookingsForEvent = async (eventId: string) => {
   const token = await getToken("jwt");
 

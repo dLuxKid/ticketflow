@@ -67,6 +67,12 @@ graph LR
     SYS -->|"erasure counts"| SCH
 ```
 
+<!-- Rendered image. Regenerate with: node docs/diagrams/render.mjs -->
+![data-flow-diagram diagram 1](diagrams/mermaid/data-flow-diagram-1.png)
+
+*[Full-resolution SVG](diagrams/mermaid/data-flow-diagram-1.svg)*
+
+
 ---
 
 ## Level 1 - Processes and data stores
@@ -211,6 +217,12 @@ graph TB
     P10 -->|"answer, dress-code and<br/>attendance advice"| ATT
 ```
 
+<!-- Rendered image. Regenerate with: node docs/diagrams/render.mjs -->
+![data-flow-diagram diagram 2](diagrams/mermaid/data-flow-diagram-2.png)
+
+*[Full-resolution SVG](diagrams/mermaid/data-flow-diagram-2.svg)*
+
+
 **Two boundaries in this level are deliberate and worth defending.**
 
 **9.0 reads D3 but never returns it.** The access-code request asks D3 whether a booking
@@ -262,6 +274,12 @@ graph TB
     P55 -.->|"ADMISSION_ADMITTED /<br/>ADMISSION_REJECTED via admissionBus"| P6X(("6.0 Report<br/>live arrivals"))
     D5 -->|"scan history"| P7X(("7.0 Analyse"))
 ```
+
+<!-- Rendered image. Regenerate with: node docs/diagrams/render.mjs -->
+![data-flow-diagram diagram 3](diagrams/mermaid/data-flow-diagram-3.png)
+
+*[Full-resolution SVG](diagrams/mermaid/data-flow-diagram-3.svg)*
+
 
 **Why 5.3 is the whole design.** The single-use guarantee is a conditional single-document
 update, not a read-then-write: concurrent scans of one code both reach MongoDB, exactly one

@@ -1,0 +1,16 @@
+{
+  "name": "ticketflow-diagrams",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Documentation diagram rendering. Deliberately separate from the application packages: nothing here ships, and the app must not gain a dependency on a browser or a WebAssembly Graphviz just to build.",
+  "scripts": {
+    "render": "node render.mjs",
+    "render:dot": "node render.mjs --dot",
+    "render:mermaid": "node render.mjs --mermaid"
+  },
+  "devDependencies": {
+    "@mermaid-js/mermaid-cli": "^11.4.2",
+    "@viz-js/viz": "^3.29.0"
+  }
+}

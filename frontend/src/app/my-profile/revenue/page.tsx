@@ -126,7 +126,12 @@ export default function RevenuePage() {
       {/* The headline figure changes with the scope, because the question does. On the
           platform tab the fee leads and is the emphasised tile; gross and "paid to
           organisers" are context, not income. */}
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {/* `p-0` is load-bearing. A global base rule gives every <section> page-band padding
+          (px-[5%] py-[3.75rem] md:py-24), which is right for a full-width band and wrong for
+          a row of stat tiles inside a card — it was adding ~96px of dead space above and
+          below this grid and pushing the chart off the first screen. Same trap as the
+          checkout summary card. */}
+      <section className="grid grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:grid-cols-4">
         {isPlatform ? (
           <>
             <Stat
@@ -198,7 +203,7 @@ export default function RevenuePage() {
         never sees.
       </p>
 
-      <section>
+      <section className="p-0">
         <h2 className="mb-3 text-base font-bold text-main-black">By event</h2>
 
         {data.events.length === 0 ? (

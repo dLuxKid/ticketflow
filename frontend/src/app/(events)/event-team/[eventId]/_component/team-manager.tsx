@@ -19,7 +19,14 @@ type Usher = {
   role: string;
 };
 
-export default function TeamManager({ eventId }: { eventId: string }) {
+export default function TeamManager({
+  eventId,
+  hasGuestList = false,
+}: {
+  eventId: string;
+  /** Whether this event has a guest list, so the tab strip can omit it. */
+  hasGuestList?: boolean;
+}) {
   const [ushers, setUshers] = useState<Usher[]>([]);
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -77,7 +84,7 @@ export default function TeamManager({ eventId }: { eventId: string }) {
         eyebrow="TicketFlow"
         title="Door staff"
         subtitle="Add anyone with a TicketFlow account by email - they can scan and admit guests for this event only, without access to edit it or see your other events."
-        tabs={eventTabs(eventId, "team")}
+        tabs={eventTabs(eventId, "team", hasGuestList)}
       />
 
       <div className="w-full rounded-big bg-main-white shadow shadow-black/10 p-4 sm:p-6">

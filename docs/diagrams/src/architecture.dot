@@ -1,0 +1,338 @@
+/*
+ * TicketFlow - system / deployment architecture (Graphviz source)
+ *
+ * Rendered to docs/diagrams/architecture.svg and .png by docs/diagrams/render.mjs.
+ * Edit THIS file, never the generated image.
+ *
+ * Conventions:
+ *   - each pale band is a deployment/architectural layer, labelled top-left
+ *   - a box is a deployable unit or a coherent module group; the rows beneath its title
+ *     name the actual files or symbols, so every box is traceable to the source tree
+ *   - solid arrows are synchronous calls; dashed arrows are asynchronous or inbound from
+ *     outside the process (webhooks, server-sent events, in-process event emitters)
+ *   - edge labels name the protocol or mechanism, never just "uses"
+ *
+ * Fonts are Helvetica and Courier because Graphviz has exact built-in metrics for both.
+ * With a font it can only estimate, layout is computed from the wrong text widths and the
+ * labels overflow their boxes in the rendered image.
+ */
+
+digraph TicketFlowArchitecture {
+  rankdir = TB;
+  compound = true;
+  newrank = true;
+  splines = spline;
+  bgcolor = "white";
+  pad = 0.35;
+  nodesep = 0.55;
+  ranksep = 0.75;
+  fontname = "Helvetica";
+
+  node [
+    shape     = plaintext,
+    fontname  = "Helvetica",
+    fontsize  = 11,
+    margin    = 0,
+  ];
+
+  edge [
+    color     = "#3a4358",
+    penwidth  = 1.1,
+    fontname  = "Helvetica-Bold",
+    fontsize  = 9,
+    fontcolor = "#3a4358",
+    arrowsize = 0.75,
+  ];
+
+  graph [
+    fontname  = "Courier-Bold",
+    fontsize  = 12,
+    fontcolor = "#5566a8",
+    labeljust = "l",
+    labelloc  = "t",
+    style     = "filled,rounded",
+    penwidth  = 0,
+  ];
+
+  /* Band fill and inner margin are set per cluster, NOT in the `graph [...]` defaults
+     above: those defaults apply to the ROOT graph too. `bgcolor` there painted the whole
+     canvas pale blue so the bands vanished into it, and `margin` there is read in INCHES
+     rather than points - 18 of them - which padded the drawing with 1296pt of empty space
+     on every side and made the exported PNG mostly blank. */
+
+  /* ── Client layer ─────────────────────────────────────────────────────────── */
+
+  subgraph cluster_client {
+    label = "CLIENT LAYER";
+    bgcolor = "#eaf1fb";
+    margin  = 18;
+
+    BROWSER [label = <<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#2b3a55" BGCOLOR="white">
+      <TR><TD ALIGN="CENTER"><B>Browser</B></TD></TR><HR/>
+      <TR><TD ALIGN="LEFT">Attendee / Organiser UI</TD></TR>
+      <TR><TD ALIGN="LEFT">AI concierge widget</TD></TR>
+    </TABLE>>];
+
+    DOOR [label = <<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#2b3a55" BGCOLOR="white">
+      <TR><TD ALIGN="CENTER"><B>Door Device</B></TD></TR><HR/>
+      <TR><TD ALIGN="LEFT">Camera QR scanner</TD></TR>
+      <TR><TD ALIGN="LEFT">Mobile web, no install</TD></TR>
+    </TABLE>>];
+
+    GUEST [label = <<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#2b3a55" BGCOLOR="white">
+      <TR><TD ALIGN="CENTER"><B>Email Client</B></TD></TR><HR/>
+      <TR><TD ALIGN="LEFT">QR ticket · Invite</TD></TR>
+      <TR><TD ALIGN="LEFT">Meet-and-Greet code</TD></TR>
+    </TABLE>>];
+  }
+
+  /* ── Frontend ─────────────────────────────────────────────────────────────── */
+
+  subgraph cluster_frontend {
+    label = "FRONTEND — NEXT.JS 15 APP ROUTER  (:3000)";
+    bgcolor = "#eaf1fb";
+    margin  = 18;
+
+    MW [label = <<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#2b3a55" BGCOLOR="white">
+      <TR><TD ALIGN="CENTER"><B>middleware.ts</B></TD></TR><HR/>
+      <TR><TD ALIGN="LEFT">Decodes JWT cookie · checks expiry</TD></TR>
+      <TR><TD ALIGN="LEFT">Redirect / UX guard ONLY</TD></TR>
+    </TABLE>>];
+
+    RSC [label = <<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#2b3a55" BGCOLOR="white">
+      <TR><TD ALIGN="CENTER"><B>Server + Client Components</B></TD></TR><HR/>
+      <TR><TD ALIGN="LEFT">app/ routes · Explore · Checkout</TD></TR>
+      <TR><TD ALIGN="LEFT">Guest list · Dashboard · Scanner</TD></TR>
+      <TR><TD ALIGN="LEFT">Digital ticket · Earnings trend</TD></TR>
+    </TABLE>>];
+
+    SA [label = <<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#2b3a55" BGCOLOR="white">
+      <TR><TD ALIGN="CENTER"><B>Server Actions / Queries</B></TD></TR><HR/>
+      <TR><TD ALIGN="LEFT">utils/actions.ts · utils/queries.ts</TD></TR>
+      <TR><TD ALIGN="LEFT">Token read from httpOnly cookie</TD></TR>
+    </TABLE>>];
+
+    ST [label = <<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#2b3a55" BGCOLOR="white">
+      <TR><TD ALIGN="CENTER"><B>Client State</B></TD></TR><HR/>
+      <TR><TD ALIGN="LEFT">TanStack Query · Zustand</TD></TR>
+      <TR><TD ALIGN="LEFT">EventSource (SSE) subscriptions</TD></TR>
+    </TABLE>>];
+  }
+
+  /* ── Backend ──────────────────────────────────────────────────────────────── */
+
+  subgraph cluster_edge {
+    label = "BACKEND EDGE — EXPRESS  (:4000)";
+    bgcolor = "#eaf1fb";
+    margin  = 18;
+
+    SEC [label = <<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#2b3a55" BGCOLOR="white">
+      <TR><TD ALIGN="CENTER"><B>Security Middleware</B></TD></TR><HR/>
+      <TR><TD ALIGN="LEFT">helmet · cors(credentials) · rate-limit</TD></TR>
+      <TR><TD ALIGN="LEFT">mongo-sanitize · xss · hpp</TD></TR>
+      <TR><TD ALIGN="LEFT">rawBody capture (webhook HMAC)</TD></TR>
+    </TABLE>>];
+
+    PRES [label = <<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#2b3a55" BGCOLOR="white">
+      <TR><TD ALIGN="CENTER"><B>Presentation Layer</B></TD></TR><HR/>
+      <TR><TD ALIGN="LEFT">Routes /api/v1: events · users · bookings · chat</TD></TR>
+      <TR><TD ALIGN="LEFT">protect · restrictTo · isLoggedIn</TD></TR>
+      <TR><TD ALIGN="LEFT">Controllers: auth · event · booking · payment</TD></TR>
+      <TR><TD ALIGN="LEFT">admission · guest · usher · dashboard · networking</TD></TR>
+    </TABLE>>];
+  }
+
+  subgraph cluster_service {
+    label = "SERVICE LAYER — BUSINESS RULES AND AUTHORISATION";
+    bgcolor = "#eaf1fb";
+    margin  = 18;
+
+    CORE [label = <<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#2b3a55" BGCOLOR="white">
+      <TR><TD ALIGN="CENTER"><B>Core Services</B></TD></TR><HR/>
+      <TR><TD ALIGN="LEFT">auth · user · event · booking · payment</TD></TR>
+      <TR><TD ALIGN="LEFT">guest · usher · admission · dashboard</TD></TR>
+      <TR><TD ALIGN="LEFT">revenue · retention · reservationSweeper</TD></TR>
+    </TABLE>>];
+
+    MONEY [label = <<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#2b3a55" BGCOLOR="white">
+      <TR><TD ALIGN="CENTER"><B>Money Path</B></TD></TR><HR/>
+      <TR><TD ALIGN="LEFT">pricingService — server-authoritative</TD></TR>
+      <TR><TD ALIGN="LEFT">payoutService — Paystack subaccounts</TD></TR>
+      <TR><TD ALIGN="LEFT">3% platform fee · split settlement</TD></TR>
+    </TABLE>>];
+
+    NET [label = <<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#2b3a55" BGCOLOR="white">
+      <TR><TD ALIGN="CENTER"><B>Meet and Greet</B></TD></TR><HR/>
+      <TR><TD ALIGN="LEFT">networking · networkingGuest</TD></TR>
+      <TR><TD ALIGN="LEFT">networkingNotification · OTP access</TD></TR>
+    </TABLE>>];
+
+    LOCAL [label = <<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#2b3a55" BGCOLOR="white">
+      <TR><TD ALIGN="CENTER"><B>Local Analytics — NO third party</B></TD></TR><HR/>
+      <TR><TD ALIGN="LEFT">anomaly · anomalyReport (rule thresholds)</TD></TR>
+      <TR><TD ALIGN="LEFT">noShow (portable weights file)</TD></TR>
+      <TR><TD ALIGN="LEFT">nlGuestQuery (regex intent parser)</TD></TR>
+    </TABLE>>];
+
+    BOT [label = <<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#2b3a55" BGCOLOR="white">
+      <TR><TD ALIGN="CENTER"><B>AI Concierge</B></TD></TR><HR/>
+      <TR><TD ALIGN="LEFT">chatbotService — one tool-calling round</TD></TR>
+      <TR><TD ALIGN="LEFT">llmProvider — OpenAI, Gemini fallback</TD></TR>
+      <TR><TD ALIGN="LEFT">weatherService — forecast and advice</TD></TR>
+    </TABLE>>];
+
+    BUS [label = <<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#2b3a55" BGCOLOR="white">
+      <TR><TD ALIGN="CENTER"><B>In-Process Event Bus</B></TD></TR><HR/>
+      <TR><TD ALIGN="LEFT">admissionBus · networkingBus</TD></TR>
+      <TR><TD ALIGN="LEFT">Node EventEmitter — single instance only</TD></TR>
+    </TABLE>>];
+  }
+
+  subgraph cluster_repo {
+    label = "PERSISTENCE";
+    bgcolor = "#eaf1fb";
+    margin  = 18;
+
+    REPO [label = <<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#2b3a55" BGCOLOR="white">
+      <TR><TD ALIGN="CENTER"><B>Repositories</B></TD></TR><HR/>
+      <TR><TD ALIGN="LEFT">user · event · booking · guest</TD></TR>
+      <TR><TD ALIGN="LEFT">auditLog · message</TD></TR>
+      <TR><TD ALIGN="LEFT">Only layer that touches Mongoose</TD></TR>
+    </TABLE>>];
+
+    SHARED [label = <<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#2b3a55" BGCOLOR="white">
+      <TR><TD ALIGN="CENTER"><B>Shared Utilities</B></TD></TR><HR/>
+      <TR><TD ALIGN="LEFT">email (pug templates) · generateQrCode</TD></TR>
+      <TR><TD ALIGN="LEFT">paystack HMAC · ticketIdGenerator</TD></TR>
+      <TR><TD ALIGN="LEFT">parseGuestCsv · networkingOtp · AppError</TD></TR>
+    </TABLE>>];
+  }
+
+  /* ── Infrastructure ───────────────────────────────────────────────────────── */
+
+  subgraph cluster_infra {
+    label = "INFRASTRUCTURE LAYER";
+    bgcolor = "#eaf1fb";
+    margin  = 18;
+
+    MDB [label = <<TABLE BORDER="2" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#2b3a55" BGCOLOR="white">
+      <TR><TD ALIGN="CENTER"><B>MongoDB Replica Set</B></TD></TR><HR/>
+      <TR><TD ALIGN="LEFT">users · events · bookings</TD></TR>
+      <TR><TD ALIGN="LEFT">guests · auditlogs · messages</TD></TR>
+      <TR><TD ALIGN="LEFT">Replica set REQUIRED — transactions</TD></TR>
+    </TABLE>>];
+
+    MLM [label = <<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#2b3a55" BGCOLOR="white">
+      <TR><TD ALIGN="CENTER"><B>ml/no_show/model.json</B></TD></TR><HR/>
+      <TR><TD ALIGN="LEFT">Portable weights · read-only</TD></TR>
+      <TR><TD ALIGN="LEFT">No runtime training</TD></TR>
+    </TABLE>>];
+
+    CRON [label = <<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#2b3a55" BGCOLOR="white">
+      <TR><TD ALIGN="CENTER"><B>Scheduled Jobs</B></TD></TR><HR/>
+      <TR><TD ALIGN="LEFT">gdpr-retention-sweep.js</TD></TR>
+      <TR><TD ALIGN="LEFT">External scheduler / CI cron</TD></TR>
+    </TABLE>>];
+  }
+
+  subgraph cluster_ext {
+    label = "EXTERNAL SERVICES";
+    bgcolor = "#eaf1fb";
+    margin  = 18;
+
+    PS [label = <<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#2b3a55" BGCOLOR="white">
+      <TR><TD ALIGN="CENTER"><B>Paystack</B></TD></TR><HR/>
+      <TR><TD ALIGN="LEFT">Transaction init · verify</TD></TR>
+      <TR><TD ALIGN="LEFT">Subaccounts · split settlement</TD></TR>
+      <TR><TD ALIGN="LEFT">Signed webhook (HMAC SHA512)</TD></TR>
+    </TABLE>>];
+
+    CLD [label = <<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#2b3a55" BGCOLOR="white">
+      <TR><TD ALIGN="CENTER"><B>Cloudinary</B></TD></TR><HR/>
+      <TR><TD ALIGN="LEFT">Cover images · avatars</TD></TR>
+    </TABLE>>];
+
+    SMTP [label = <<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#2b3a55" BGCOLOR="white">
+      <TR><TD ALIGN="CENTER"><B>SMTP — Nodemailer</B></TD></TR><HR/>
+      <TR><TD ALIGN="LEFT">QR tickets · invites</TD></TR>
+      <TR><TD ALIGN="LEFT">Password reset · access codes</TD></TR>
+    </TABLE>>];
+
+    LLM [label = <<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#2b3a55" BGCOLOR="white">
+      <TR><TD ALIGN="CENTER"><B>LLM Provider</B></TD></TR><HR/>
+      <TR><TD ALIGN="LEFT">OpenAI primary · Gemini fallback</TD></TR>
+      <TR><TD ALIGN="LEFT">plain fetch, no vendor SDK</TD></TR>
+    </TABLE>>];
+
+    METEO [label = <<TABLE BORDER="1" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" COLOR="#2b3a55" BGCOLOR="white">
+      <TR><TD ALIGN="CENTER"><B>Open-Meteo</B></TD></TR><HR/>
+      <TR><TD ALIGN="LEFT">Geocoding + forecast</TD></TR>
+      <TR><TD ALIGN="LEFT">No API key required</TD></TR>
+    </TABLE>>];
+  }
+
+  /* Each layer occupies exactly one rank, so the bands read as horizontal strips stacked
+     top to bottom. Left to itself Graphviz ranks by edge depth and the "layers" end up
+     interleaved diagonally across the page - which looks like a dependency graph, not an
+     architecture. */
+  { rank = same; BROWSER; DOOR; GUEST; }
+  { rank = same; MW; RSC; SA; ST; }
+  { rank = same; SEC; PRES; }
+  { rank = same; CORE; MONEY; NET; LOCAL; BOT; BUS; }
+  { rank = same; REPO; SHARED; }
+  { rank = same; MDB; MLM; CRON; }
+  { rank = same; PS; CLD; SMTP; LLM; METEO; }
+
+  // Both bands are sinks, so nothing ranked them relative to each other and Graphviz drew
+  // them side by side - two half-width bands rather than two stacked strips. One invisible
+  // edge is enough to settle the order.
+  PS -> MDB [style = invis, weight = 10];
+
+  /* ── Flows ────────────────────────────────────────────────────────────────── */
+
+  BROWSER -> MW    [label = "HTTPS"];
+  DOOR    -> RSC   [label = "HTTPS"];
+  GUEST   -> RSC   [label = "SIGNED LINK"];
+  MW      -> RSC;
+  RSC     -> SA;
+  RSC     -> ST    [dir = none];
+
+  SA -> SEC [label = "REST · JWT httpOnly cookie"];
+  ST -> SEC [label = "REST + SSE"];
+
+  SEC  -> PRES;
+  PRES -> CORE;
+  PRES -> MONEY;
+  PRES -> NET;
+  PRES -> LOCAL;
+  PRES -> BOT;
+
+  CORE  -> REPO   [label = "REPOSITORY API"];
+  MONEY -> REPO;
+  NET   -> REPO;
+  LOCAL -> REPO;
+  BOT   -> REPO;
+  CORE  -> SHARED;
+  NET   -> SHARED;
+
+  REPO   -> MDB   [label = "MONGOOSE ODM"];
+  LOCAL  -> MLM   [label = "READ WEIGHTS"];
+  CRON   -> CORE  [label = "NPM RUN GDPR:SWEEP", style = dashed];
+
+  MONEY  -> PS    [label = "SUBACCOUNT + SPLIT"];
+  CORE   -> PS    [label = "INIT TRANSACTION"];
+  CORE   -> CLD   [label = "UPLOAD"];
+  SHARED -> SMTP  [label = "SEND"];
+  BOT    -> LLM   [label = "FETCH"];
+  BOT    -> METEO [label = "FETCH"];
+
+  /* Asynchronous and inbound. Drawn dashed and in a different colour because these are the
+     paths that do not follow the request/response shape of everything above - they are the
+     ones that surprise a reader tracing a bug. */
+  edge [style = dashed, color = "#5b4b9e", fontcolor = "#5b4b9e"];
+
+  PS   -> SEC  [label = "SIGNED WEBHOOK\nPOST /bookings/webhook/paystack"];
+  CORE -> BUS  [label = "EMIT ADMITTED / REJECTED"];
+  NET  -> BUS  [label = "EMIT MESSAGE / PRESENCE"];
+  BUS  -> ST   [label = "SSE PUSH\n/events/:id/stream"];
+}

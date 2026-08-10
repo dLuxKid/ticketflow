@@ -1,8 +1,8 @@
 # TicketFlow - Technical Documentation
 
-**Document version:** 4.2 · **Repository state:** branch `dev`, working tree ahead of commit `c6f5943` · **Last verified:** 9 August 2026
+**Document version:** 4.3 · **Repository state:** branch `dev`, working tree ahead of commit `1ff7d82` · **Last verified:** 10 August 2026
 
-> **Changes since v3.0.** Six areas changed materially:
+> **Changes since v3.0.** Eleven areas changed materially:
 >
 > 1. **Administration** - signup can no longer grant `admin` (a privilege-escalation hole, OWASP A01, now closed by a role whitelist); a **root admin** is seeded from the CLI and is the only account that can promote or demote other admins; admins can change roles and **archive events and deactivate users** (soft delete, §5.7).
 > 2. **Meet and Greet** (formerly "networking") - the attendee network is now reachable by **guests without accounts**, authorised by an emailed one-time code proving control of the booking email (§5.8). The public channel is now labelled **Event Chat (Public)**.
@@ -13,6 +13,9 @@
 > 7. **Revenue model** - TicketFlow now takes a **3% platform fee** via Paystack split payments, settling organisers directly to their own subaccount (§5.6.1). This required making ticket pricing **server-authoritative**, closing a defect that let a buyer name their own price.
 > 8. **Revenue reporting** - organisers see gross/fee/net per event and in total; admins see the same across the whole platform, including the platform's own fee income (§5.6.2). Closes limitation 9b.
 > 9. **Two door-scan defects fixed** - the scan query never loaded the capacity fields, so the venue-capacity guardrail silently never fired on a single real scan; and a correctly-typed code in the wrong case, or a legacy `#`-prefixed ID typed without the hash, was reported as an invalid ticket (§7.4.4).
+>
+> 10. **Guest list is scoped to the events that have one** - the shared organiser tab strip offered a Guest list for every event, including public ones, where the link could only produce a 400. The rule now has a single definition, `hasGuestList(event)`, computed server-side and returned by a new `GET /events/:eventId/workspace` lookup (§6.2). It previously existed twice, written in opposite directions, which disagreed whenever `accessMode` was absent.
+> 11. **Diagrams are rendered to images** - every mermaid block in this document set now has a committed PNG and SVG beside it, and the use case and architecture diagrams are hand-authored Graphviz laid out for a printed page (`docs/diagrams/`). A fenced mermaid block does not render in a PDF or Word export, which is how this work is submitted.
 >
 > Limitations 1 and 6 of v3.0 are closed; the remaining items still stand (§12).
 
@@ -132,6 +135,12 @@ flowchart LR
     E -->|"webhook, HMAC-SHA512 verified"| B
     A -->|"inline checkout"| E
 ```
+
+<!-- Rendered image. Regenerate with: node docs/diagrams/render.mjs -->
+![technical-documentation diagram 1](diagrams/mermaid/technical-documentation-1.png)
+
+*[Full-resolution SVG](diagrams/mermaid/technical-documentation-1.svg)*
+
 
 ### 3.2 Backend layering
 
@@ -277,6 +286,12 @@ erDiagram
     }
 ```
 
+<!-- Rendered image. Regenerate with: node docs/diagrams/render.mjs -->
+![technical-documentation diagram 2](diagrams/mermaid/technical-documentation-2.png)
+
+*[Full-resolution SVG](diagrams/mermaid/technical-documentation-2.svg)*
+
+
 ### 4.1 Design decisions worth citing as evidence
 
 | Decision | Implementation | Rationale |
@@ -360,6 +375,12 @@ sequenceDiagram
         P->>A: webhook (retried, idempotent)
     end
 ```
+
+<!-- Rendered image. Regenerate with: node docs/diagrams/render.mjs -->
+![technical-documentation diagram 3](diagrams/mermaid/technical-documentation-3.png)
+
+*[Full-resolution SVG](diagrams/mermaid/technical-documentation-3.svg)*
+
 
 **Why it was restructured.** The earlier flow charged the buyer first and only then asked the API to create the booking. A closed tab, a dropped connection, or a tier selling out between payment and callback left a buyer charged with no ticket; and because inventory was decremented only after payment, two buyers could both pay for the last seat.
 
@@ -471,7 +492,7 @@ Five decisions worth citing:
 2. **The fee is summed per transaction, not taken as a percentage of the grand total.** `platformFeeMinor` rounds down, so the two differ in general, and Paystack deducts per transaction. A report derived differently from the way the money actually moved produces a statement that never reconciles with the provider's.
 3. **Only confirmed payments count.** Pending holds have not been paid and expired ones never will be; including either would report revenue that does not exist.
 4. **Archived events are included.** Money an archived event took is still money the platform took, so dropping those rows would make the report impossible to reconcile.
-5. **A daily series accompanies the totals**, dated by the booking's `createdAt` — there is no `paidAt` on a booking, and confirmation follows reservation within minutes, so it is the closest honest proxy. Days with no sales are **filled with zeroes rather than omitted**: a line chart that skips empty days silently compresses time and makes a quiet week look like continuous trading. A test asserts the series sums exactly to the totals shown above it, because a chart that disagrees with its own headline is worse than no chart.
+5. **A daily series accompanies the totals**, dated by the booking's `createdAt` — there is no `paidAt` on a booking, and confirmation follows reservation within minutes, so it is the closest honest proxy. Days with no sales are **filled with zeroes rather than omitted**: a chart that skips empty days silently compresses time and makes a quiet week look like continuous trading. The series is drawn as **columns, not a line** — each value is a total accumulated within a day, and a line would interpolate between them, asserting a figure at an hour the data cannot answer for. A test asserts the series sums exactly to the totals shown above it, because a chart that disagrees with its own headline is worse than no chart.
 
 **Two limits are stated in the UI rather than hidden.** "Net" is before Paystack's own processing charge - the organiser bears it (`bearer: 'subaccount'`) and TicketFlow never sees it, so reporting it would mean inventing a number. And these figures are what was *instructed and charged*, not what was confirmed *settled*; settlement reconciliation is limitation 9c.
 
@@ -578,13 +599,14 @@ All routes are mounted under `/api/v1` (`backend/app.js:95–98`): `/events`, `/
 | `GET` | `/revenue/summary?scope=own\|platform` | Protected | Revenue per event plus totals - own events for an organiser, **all** events for an admin |
 | `PATCH` | `/update/:eventId` | Protected † | Edit event |
 | `DELETE` | `/:eventId` | **Admin** | Archive an event (`isActive: false`); bookings, guests, chat and audit rows are kept, assigned ushers are unassigned |
+| `GET` | `/:eventId/workspace` | Protected ※ | Name, slug, access mode and `hasGuestList` for one event - what the organiser surfaces need to draw their own tab strip |
 | `GET` | `/:eventId/dashboard` | Protected † | Live dashboard snapshot |
 | `GET` | `/:eventId/stream` | Protected † | SSE admission stream |
 | `GET` | `/:eventId/anomalies` | Protected † | Scan-anomaly report |
-| `GET` | `/:eventId/guests` | Protected † | List guest entries |
-| `POST` | `/:eventId/guests` | Protected † | Import guests, issue invites |
-| `POST` | `/:eventId/guests/query` | Protected † | Natural-language guest query |
-| `DELETE` | `/:eventId/guests/:guestId/erase` | Protected † | GDPR erase one guest |
+| `GET` | `/:eventId/guests` | Protected †◇ | List guest entries |
+| `POST` | `/:eventId/guests` | Protected †◇ | Import guests, issue invites |
+| `POST` | `/:eventId/guests/query` | Protected †◇ | Natural-language guest query |
+| `DELETE` | `/:eventId/guests/:guestId/erase` | Protected †◇ | GDPR erase one guest |
 | `GET` | `/:eventId/ushers` | Protected † | List assigned door staff |
 | `POST` | `/:eventId/ushers` | Protected † | Assign an usher |
 | `DELETE` | `/:eventId/ushers/:userId` | Protected † | Unassign an usher |
@@ -595,6 +617,10 @@ All routes are mounted under `/api/v1` (`backend/app.js:95–98`): `/events`, `/
 | `GET`/`POST` | `/:eventId/network/dms/:userId` | Protected ‡ | Read / send a direct message |
 
 † No role gate at the router; **ownership is enforced in the service layer** (event creator or admin). This is a deliberate pattern - see §7.2.
+
+◇ Additionally conditional on the **event**, not the caller: `guestService` rejects guest-list management with **400** unless `accessMode` is `invite_only` or `hybrid`. A public event has no guest list - everyone attending holds a ticket - so an organiser who owns one still cannot reach these routes. The single predicate behind that rule is `hasGuestList(event)` in `eventModel.js`.
+
+※ Authorised with `admissionService.authorizeScan` rather than `canViewDashboard`: owner, admin, **or an usher assigned to the event**. The scanner is one of the four surfaces that calls it, and door staff must be able to open theirs.
 
 ‡ Eligibility is enforced in `networkingService`: the caller must hold a non-revoked, non-rejected booking for the event (or be its organiser/admin). Posting is additionally gated on the event being live. The two `network/guest/*` routes are registered **before** `router.use(protect)` and use two path segments so the public `/:slug` route cannot swallow them.
 

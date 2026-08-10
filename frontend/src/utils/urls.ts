@@ -27,6 +27,8 @@ export const API_URLS = {
     upcoming: `${baseUrl}/api/v1/events/upcoming`,
     trending: `${baseUrl}/api/v1/events/trending`,
     single: (slug: string) => `${baseUrl}/api/v1/events/${slug}`,
+    workspace: (eventId: string) =>
+      `${baseUrl}/api/v1/events/${eventId}/workspace`,
     dashboard: (eventId: string) =>
       `${baseUrl}/api/v1/events/${eventId}/dashboard`,
     stream: (eventId: string) => `${baseUrl}/api/v1/events/${eventId}/stream`,

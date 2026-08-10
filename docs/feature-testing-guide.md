@@ -1,6 +1,6 @@
 # TicketFlow — Feature List and Testing Guide
 
-**Document version:** 2.1 · **Verified against:** branch `dev`, 9 August 2026
+**Document version:** 2.2 · **Verified against:** branch `dev`, 10 August 2026
 
 > **Purpose.** Every feature the application actually has, and step-by-step instructions to
 > exercise each one by hand. Written to be used two ways: as a demo script (Task 1.2 asks for
@@ -261,11 +261,18 @@ Check the arithmetic yourself on one event: 3% of its gross should equal the fee
 gross should equal fee + net. Reporting gross or net here would overstate TicketFlow's income
 by more than an order of magnitude.
 
-**4.8 — the trend.** Below the tiles, a daily line chart plots *your net* on the My events tab
-and *platform fee income* on the Platform tab. Hover any day for its exact figure, and open
-**View as table** — the chart is never the only route to the numbers. Days with no sales
-appear as zero rather than being skipped, so a quiet week does not masquerade as continuous
-trading.
+**4.8 — the trend.** Below the tiles, a daily **column** chart plots *your net* on the My
+events tab and *platform fee income* on the Platform tab. Hover any day for its exact figure
+and ticket count, and open **View as table** — the chart is never the only route to the
+numbers. Days with no sales appear as a gap on a zero baseline rather than being skipped, so
+a quiet week does not masquerade as continuous trading.
+
+Columns rather than a line, because each value is everything earned *within* a day — a total
+over a bucket, not a reading at an instant. A line would interpolate between days and imply a
+figure at 3am that nobody can look up. Two things worth checking deliberately: the y-axis top
+sits just above the tallest column rather than at some round number far above it (a peak of
+NGN 220 gives an axis to NGN 250, not NGN 400), and the axis always starts at **zero** — a
+column means the length of the bar, so a truncated axis would make it lie.
 
 **4.6** Profile → **Revenue** as the **admin**. The heading changes to *Platform revenue*, an
 **Organiser** column appears, and every event on the platform is listed — with "Platform fee"
@@ -331,11 +338,13 @@ from a forgery.
 | 6.5 | **Natural-language guest queries** — *regex parser, not an LLM* | Guest list |
 | 6.6 | Purchase refused on invite-only events | — |
 | 6.7 | GDPR: erase one guest, plus a scheduled retention sweep | Guest list / CLI |
+| 6.8 | **Guest list is offered only where one exists** — hidden for public events | My Events · organiser tabs |
 
 ### How to test
 
 **6.1 — guest import.** On an **invite-only** or **hybrid** event, open Guest list → Import and
-upload the `guests.csv` from §0.4.
+upload the `guests.csv` from §0.4. (If you cannot find the Guest list link, check the event's
+access mode — see §6.8.)
 
 - The header row is **optional** and columns may be in any order; without a header the parser
   assumes `name,email,vip,plusOnes`.
@@ -383,6 +392,23 @@ attendance statistics stay usable. Then run the scheduled sweep:
 cd backend && npm run gdpr:sweep
 ```
 It anonymises guests for events past their retention window and is safe to re-run.
+
+**6.8 — the guest list is only offered where one exists.** Create (or open) a **public**
+event and confirm the Guest list link is absent in three places:
+
+1. its card in **My Events** — Live dashboard, Scan and Door staff are there, Guest list is not;
+2. the tab strip at the top of its **Live dashboard**, **Scanner** and **Door staff** pages;
+3. typing `/guest-list/<eventId>` by hand — you get an explanation that the event has no
+   guest list and a link to change its access mode, not a broken page.
+
+Now switch that event to **hybrid** and reload: the link appears everywhere it was missing.
+
+Why it works this way: only invite-only and hybrid events have a guest list, and
+`guestService` answers **400** for a public one. Showing a link that can only fail leaves the
+organiser unable to tell "not allowed" from "broken". The rule has a single definition —
+`hasGuestList(event)` in `backend/src/models/eventModel.js` — used both by the authorisation
+check and by the `GET /events/:eventId/workspace` lookup the UI reads, so the two cannot
+disagree.
 
 ---
 

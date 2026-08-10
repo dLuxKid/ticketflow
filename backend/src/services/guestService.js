@@ -1,5 +1,6 @@
 import * as eventRepository from '../repositories/eventRepository.js';
 import * as guestRepository from '../repositories/guestRepository.js';
+import { hasGuestList } from '../models/eventModel.js';
 import * as bookingRepository from '../repositories/bookingRepository.js';
 import { generateInviteToken } from '../shared/utils/inviteToken.js';
 import { sendInvite } from '../shared/utils/sendInvite.js';
@@ -27,7 +28,7 @@ const authorizeGuestManagement = async (eventId, user) => {
       403,
     );
   }
-  if (event.accessMode === 'public') {
+  if (!hasGuestList(event)) {
     throw new AppError(
       'This is a public event. Set it to invite-only or hybrid to add guests.',
       400,

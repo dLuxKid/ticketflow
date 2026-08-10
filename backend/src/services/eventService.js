@@ -1,6 +1,8 @@
 import * as eventRepository from '../repositories/eventRepository.js';
 import * as userRepository from '../repositories/userRepository.js';
 import AppError from '../shared/errors/AppError.js';
+import { hasGuestList } from '../models/eventModel.js';
+import { authorizeScan } from './admissionService.js';
 
 /**
  * Business logic layer for event management.
@@ -77,6 +79,45 @@ export const getAssignedEvents = (user) => {
   const assigned = user?.assignedEvents ?? [];
   if (assigned.length === 0) return Promise.resolve([]);
   return eventRepository.findByIds(assigned);
+};
+
+/**
+ * The small amount an organiser surface needs to render its own chrome: which event this is,
+ * and which of the per-event tools it actually has.
+ *
+ * Exists because the Guest list / Live dashboard / Scanner / Door staff pages are addressed
+ * by event id alone and previously knew nothing else about the event - so the shared tab
+ * strip offered a Guest list for every event, including public ones, where the link led
+ * straight to a 400 from guestService. Offering a control that cannot work is a defect in
+ * its own right: the user cannot tell "not allowed" from "broken".
+ *
+ * Authorised with admissionService.authorizeScan rather than a fresh rule, because that is
+ * already the platform's definition of "may work this event" - owner, admin, or an usher
+ * assigned to it - and the scanner is one of the four surfaces asking.
+ */
+export const getEventWorkspace = async (eventId, user) => {
+  const event = await eventRepository.findById(eventId);
+  if (!event) throw new AppError('No event found with that ID', 404);
+
+  const auth = authorizeScan(user, event);
+  if (!auth.ok) {
+    throw new AppError(
+      'You do not have permission to view this event',
+      auth.httpStatus ?? 403,
+    );
+  }
+
+  return {
+    eventId: String(event._id),
+    eventName: event.eventName,
+    // The edit route is addressed by slug, not id, so a surface that only knows the id
+    // cannot link to it without this.
+    slug: event.slug,
+    accessMode: event.accessMode,
+    // Computed here, not in the browser, so the UI cannot disagree with the rule the API
+    // enforces when the guest-list request actually arrives.
+    hasGuestList: hasGuestList(event),
+  };
 };
 
 export const getEventBySlug = async (slug) => {

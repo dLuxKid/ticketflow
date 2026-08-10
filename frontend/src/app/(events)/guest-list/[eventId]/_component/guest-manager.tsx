@@ -40,7 +40,14 @@ type QueryAnswer = {
   guests: { name: string; email: string; vip: boolean }[];
 };
 
-export default function GuestManager({ eventId }: { eventId: string }) {
+export default function GuestManager({
+  eventId,
+  hasGuestList = false,
+}: {
+  eventId: string;
+  /** Whether this event has a guest list, so the tab strip can omit it. */
+  hasGuestList?: boolean;
+}) {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [csv, setCsv] = useState("");
   const [manualName, setManualName] = useState("");
@@ -266,7 +273,7 @@ export default function GuestManager({ eventId }: { eventId: string }) {
         eyebrow="TicketFlow"
         title="Guest list"
         subtitle="Add guests one at a time, or import a whole list at once. Each new guest is emailed a single-use QR invite."
-        tabs={eventTabs(eventId, "guests")}
+        tabs={eventTabs(eventId, "guests", hasGuestList)}
       />
 
       <div className="w-full rounded-big bg-main-white shadow shadow-black/10 p-4 sm:p-6">

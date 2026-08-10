@@ -1,4 +1,5 @@
 import LiveDashboard from "./_component/live-dashboard";
+import { getEventWorkspace } from "@/utils/queries";
 
 /**
  * Live arrivals dashboard for one event. The organiser opens this on the night and watches
@@ -11,5 +12,13 @@ export default async function DashboardPage({
   params: Promise<{ eventId: string }>;
 }) {
   const { eventId } = await params;
-  return <LiveDashboard eventId={eventId} />;
+  // Fetched here rather than in the client component so the tab strip is correct on
+  // first paint - a tab that appears and then vanishes is worse than one that never did.
+  const workspace = await getEventWorkspace(eventId);
+  return (
+    <LiveDashboard
+      eventId={eventId}
+      hasGuestList={workspace?.hasGuestList ?? false}
+    />
+  );
 }

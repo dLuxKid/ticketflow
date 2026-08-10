@@ -11,6 +11,30 @@ solid lines are actor associations.
 
 ## 1. Use case diagram
 
+![TicketFlow use case diagram](diagrams/use-case.png)
+
+*[Full-resolution SVG](diagrams/use-case.svg) · source: [`diagrams/src/use-case.dot`](diagrams/src/use-case.dot) · regenerate with `node docs/diagrams/render.mjs --dot`*
+
+**Reading it.** Stick figures are actors, with **people on the left and external systems on
+the right**, so the two never have to be told apart by name. A plain line is an actor
+association. A dashed arrow is an `<<include>>` or `<<extend>>` dependency and is always
+labelled. The pale bands are subsystems, not deployment units.
+
+**One rule the diagram states rather than implies.** The `GUEST LIST` band is annotated
+*invite-only and hybrid events only*. A public event has no guest list at all - everyone
+attending it holds a ticket - and `guestService` rejects guest-list management for one with a
+400. The dotted `requires accessMode` edge records that this is a precondition on the event,
+not a permission on the actor: an organiser who owns a public event still cannot reach these
+use cases.
+
+<details>
+<summary>Mermaid source (same content, renders inline on GitHub)</summary>
+
+The Graphviz version above is the one to read. This block is kept so the diagram is
+diffable as text and viewable in editors that render mermaid but cannot show a linked image -
+laid out automatically, it spreads into a single very wide row that is legible on screen but
+not on a printed page.
+
 ```mermaid
 graph LR
     VISITOR(("Visitor<br/>unauthenticated"))
@@ -176,6 +200,11 @@ graph LR
     SCHED --- UC28
 ```
 
+*Rendered: [PNG](diagrams/mermaid/use-case-diagram-1.png) · [SVG](diagrams/mermaid/use-case-diagram-1.svg). Not shown inline - see the note above about its width.*
+
+</details>
+
+
 **Two relationships in this diagram carry a design argument rather than just structure.**
 
 `UC32 Join Meet and Greet` *extends* `UC33 Request access code`, not the reverse: a registered attendee reaches the network directly, and the emailed code is the **alternative** path for the majority of attendees who hold a booking but no account. Modelling it the other way round would imply every participant must pass through an OTP, which is not what the system does.
@@ -228,6 +257,7 @@ graph LR
 | 40 | Get weather / dress-code advice | Visitor, Attendee | - (chatbot tool within 37) | `weatherService` (Open-Meteo) |
 | 41 | Work an assigned door | Usher | `GET /api/events/my/assigned-events` | `eventService.getAssignedEvents` |
 | 42 | Connect a payout account | Organiser | `GET /users/payout/banks`, `POST /users/payout/resolve-account`, `POST /users/me/payout` | `payoutService` (Paystack subaccounts) |
+| 43 | Load an event's organiser workspace | Organiser, Admin, Usher | `GET /api/events/:eventId/workspace` | `eventService.getEventWorkspace` → `admissionService.authorizeScan` |
 
 ## 3. Preconditions and business rules worth stating
 
@@ -237,6 +267,16 @@ graph LR
 - **Invite-only events cannot be purchased into.** `bookingService.createBooking` rejects
   with 403 when `event.accessMode === 'invite_only'`; those events admit only from the
   organiser's guest list. `hybrid` allows both paths.
+- **The converse also holds: a public event has no guest list.** Use cases 14–17 and 22 are
+  rejected with **400** unless `accessMode` is `invite_only` or `hybrid`, and the UI does not
+  offer them at all for a public event - not in My Events, not in the shared organiser tab
+  strip, and a hand-typed URL gets an explanation rather than a failing page. This is a
+  precondition on the **event**, not a permission on the actor: an organiser who owns a
+  public event still cannot reach them. The rule has one definition, `hasGuestList(event)`
+  in `eventModel.js`, consumed both by `guestService`'s authorisation check and by use case
+  43, which is what the UI reads. It previously existed twice, written in opposite directions
+  (`=== 'public'` server-side against `invite_only || hybrid` in the browser), and the two
+  disagreed on any event whose `accessMode` was absent.
 - **Seats are held before payment, and the ticket is emailed only after it.** Use case 5
   reserves inventory and writes `pending` bookings, then 6 confirms the charge, and only a
   confirmed charge triggers 7. A reservation that is never paid expires and its seats go

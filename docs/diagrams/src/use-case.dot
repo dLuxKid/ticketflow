@@ -1,0 +1,301 @@
+/*
+ * TicketFlow - UML use case diagram (Graphviz source)
+ *
+ * Rendered to docs/diagrams/use-case.svg and .png by docs/diagrams/render.mjs.
+ * Edit THIS file, never the generated image.
+ *
+ * Conventions, matching the notation used in the report:
+ *   - stick figures are actors; a solid line is an actor association (no arrowhead)
+ *   - ellipses are use cases, grouped into the subsystem that owns them
+ *   - dashed arrows are <<include>> / <<extend>> dependencies, labelled
+ *   - human actors sit on the left, external systems on the right, so every association
+ *     crosses the diagram in one direction and the two kinds never get confused
+ *
+ * Actors are the four roles in backend/src/models/userModel.js (user, creator, usher,
+ * admin), with root admin as a specialisation of admin, plus unauthenticated visitors.
+ */
+
+digraph TicketFlowUseCases {
+  rankdir = LR;
+  // Padding round the drawing. Without it the outermost labels sit flush against the
+  // bounding box and the rasteriser shaves the last glyph off.
+  pad = 0.35;
+  compound = true;
+  newrank = true;
+  splines = spline;
+  overlap = false;
+  concentrate = false;
+  bgcolor = "white";
+  nodesep = 0.30;
+  ranksep = 1.5;
+  fontname = "Courier";
+
+  node [
+    shape     = ellipse,
+    style     = filled,
+    fillcolor = "white",
+    color     = "#3b3b3b",
+    penwidth  = 1.0,
+    fontname  = "Courier",
+    fontsize  = 10,
+    margin    = "0.12,0.055",
+  ];
+
+  edge [
+    color     = "#3b3b3b",
+    penwidth  = 0.9,
+    fontname  = "Courier",
+    fontsize  = 9,
+    arrowsize = 0.7,
+  ];
+
+  graph [
+    fontname  = "Courier",
+    fontsize  = 11,
+    fontcolor = "#4a4a4a",
+    labeljust = "l",
+    labelloc  = "t",
+    style     = "filled,rounded",
+    penwidth  = 0,
+  ];
+
+  /* ── Actors ───────────────────────────────────────────────────────────────── */
+
+  /* Actors are HTML-label tables - image in one row, caption in the next - rather than a
+     node with `image=` plus `labelloc=b`. With the latter, Graphviz sizes the node to the
+     image and then draws the caption inside that same box, so every actor's name was
+     printed across its own stick figure. A two-row table cannot overlap by construction. */
+  node [shape = plaintext, style = "", fillcolor = "none", color = "none",
+        fontsize = 10, margin = 0];
+
+  VISITOR  [label = <<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="1"><TR><TD><IMG SRC="actor.svg"/></TD></TR><TR><TD>Visitor<BR/>(unauthenticated)</TD></TR></TABLE>>];
+  ATTENDEE [label = <<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="1"><TR><TD><IMG SRC="actor.svg"/></TD></TR><TR><TD>Attendee<BR/>(role: user)</TD></TR></TABLE>>];
+  ORG      [label = <<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="1"><TR><TD><IMG SRC="actor.svg"/></TD></TR><TR><TD>Event Organiser<BR/>(role: creator)</TD></TR></TABLE>>];
+  USHER    [label = <<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="1"><TR><TD><IMG SRC="actor.svg"/></TD></TR><TR><TD>Door Staff<BR/>(role: usher)</TD></TR></TABLE>>];
+  ADMIN    [label = <<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="1"><TR><TD><IMG SRC="actor.svg"/></TD></TR><TR><TD>Admin User<BR/>(role: admin)</TD></TR></TABLE>>];
+  ROOT     [label = <<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="1"><TR><TD><IMG SRC="actor.svg"/></TD></TR><TR><TD>Root Admin<BR/>(isRootAdmin)</TD></TR></TABLE>>];
+
+  PAYSTACK [label = <<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="1"><TR><TD><IMG SRC="actor.svg"/></TD></TR><TR><TD>Paystack</TD></TR></TABLE>>];
+  MAIL     [label = <<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="1"><TR><TD><IMG SRC="actor.svg"/></TD></TR><TR><TD>Email Service<BR/>(SMTP)</TD></TR></TABLE>>];
+  LLM      [label = <<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="1"><TR><TD><IMG SRC="actor.svg"/></TD></TR><TR><TD>LLM Provider<BR/>(OpenAI / Gemini)</TD></TR></TABLE>>];
+  METEO    [label = <<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="1"><TR><TD><IMG SRC="actor.svg"/></TD></TR><TR><TD>Open-Meteo</TD></TR></TABLE>>];
+  SCHED    [label = <<TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="1"><TR><TD><IMG SRC="actor.svg"/></TD></TR><TR><TD>Retention<BR/>Scheduler</TD></TR></TABLE>>];
+
+  /* Human actors share a rank so they form one left-hand column, and the external systems
+     share another so they form one right-hand column. Without this Graphviz scatters them
+     down both sides of the drawing wherever their first edge happens to land, and the
+     reader loses the single strongest cue the diagram has: who is a person and who is a
+     machine. */
+  { rank = same; VISITOR; ATTENDEE; ORG; USHER; ADMIN; ROOT; }
+  { rank = same; PAYSTACK; MAIL; LLM; METEO; SCHED; }
+
+  node [shape = ellipse, style = filled, fillcolor = "white", color = "#3b3b3b",
+        image = "", labelloc = "c", height = 0.5];
+
+  /* ── Subsystems ───────────────────────────────────────────────────────────── */
+
+  subgraph cluster_access {
+    label = "ACCESS AND ACCOUNTS";
+    bgcolor = "#e8eefc";
+    UC_SIGNUP  [label = "Sign Up /\nLog In"];
+    UC_RESET   [label = "Reset\nPassword"];
+    UC_PROFILE [label = "Manage\nProfile"];
+    UC_DELME   [label = "Delete Own\nAccount"];
+  }
+
+  subgraph cluster_sales {
+    label = "DISCOVERY AND TICKETING";
+    bgcolor = "#dfe7fb";
+    UC_BROWSE  [label = "Browse /\nSearch Events"];
+    UC_VIEW    [label = "View Event\nDetails"];
+    UC_BUY     [label = "Buy Ticket"];
+    UC_PAY     [label = "Pay for\nBooking"];
+    UC_QR      [label = "Receive QR\nTicket"];
+    UC_MYTIX   [label = "View My\nTickets"];
+  }
+
+  subgraph cluster_org {
+    label = "EVENT ORGANISING";
+    bgcolor = "#fdf0d5";
+    UC_CREATE  [label = "Create Event"];
+    UC_UPDATE  [label = "Update Event"];
+    UC_MYEV    [label = "View My\nEvents"];
+    UC_CURR    [label = "Set Ticket\nCurrency"];
+    UC_PAYOUT  [label = "Connect Payout\nAccount"];
+    UC_STAFF   [label = "Assign Door\nStaff"];
+    UC_REV     [label = "View Revenue\nand Earnings"];
+  }
+
+  subgraph cluster_guests {
+    label = "GUEST LIST  (invite-only and hybrid events only)";
+    bgcolor = "#ddf3e0";
+    UC_IMPORT  [label = "Import Guest\nList (CSV)"];
+    UC_INVITE  [label = "Issue Single-Use\nQR Invite"];
+    UC_GLIST   [label = "View Guest\nList"];
+    UC_NLQ     [label = "Ask NL Question\nAbout Guests"];
+    UC_ERASE   [label = "Erase Guest\nPII"];
+  }
+
+  subgraph cluster_door {
+    label = "DOOR OPERATIONS";
+    bgcolor = "#f3e4f7";
+    UC_SCAN    [label = "Scan Ticket /\nInvite QR"];
+    UC_ADMIT   [label = "Admit or Reject\nAtomically"];
+    UC_MANUAL  [label = "Manually Set\nCheck-In"];
+    UC_AUDIT   [label = "Record Audit\nEntry"];
+  }
+
+  subgraph cluster_insight {
+    label = "INSIGHT AND ANALYTICS";
+    bgcolor = "#e4f1f6";
+    UC_LIVE    [label = "Watch Live\nArrivals"];
+    UC_ANOM    [label = "Review Scan\nAnomalies"];
+    UC_NOSHOW  [label = "See No-Show\nPredictions"];
+  }
+
+  subgraph cluster_net {
+    label = "MEET AND GREET";
+    bgcolor = "#fce6ea";
+    UC_JOIN    [label = "Join Meet\nand Greet"];
+    UC_OTP     [label = "Request Access\nCode by Email"];
+    UC_OPTIN   [label = "Opt In to\nDirectory"];
+    UC_CHAT    [label = "Post to Event\nChat"];
+    UC_DM      [label = "Send Direct\nMessage"];
+  }
+
+  subgraph cluster_ai {
+    label = "AI CONCIERGE";
+    bgcolor = "#e9e4f7";
+    UC_ASK     [label = "Ask the\nChatbot"];
+    UC_FIND    [label = "Search Events by\nDescription"];
+    UC_ABOUT   [label = "Ask About a\nNamed Event"];
+    UC_WEATHER [label = "Get Weather /\nDress-Code Advice"];
+  }
+
+  subgraph cluster_admin {
+    label = "ADMINISTRATION AND COMPLIANCE";
+    bgcolor = "#f9dcdc";
+    UC_USERS   [label = "Administer\nUsers"];
+    UC_ROLE    [label = "Change a\nUser's Role"];
+    UC_DEACT   [label = "Deactivate\na User"];
+    UC_ARCH    [label = "Archive an\nEvent"];
+    UC_SWEEP   [label = "Run Retention\nSweep"];
+    UC_PLAT    [label = "View Platform\nRevenue"];
+  }
+
+  /* ── Actor associations (solid, no arrowhead) ─────────────────────────────── */
+
+  edge [dir = none, style = solid];
+
+  VISITOR -> UC_BROWSE;
+  VISITOR -> UC_VIEW;
+  VISITOR -> UC_SIGNUP;
+  VISITOR -> UC_RESET;
+  VISITOR -> UC_BUY;
+  VISITOR -> UC_OTP;
+  VISITOR -> UC_ASK;
+
+  ATTENDEE -> UC_VIEW;
+  ATTENDEE -> UC_BUY;
+  ATTENDEE -> UC_MYTIX;
+  ATTENDEE -> UC_PROFILE;
+  ATTENDEE -> UC_DELME;
+  ATTENDEE -> UC_JOIN;
+  ATTENDEE -> UC_OPTIN;
+  ATTENDEE -> UC_CHAT;
+  ATTENDEE -> UC_DM;
+  ATTENDEE -> UC_ASK;
+
+  ORG -> UC_CREATE;
+  ORG -> UC_UPDATE;
+  ORG -> UC_MYEV;
+  ORG -> UC_CURR;
+  ORG -> UC_PAYOUT;
+  ORG -> UC_REV;
+  ORG -> UC_STAFF;
+  ORG -> UC_IMPORT;
+  ORG -> UC_GLIST;
+  ORG -> UC_LIVE;
+  ORG -> UC_SCAN;
+  ORG -> UC_MANUAL;
+  ORG -> UC_ERASE;
+
+  USHER -> UC_SCAN;
+  USHER -> UC_MANUAL;
+
+  ADMIN -> UC_USERS;
+  ADMIN -> UC_DEACT;
+  ADMIN -> UC_ARCH;
+  ADMIN -> UC_PLAT;
+  ADMIN -> UC_GLIST;
+  ADMIN -> UC_LIVE;
+  ADMIN -> UC_STAFF;
+  ADMIN -> UC_SCAN;
+  ADMIN -> UC_ERASE;
+
+  ROOT -> UC_ROLE;
+
+  /* Written use-case-first, so under rankdir=LR the external systems are pulled to the
+     RIGHT of the use cases they serve. Written the other way round (PAYSTACK -> UC_PAY)
+     they were dragged into the middle of the drawing and the left/right split collapsed. */
+  UC_PAY     -> PAYSTACK;
+  UC_QR      -> MAIL;
+  UC_ASK     -> LLM;
+  UC_WEATHER -> METEO;
+  UC_SWEEP   -> SCHED;
+
+  /* ── Generalisation ───────────────────────────────────────────────────────── */
+
+  // constraint=false: both actors are pinned to the same rank above, and letting this edge
+  // influence ranking would break that column apart to make room for it.
+  edge [dir = forward, style = solid, arrowhead = onormal, fontsize = 9];
+  ROOT -> ADMIN [label = "is a", constraint = false];
+
+  /* ── include / extend dependencies ────────────────────────────────────────── */
+
+  edge [dir = forward, style = dashed, arrowhead = vee, color = "#555555"];
+
+  UC_BUY    -> UC_PAY     [label = "includes"];
+  UC_PAY    -> UC_PAYOUT  [label = "includes"];
+  UC_PAY    -> UC_QR      [label = "includes"];
+  UC_PAY    -> PAYSTACK   [label = "includes"];
+  UC_QR     -> MAIL       [label = "includes"];
+  UC_RESET  -> MAIL       [label = "includes"];
+
+  UC_IMPORT -> UC_INVITE  [label = "includes"];
+  UC_INVITE -> MAIL       [label = "includes"];
+  UC_NLQ    -> UC_GLIST   [label = "extends"];
+  UC_ERASE  -> UC_GLIST   [label = "extends"];
+  UC_SWEEP  -> UC_ERASE   [label = "extends"];
+
+  UC_SCAN   -> UC_ADMIT   [label = "includes"];
+  UC_ADMIT  -> UC_AUDIT   [label = "includes"];
+  UC_MANUAL -> UC_AUDIT   [label = "includes"];
+
+  UC_ANOM   -> UC_LIVE    [label = "extends"];
+  UC_NOSHOW -> UC_LIVE    [label = "extends"];
+
+  UC_JOIN   -> UC_OTP     [label = "extends"];
+  UC_OTP    -> MAIL       [label = "includes"];
+  UC_CHAT   -> UC_JOIN    [label = "includes"];
+  UC_DM     -> UC_JOIN    [label = "includes"];
+  UC_OPTIN  -> UC_JOIN    [label = "includes"];
+
+  UC_FIND    -> UC_ASK    [label = "extends"];
+  UC_ABOUT   -> UC_ASK    [label = "extends"];
+  UC_WEATHER -> UC_ASK    [label = "extends"];
+  UC_ASK     -> LLM       [label = "includes"];
+  UC_WEATHER -> METEO     [label = "includes"];
+
+  UC_ROLE   -> UC_USERS   [label = "extends"];
+  UC_DEACT  -> UC_USERS   [label = "extends"];
+  UC_CURR   -> UC_CREATE  [label = "extends"];
+  UC_CURR   -> UC_UPDATE  [label = "extends"];
+
+  /* The rule this diagram is most often read for: only invite-only and hybrid events
+     have a guest list at all, so every use case in that cluster is conditional on the
+     event's access mode. Public events admit purely by ticket. */
+  UC_GLIST -> UC_CREATE [label = "requires accessMode\ninvite_only or hybrid",
+                         style = dotted, color = "#7a7a7a", fontcolor = "#5a5a5a",
+                         constraint = false];
+}

@@ -258,6 +258,25 @@ export const endOfDay = (date) => {
   return end;
 };
 
+/**
+ * Whether an event carries a guest list at all.
+ *
+ * Only `invite_only` and `hybrid` events do: a public event admits people purely by ticket,
+ * and guestService refuses to manage a guest list for one. Defined once, here, because the
+ * rule is enforced in three places that must not drift - the guest-management authorisation
+ * check, the workspace lookup that decides whether the UI offers the tab, and the My Events
+ * card. Two of those previously carried their own copy of the condition, written in opposite
+ * directions (`=== 'public'` vs `invite_only || hybrid`), which disagreed on any event whose
+ * accessMode was absent.
+ *
+ * Tested positively, so an event with no accessMode at all is treated as having no guest
+ * list rather than as "not public". The schema defaults the field to 'public', so this only
+ * concerns records written before it existed - and offering a guest list that the backend
+ * then refuses is the worse of the two failures.
+ */
+export const hasGuestList = (event) =>
+  event?.accessMode === 'invite_only' || event?.accessMode === 'hybrid';
+
 eventSchema.virtual('isLive').get(function () {
   if (!this.startDate || !this.endDate) return 'upcoming';
 

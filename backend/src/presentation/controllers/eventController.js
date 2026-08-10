@@ -85,6 +85,18 @@ export const getEvent = catchAsync(async (req, res) => {
   });
 });
 
+export const getEventWorkspace = catchAsync(async (req, res) => {
+  const workspace = await eventService.getEventWorkspace(
+    req.params.eventId,
+    req.user,
+  );
+
+  res.status(200).json({
+    status: 'success',
+    data: { workspace },
+  });
+});
+
 export const updateEvent = catchAsync(async (req, res, next) => {
   const event = await eventService.updateEvent(
     req.params.eventId,

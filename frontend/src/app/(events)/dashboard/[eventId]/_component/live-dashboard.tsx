@@ -61,7 +61,14 @@ const FLAG_LABEL: Record<string, string> = {
   rapid_sequential: "Scans too close together",
 };
 
-export default function LiveDashboard({ eventId }: { eventId: string }) {
+export default function LiveDashboard({
+  eventId,
+  hasGuestList = false,
+}: {
+  eventId: string;
+  /** Whether this event has a guest list, so the tab strip can omit it. */
+  hasGuestList?: boolean;
+}) {
   const [connected, setConnected] = useState(false);
   const [capacity, setCapacity] = useState(0);
   const [sold, setSold] = useState(0);
@@ -131,7 +138,7 @@ export default function LiveDashboard({ eventId }: { eventId: string }) {
         eyebrow="TicketFlow"
         title="Live arrivals"
         subtitle="Watch guests arrive in real time as they're scanned at the door."
-        tabs={eventTabs(eventId, "dashboard")}
+        tabs={eventTabs(eventId, "dashboard", hasGuestList)}
         right={
           <span
             role="status"

@@ -43,7 +43,14 @@ type BarcodeDetectorLike = {
   detect: (source: CanvasImageSource) => Promise<{ rawValue: string }[]>;
 };
 
-export default function Scanner({ eventId }: { eventId: string }) {
+export default function Scanner({
+  eventId,
+  hasGuestList = false,
+}: {
+  eventId: string;
+  /** Whether this event has a guest list, so the tab strip can omit it. */
+  hasGuestList?: boolean;
+}) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const detectorRef = useRef<BarcodeDetectorLike | null>(null);
   const scanningRef = useRef(false);
@@ -174,7 +181,7 @@ export default function Scanner({ eventId }: { eventId: string }) {
         eyebrow="TicketFlow"
         title="Scan tickets"
         subtitle="Point the camera at a guest's QR code, or type their code below."
-        tabs={eventTabs(eventId, "scan")}
+        tabs={eventTabs(eventId, "scan", hasGuestList)}
       />
 
       {cameraSupported ? (

@@ -44,6 +44,11 @@ router.get('/my/assigned-events', eventController.getAssignedEvents);
 // scope is decided inside revenueService from the caller's role - an organiser sees their own
 // events, an admin sees the whole platform.
 router.get('/revenue/summary', eventController.getRevenueSummary);
+// What an organiser surface needs to render its own chrome (name, access mode, whether the
+// event has a guest list at all). Two segments, so the public single-segment '/:slug' above
+// cannot swallow it. No role gate: eventService.getEventWorkspace authorises owner, admin or
+// assigned usher, which is exactly who can open these pages.
+router.get('/:eventId/workspace', eventController.getEventWorkspace);
 // Ownership is enforced in eventService.updateEvent; the service allows the event's
 // own creator or an admin. No role gate here so any user who owns an event can edit it.
 router.patch('/update/:eventId', eventController.updateEvent);

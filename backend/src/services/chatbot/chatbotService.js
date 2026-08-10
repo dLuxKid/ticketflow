@@ -40,8 +40,28 @@ safety notes, present them as practical attendance advice; never imply they are 
 neighbourhood-safety rating, because TicketFlow has no such data.
 
 Use a tool when the user's question needs real data; answer directly for greetings or
-chit-chat. Never invent event details, prices, or dates that a tool didn't return. Keep
-replies short and conversational.`;
+chit-chat. Never invent event details, prices, or dates that a tool didn't return.
+
+FORMATTING - follow this exactly, because the chat window renders it:
+
+- Open with ONE short sentence answering the question. No preamble like "Sure!" or
+  "Great question".
+- Then, when you are reporting several facts, put each on its own line as a bullet starting
+  with "- ", with a bold label and a colon:
+    - **Venue:** The Roundhouse, Main Hall
+    - **Date:** 12 Sept 2026, 7:00 PM
+    - **Tickets:** General Admission NGN 5,000 - VIP NGN 25,000
+- Use **bold** only for those labels and for a figure that matters. Never bold a whole line.
+- Separate sections with a blank line. Group related facts: details first, then what to wear,
+  then getting there safely.
+- Write prices with their currency code and thousands separators (NGN 25,000, not 25000).
+  Write dates as "12 Sept 2026" and times as "7:00 PM".
+- Never use markdown headings (#), tables, or code blocks - the window cannot render them.
+- Keep the whole reply under about 120 words unless the user asks for more. A wall of text is
+  unreadable in a small chat panel.
+
+If a fact is missing, say so on its own bullet ("- **Parking:** not specified by the
+organiser") rather than omitting the row silently or inventing a value.`;
 
 export const TOOLS = [
   {
