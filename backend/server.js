@@ -15,8 +15,9 @@ process.on('uncaughtException', (err) => {
   process.exit(1);
 });
 
-const DB = process.env.DB;
-console.log('Connecting to DB...', DB);
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config({ path: './config.env' });
+}
 
 mongoose.connect(DB).then(() => {
   console.warn('DB connection successful ✅');
