@@ -1,7 +1,9 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 
-dotenv.config({ path: './config.env' });
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config({ path: './config.env' });
+}
 
 import app from './app.js';
 import {
@@ -15,9 +17,8 @@ process.on('uncaughtException', (err) => {
   process.exit(1);
 });
 
-if (process.env.NODE_ENV !== 'production') {
-  dotenv.config({ path: './config.env' });
-}
+const DB = process.env.DB;
+console.log('Connecting to DB...', DB);
 
 mongoose.connect(DB).then(() => {
   console.warn('DB connection successful ✅');
